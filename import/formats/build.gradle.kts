@@ -2,7 +2,7 @@ plugins {
     id("fuzz.jvm.library")
 }
 
-// Заглушка. Наполняет раздел «Бэкенд и API»: PlaylistImporter для M3U/M3U8, CSV, JSON, XSPF, текста.
+// Разбор плейлистов: M3U/M3U8, CSV (Exportify, выгрузки Яндекс Музыки), XSPF и простой текст «Исполнитель — Название».
 dependencies {
     implementation(projects.core.domain)
 }

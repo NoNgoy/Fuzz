@@ -1,4 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_import_title">Импорт</string>
+    <string name="feature_import_back">Назад</string>
+    <string name="feature_import_pick_title">Перенести плейлист</string>
+    <string name="feature_import_pick_body">Выбери файл плейлиста (%1$s). Треки из него сопоставятся с твоей коллекцией, а сомнительные совпадения ты подтвердишь сам.</string>
+    <string name="feature_import_pick">Выбрать файл</string>
+    <string name="feature_import_hint">Из Spotify плейлист выгружается в CSV через Exportify, из Яндекс Музыки сторонними сервисами в CSV или текст «Исполнитель — Название». M3U сохраняют AIMP, VLC и большинство плееров.</string>
+    <string name="feature_import_unsupported">Формат «%1$s» не поддерживается. Подойдут: %2$s.</string>
+    <string name="feature_import_unreadable">Файл не читается. Проверь, что это плейлист, а не архив или документ.</string>
+    <string name="feature_import_empty">В файле не нашлось ни одного трека.</string>
+    <string name="feature_import_rename">Название плейлиста</string>
+    <string name="feature_import_found">Найдено</string>
+    <string name="feature_import_doubtful">Сомнение</string>
+    <string name="feature_import_not_found">Не найдено</string>
+    <string name="feature_import_tab_empty">Здесь пусто.</string>
+    <string name="feature_import_confirm">Подтвердить, осталось %1$d</string>
+    <string name="feature_import_in_list">В списке: %1$s</string>
+    <string name="feature_import_this_one">Это он</string>
+    <string name="feature_import_none">Нет в коллекции</string>
+    <string name="feature_import_restore">Вернуть</string>
+    <plurals name="feature_import_tracks">
+        <item quantity="one">%1$d трек</item>
+        <item quantity="few">%1$d трека</item>
+        <item quantity="many">%1$d треков</item>
+        <item quantity="other">%1$d трека</item>
+    </plurals>
+    <plurals name="feature_import_save">
+        <item quantity="one">Сохранить плейлист: %1$d трек</item>
+        <item quantity="few">Сохранить плейлист: %1$d трека</item>
+        <item quantity="many">Сохранить плейлист: %1$d треков</item>
+        <item quantity="other">Сохранить плейлист: %1$d трека</item>
+    </plurals>
+    <string name="feature_import_saved">Плейлист «%1$s» сохранён</string>
 </resources>

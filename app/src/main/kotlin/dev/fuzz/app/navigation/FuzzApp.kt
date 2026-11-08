@@ -106,7 +106,14 @@ fun FuzzApp(
                 onOpenSettings = { navController.navigate(SettingsRoute) },
             )
             waveScreen()
-            importScreen()
+            importScreen(
+                onBack = navController::popBackStack,
+                onSaved = { id ->
+                    navController.navigate(TrackListRoute(playlistId = id)) {
+                        popUpTo<ImportRoute> { inclusive = true }
+                    }
+                },
+            )
             settingsScreen()
             connectionsScreen()
             onboardingScreen(

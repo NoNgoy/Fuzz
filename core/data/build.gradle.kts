@@ -12,6 +12,7 @@ dependencies {
     implementation(projects.engine.recommend)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.androidx.room.ktx)
+    implementation(projects.engine.match)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.ext.junit)
 }

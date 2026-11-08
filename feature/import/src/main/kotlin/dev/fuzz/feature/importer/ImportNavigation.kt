@@ -7,6 +7,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object ImportRoute
 
-fun NavGraphBuilder.importScreen() {
-    composable<ImportRoute> { ImportScreen() }
+fun NavGraphBuilder.importScreen(
+    onBack: () -> Unit,
+    onSaved: (playlistId: String) -> Unit,
+) {
+    composable<ImportRoute> { ImportEntry(onBack = onBack, onSaved = onSaved) }
 }
