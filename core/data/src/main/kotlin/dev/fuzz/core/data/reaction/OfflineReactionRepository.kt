@@ -23,6 +23,9 @@ internal class OfflineReactionRepository
                 ids.mapTo(HashSet(), ::TrackId)
             }
 
+        override fun observeLikedOrdered(): Flow<List<TrackId>> =
+            dao.observeLikedOrdered().map { ids -> ids.map(::TrackId) }
+
         override suspend fun set(
             trackId: TrackId,
             reaction: Reaction,

@@ -8,6 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.fuzz.core.database.FuzzDatabase
+import dev.fuzz.core.database.dao.PlaylistDao
 import dev.fuzz.core.database.dao.ReactionDao
 import dev.fuzz.core.database.dao.TrackDao
 import javax.inject.Singleton
@@ -23,6 +24,9 @@ object DatabaseModule {
 
     @Provides
     fun provideTrackDao(db: FuzzDatabase): TrackDao = db.trackDao()
+
+    @Provides
+    fun providePlaylistDao(db: FuzzDatabase): PlaylistDao = db.playlistDao()
 
     @Provides
     fun provideReactionDao(db: FuzzDatabase): ReactionDao = db.reactionDao()

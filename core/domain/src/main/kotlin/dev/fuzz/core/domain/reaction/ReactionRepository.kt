@@ -9,6 +9,9 @@ interface ReactionRepository {
 
     fun observeLiked(): Flow<Set<TrackId>>
 
+    /** Лайкнутые треки, последние лайки сверху. */
+    fun observeLikedOrdered(): Flow<List<TrackId>>
+
     suspend fun set(
         trackId: TrackId,
         reaction: Reaction,

@@ -14,6 +14,9 @@ interface ReactionDao {
     @Query("SELECT track_id FROM track_reactions WHERE reaction = 1")
     fun observeLiked(): Flow<List<String>>
 
+    @Query("SELECT track_id FROM track_reactions WHERE reaction = 1 ORDER BY updated_at DESC")
+    fun observeLikedOrdered(): Flow<List<String>>
+
     @Upsert
     suspend fun upsert(entity: ReactionEntity)
 }
