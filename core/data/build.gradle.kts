@@ -10,6 +10,7 @@ dependencies {
     implementation(projects.core.database)
     implementation(projects.core.datastore)
     implementation(libs.androidx.room.ktx)
+    implementation(projects.engine.match)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.ext.junit)
 }
