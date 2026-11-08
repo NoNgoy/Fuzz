@@ -19,7 +19,10 @@
     <string name="feature_player_action_sound">Звук</string>
     <string name="feature_player_action_sleep">Сон</string>
     <string name="feature_player_queue_count">Треков в очереди: %1$d</string>
-    <string name="feature_player_soon_lyrics">Тексты песен появятся на этапе 3</string>
+    <string name="feature_player_lyrics_idle">Сейчас ничего не играет</string>
+    <string name="feature_player_lyrics_not_found">Текста этой песни пока нигде нет</string>
+    <string name="feature_player_lyrics_offline">Не удалось загрузить текст: нет сети или сервис недоступен</string>
+    <string name="feature_player_lyrics_source">Текст: %1$s</string>
     <string name="feature_player_soon_why">«Почему этот трек?» появится вместе с волной на этапе 2</string>
     <string name="feature_player_soon_sound">Эквалайзер и кроссфейд появятся на этапе 3</string>
     <string name="feature_player_soon_sleep">Таймер сна появится на этапе 3</string>

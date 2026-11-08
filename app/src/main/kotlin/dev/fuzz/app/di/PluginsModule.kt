@@ -12,6 +12,7 @@ import dev.fuzz.core.data.wave.RoomSimilarityStore
 import dev.fuzz.core.data.wave.SourceExternalCatalog
 import dev.fuzz.core.database.dao.SimilarityCacheDao
 import dev.fuzz.core.domain.connection.ConnectedSources
+import dev.fuzz.core.domain.plugin.LyricsProvider
 import dev.fuzz.core.domain.plugin.MetadataProvider
 import dev.fuzz.core.domain.plugin.Providers
 import dev.fuzz.core.domain.search.CatalogSource
@@ -21,6 +22,7 @@ import dev.fuzz.engine.recommend.port.ExternalCatalog
 import dev.fuzz.engine.recommend.port.SimilarityGraph
 import dev.fuzz.meta.lastfm.LastFmProvider
 import dev.fuzz.meta.listenbrainz.ListenBrainzProvider
+import dev.fuzz.meta.lyrics.LrclibProvider
 import dev.fuzz.source.deezerpreview.DeezerPreviewSource
 import dev.fuzz.source.jamendo.JamendoSource
 import io.ktor.client.HttpClient
@@ -86,6 +88,12 @@ internal object PluginsModule {
                 add(SourceExternalCatalog(jamendo, TrackOrigin.OpenCatalog, Providers.JAMENDO, registry))
             }
         }
+
+    /** Встроенные источники текстов; свои API из «Подключений» спрашиваются раньше них. */
+    @Provides
+    @Singleton
+    fun provideLyricsProviders(client: HttpClient): List<@JvmSuppressWildcards LyricsProvider> =
+        listOf(LrclibProvider(client, USER_AGENT))
 
     /** Встроенные каталоги для экрана поиска; Jamendo только с ключом. */
     @Provides

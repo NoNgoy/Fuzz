@@ -1,5 +1,7 @@
 package dev.fuzz.core.domain.connection
 
+import dev.fuzz.core.domain.plugin.LyricsProvider
+import dev.fuzz.core.domain.plugin.MetadataProvider
 import dev.fuzz.core.domain.plugin.MusicSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -70,16 +72,27 @@ interface ConnectionsRepository {
     suspend fun remove(id: String)
 }
 
-/** Включённые подключения как источники музыки: их видят поиск и волна. */
+/** Что даёт одно подключение: всегда источник музыки, свой API может ещё тексты и похожих. */
+data class ConnectionPlugins(
+    val source: MusicSource,
+    val lyrics: LyricsProvider? = null,
+    val metadata: MetadataProvider? = null,
+)
+
+/** Включённые подключения: источники видят поиск и волна, тексты — плеер. */
 interface ConnectedSources {
     val sources: StateFlow<List<MusicSource>>
+
+    val lyrics: StateFlow<List<LyricsProvider>>
+
+    val metadata: StateFlow<List<MetadataProvider>>
 }
 
-/** Собирает источник из настроек. Живёт в app: только он знает все плагины. */
+/** Собирает плагины подключения из настроек. Живёт в app: только он знает все плагины. */
 interface MusicSourceFactory {
-    /** Источник или [IllegalArgumentException] с понятной причиной (битый манифест, неверный адрес). */
+    /** Плагины или [IllegalArgumentException] с понятной причиной (битый манифест, неверный адрес). */
     fun create(
         config: ConnectionConfig,
         secret: String?,
-    ): MusicSource
+    ): ConnectionPlugins
 }

@@ -67,6 +67,7 @@ dependencies {
     implementation(projects.engine.recommend)
     implementation(projects.meta.lastfm)
     implementation(projects.meta.listenbrainz)
+    implementation(projects.meta.lyrics)
     implementation(projects.source.jamendo)
     implementation(projects.source.deezerPreview)
     implementation(projects.source.subsonic)

@@ -8,8 +8,8 @@ import dev.fuzz.connect.templates.jellyfin.JellyfinSource
 import dev.fuzz.connect.templates.webdav.WebDavSource
 import dev.fuzz.core.domain.connection.ConnectionConfig
 import dev.fuzz.core.domain.connection.ConnectionKind
+import dev.fuzz.core.domain.connection.ConnectionPlugins
 import dev.fuzz.core.domain.connection.MusicSourceFactory
-import dev.fuzz.core.domain.plugin.MusicSource
 import dev.fuzz.source.subsonic.SubsonicSource
 import io.ktor.client.HttpClient
 import java.net.URI
@@ -24,61 +24,64 @@ internal class PluginSourceFactory
         override fun create(
             config: ConnectionConfig,
             secret: String?,
-        ): MusicSource {
+        ): ConnectionPlugins {
             val id = "connection:${config.id}"
             val password = secret.orEmpty()
-            return when (config.kind) {
-                ConnectionKind.Subsonic -> {
-                    SubsonicSource(client, url(config), config.username, password, id, config.name)
-                }
+            val source =
+                when (config.kind) {
+                    ConnectionKind.Subsonic -> {
+                        SubsonicSource(client, url(config), config.username, password, id, config.name)
+                    }
 
-                ConnectionKind.Jellyfin -> {
-                    JellyfinSource(
-                        client,
-                        url(config),
-                        config.username,
-                        password,
-                        deviceId = config.id,
-                        id,
-                        config.name,
-                    )
-                }
+                    ConnectionKind.Jellyfin -> {
+                        JellyfinSource(
+                            client,
+                            url(config),
+                            config.username,
+                            password,
+                            deviceId = config.id,
+                            id,
+                            config.name,
+                        )
+                    }
 
-                ConnectionKind.Ampache -> {
-                    val credentials =
-                        if (config.username.isBlank()) {
-                            AmpacheCredentials.ApiKey(password)
-                        } else {
-                            AmpacheCredentials.Password(config.username, password)
-                        }
-                    AmpacheSource(client, url(config), credentials, id, config.name)
-                }
+                    ConnectionKind.Ampache -> {
+                        val credentials =
+                            if (config.username.isBlank()) {
+                                AmpacheCredentials.ApiKey(password)
+                            } else {
+                                AmpacheCredentials.Password(config.username, password)
+                            }
+                        AmpacheSource(client, url(config), credentials, id, config.name)
+                    }
 
-                ConnectionKind.WebDav -> {
-                    WebDavSource(
-                        client,
-                        url(config),
-                        config.username.ifBlank { null },
-                        secret?.ifBlank { null },
-                        id,
-                        config.name,
-                    )
-                }
+                    ConnectionKind.WebDav -> {
+                        WebDavSource(
+                            client,
+                            url(config),
+                            config.username.ifBlank { null },
+                            secret?.ifBlank { null },
+                            id,
+                            config.name,
+                        )
+                    }
 
-                ConnectionKind.Manifest -> {
-                    when (val parsed = ManifestParser.parse(config.manifest)) {
-                        is ManifestParser.Result.Valid -> {
-                            ManifestConnection(client, parsed.manifest, secret?.ifBlank { null }).source
-                        }
+                    ConnectionKind.Manifest -> {
+                        when (val parsed = ManifestParser.parse(config.manifest)) {
+                            is ManifestParser.Result.Valid -> {
+                                val connection = ManifestConnection(client, parsed.manifest, secret?.ifBlank { null })
+                                return ConnectionPlugins(connection.source, connection.lyrics, connection.metadata)
+                            }
 
-                        is ManifestParser.Result.Invalid -> {
-                            throw IllegalArgumentException(
-                                parsed.errors.joinToString("\n"),
-                            )
+                            is ManifestParser.Result.Invalid -> {
+                                throw IllegalArgumentException(
+                                    parsed.errors.joinToString("\n"),
+                                )
+                            }
                         }
                     }
                 }
-            }
+            return ConnectionPlugins(source)
         }
 
         /** Только http(s) с хостом: иначе источник ушёл бы непонятно куда. */
