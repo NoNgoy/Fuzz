@@ -9,8 +9,9 @@ android {
     namespace = "dev.fuzz.app"
     defaultConfig {
         applicationId = "dev.fuzz"
-        versionCode = 1
-        versionName = "0.1.0"
+        // Номер сборки CI и тег релиза; локально 1 и 0.1.0.
+        versionCode = secret("fuzz.versionCode", "FUZZ_VERSION_CODE").toIntOrNull() ?: 1
+        versionName = secret("fuzz.versionName", "FUZZ_VERSION_NAME").ifEmpty { "0.1.0" }
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Ключи API не коммитятся: ~/.gradle/gradle.properties или переменные окружения CI.
         buildConfigField("String", "LASTFM_API_KEY", "\"${secret("fuzz.lastfm.apiKey", "FUZZ_LASTFM_API_KEY")}\"")
@@ -21,8 +22,22 @@ android {
         )
     }
     buildFeatures { buildConfig = true }
+    // Ключ подписи релизов лежит в секретах GitHub и приходит в CI через переменные окружения.
+    // Без него релиз подписывается отладочным ключом: так его можно собрать и поставить локально.
+    val releaseKeystore = secret("fuzz.keystore.path", "FUZZ_KEYSTORE_PATH").takeIf { it.isNotEmpty() }?.let(::file)
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = releaseKeystore
+                storePassword = secret("fuzz.keystore.password", "FUZZ_KEYSTORE_PASSWORD")
+                keyAlias = secret("fuzz.key.alias", "FUZZ_KEY_ALIAS")
+                keyPassword = secret("fuzz.key.password", "FUZZ_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
