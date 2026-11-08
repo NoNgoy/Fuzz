@@ -115,7 +115,7 @@ fun FuzzApp(
                 },
             )
             settingsScreen()
-            connectionsScreen()
+            connectionsScreen(onBack = navController::popBackStack)
             onboardingScreen(
                 onFinished = {
                     navController.navigate(HomeRoute) {

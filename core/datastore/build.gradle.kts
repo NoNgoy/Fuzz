@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.protobuf)
 }
 
-// Настройки на Proto DataStore. Хранилище секретов (Tink) добавится вместе с подключениями.
+// Настройки на Proto DataStore. Секреты подключений шифрует core:data ключом из Android Keystore.
 dependencies {
     api(libs.androidx.datastore)
     api(libs.protobuf.kotlin.lite)

@@ -5,9 +5,11 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.fuzz.app.BuildConfig
+import dev.fuzz.core.data.wave.ConnectedCatalog
 import dev.fuzz.core.data.wave.ExternalTrackRegistry
 import dev.fuzz.core.data.wave.ProviderSimilarityGraph
 import dev.fuzz.core.data.wave.SourceExternalCatalog
+import dev.fuzz.core.domain.connection.ConnectedSources
 import dev.fuzz.core.domain.plugin.MetadataProvider
 import dev.fuzz.core.domain.plugin.Providers
 import dev.fuzz.engine.recommend.model.TrackOrigin
@@ -66,8 +68,11 @@ internal object PluginsModule {
     fun provideCatalogs(
         client: HttpClient,
         registry: ExternalTrackRegistry,
+        connected: ConnectedSources,
     ): List<@JvmSuppressWildcards ExternalCatalog> =
         buildList {
+            // Свои серверы из «Подключений»: набор читается на каждый запрос, включение работает сразу.
+            add(ConnectedCatalog(connected, registry))
             add(SourceExternalCatalog(DeezerPreviewSource(client), TrackOrigin.Preview, Providers.DEEZER, registry))
             if (BuildConfig.JAMENDO_CLIENT_ID.isNotBlank()) {
                 val jamendo = JamendoSource(client, BuildConfig.JAMENDO_CLIENT_ID)
