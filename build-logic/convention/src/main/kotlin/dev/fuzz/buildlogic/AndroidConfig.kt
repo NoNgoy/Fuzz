@@ -20,6 +20,8 @@ internal fun Project.configureAndroid(android: CommonExtension) {
         }
         testOptions.unitTests.isIncludeAndroidResources = true
         testOptions.unitTests.isReturnDefaultValues = true
+        // Robolectric на SDK 36 лезет во внутренности FileDescriptor, а JDK 21 их закрывает.
+        testOptions.unitTests.all { it.jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED") }
         // Robolectric сам качает android-all. Зеркало можно задать локально: fuzz.robolectric.repo в ~/.gradle/gradle.properties.
         val robolectricRepo = providers.gradleProperty("fuzz.robolectric.repo").orNull
         if (robolectricRepo != null) {
