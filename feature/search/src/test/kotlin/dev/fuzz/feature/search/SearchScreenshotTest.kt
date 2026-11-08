@@ -28,6 +28,12 @@ class SearchScreenshotTest {
                         artists = persistentListOf(ArtistHit("Deftones", trackCount = 42)),
                         tracks = SampleTracks.all.take(3).toImmutableList(),
                         searched = true,
+                        online =
+                            SampleTracks.all
+                                .drop(3)
+                                .take(2)
+                                .map { it.copy(format = "Navidrome дома") }
+                                .toImmutableList(),
                     ),
                 onIntent = {},
             )
