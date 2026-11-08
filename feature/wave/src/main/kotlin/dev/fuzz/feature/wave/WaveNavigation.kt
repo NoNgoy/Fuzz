@@ -7,6 +7,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object WaveRoute
 
-fun NavGraphBuilder.waveScreen() {
-    composable<WaveRoute> { WaveScreen() }
+fun NavGraphBuilder.waveScreen(onBack: () -> Unit) {
+    composable<WaveRoute> { WaveEntry(onBack = onBack) }
 }

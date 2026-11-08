@@ -1,4 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="feature_wave_title">Волна</string>
+    <string name="feature_wave_title">Настройки волны</string>
+    <string name="feature_wave_back">Назад</string>
+    <string name="feature_wave_tag">Моя волна</string>
+    <string name="feature_wave_mix_familiar">Знакомое</string>
+    <string name="feature_wave_mix_all_new">Всё новое</string>
+    <string name="feature_wave_mix_new">Новое %1$d%%</string>
+    <string name="feature_wave_card_title">Моя волна</string>
+    <string name="feature_wave_no_filters">Без фильтров</string>
+    <string name="feature_wave_play">Играть волну</string>
+    <string name="feature_wave_pause">Пауза</string>
+    <string name="feature_wave_familiar">Знакомое</string>
+    <string name="feature_wave_new">Новое</string>
+    <string name="feature_wave_slider">Знакомое или новое</string>
+    <string name="feature_wave_share">%1$s %2$d%%</string>
+    <string name="feature_wave_activity">Занятие</string>
+    <string name="feature_wave_mood">Настроение</string>
+    <string name="feature_wave_character">Характер</string>
+    <string name="feature_wave_reset">Сбросить</string>
+    <string name="feature_wave_library_empty">Сначала добавьте музыку в коллекцию</string>
+    <string name="feature_wave_source_favorites">Любимое</string>
+    <string name="feature_wave_source_unheard">Из коллекции, не слышал</string>
+    <string name="feature_wave_source_similar">Похожие</string>
+    <string name="feature_wave_source_open_catalog">Jamendo</string>
+    <string name="feature_wave_source_preview">Превью</string>
+    <string name="feature_wave_activity_waking_up">Просыпаюсь</string>
+    <string name="feature_wave_activity_commuting">В дороге</string>
+    <string name="feature_wave_activity_working">Работаю</string>
+    <string name="feature_wave_activity_workout">Тренируюсь</string>
+    <string name="feature_wave_activity_relaxing">Отдыхаю</string>
+    <string name="feature_wave_activity_falling_asleep">Засыпаю</string>
+    <string name="feature_wave_mood_energetic">Бодрое</string>
+    <string name="feature_wave_mood_happy">Весёлое</string>
+    <string name="feature_wave_mood_calm">Спокойное</string>
+    <string name="feature_wave_mood_sad">Грустное</string>
+    <string name="feature_wave_mood_aggressive">Агрессивное</string>
+    <string name="feature_wave_character_favorite">Любимое</string>
+    <string name="feature_wave_character_unfamiliar">Незнакомое</string>
+    <string name="feature_wave_character_popular">Популярное</string>
 </resources>

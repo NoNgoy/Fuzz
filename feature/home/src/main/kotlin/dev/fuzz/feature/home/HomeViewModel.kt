@@ -4,9 +4,12 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.fuzz.core.domain.library.ObserveLibraryTracksUseCase
 import dev.fuzz.core.domain.library.ObserveRecentlyAddedUseCase
-import dev.fuzz.core.domain.player.PlayShuffledLibraryUseCase
 import dev.fuzz.core.domain.player.PlayerController
+import dev.fuzz.core.domain.wave.WavePlayer
+import dev.fuzz.core.domain.wave.WaveSettingsRepository
+import dev.fuzz.core.domain.wave.WaveStartResult
 import dev.fuzz.core.model.Track
+import dev.fuzz.core.model.wave.WaveSettings
 import dev.fuzz.core.ui.mvi.MviViewModel
 import dev.fuzz.core.ui.mvi.UiEffect
 import dev.fuzz.core.ui.mvi.UiIntent
@@ -24,7 +27,9 @@ import javax.inject.Inject
 data class HomeState(
     val isLoading: Boolean = true,
     val libraryEmpty: Boolean = false,
+    /** Играет именно волна: кнопка на карточке тогда ставит паузу. */
     val isPlaying: Boolean = false,
+    val familiarity: Int = WaveSettings.DEFAULT_FAMILIARITY,
     val recentlyAdded: ImmutableList<Track> = persistentListOf(),
 ) : UiState
 
@@ -46,21 +51,26 @@ class HomeViewModel
     constructor(
         observeTracks: ObserveLibraryTracksUseCase,
         observeRecentlyAdded: ObserveRecentlyAddedUseCase,
-        private val playShuffled: PlayShuffledLibraryUseCase,
+        private val wave: WavePlayer,
+        waveSettings: WaveSettingsRepository,
         private val player: PlayerController,
     ) : MviViewModel<HomeState, HomeIntent, HomeEffect>(HomeState()) {
         init {
             combine(
                 observeTracks().map { it.isEmpty() }.distinctUntilChanged(),
                 observeRecentlyAdded(),
-                player.state.map { it.isPlaying }.distinctUntilChanged(),
-            ) { empty, recent, playing ->
+                combine(wave.status, player.state.map { it.isPlaying }.distinctUntilChanged()) { status, playing ->
+                    status.active && playing
+                }.distinctUntilChanged(),
+                waveSettings.settings.map { it.familiarity }.distinctUntilChanged(),
+            ) { empty, recent, playing, familiarity ->
                 setState {
                     copy(
                         isLoading = false,
                         libraryEmpty = empty,
                         recentlyAdded = recent.toImmutableList(),
                         isPlaying = playing,
+                        familiarity = familiarity,
                     )
                 }
             }.launchIn(viewModelScope)
@@ -69,10 +79,12 @@ class HomeViewModel
         override fun onIntent(intent: HomeIntent) {
             when (intent) {
                 HomeIntent.PlayWave -> {
-                    if (currentState.isPlaying) {
+                    if (wave.status.value.active) {
                         player.togglePlayPause()
                     } else {
-                        viewModelScope.launch { if (!playShuffled()) sendEffect(HomeEffect.LibraryEmpty) }
+                        viewModelScope.launch {
+                            if (wave.start() == WaveStartResult.EmptyLibrary) sendEffect(HomeEffect.LibraryEmpty)
+                        }
                     }
                 }
 

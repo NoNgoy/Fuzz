@@ -105,7 +105,7 @@ fun FuzzApp(
                 onOpenConnections = { navController.navigate(ConnectionsRoute) },
                 onOpenSettings = { navController.navigate(SettingsRoute) },
             )
-            waveScreen()
+            waveScreen(onBack = navController::popBackStack)
             importScreen(
                 onBack = navController::popBackStack,
                 onSaved = { id ->

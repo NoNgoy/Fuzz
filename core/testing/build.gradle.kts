@@ -13,5 +13,6 @@ dependencies {
     api(libs.robolectric)
     api(libs.roborazzi)
     api(libs.roborazzi.compose)
+    api(platform(libs.compose.bom))
     api(libs.compose.ui.test.junit4)
 }

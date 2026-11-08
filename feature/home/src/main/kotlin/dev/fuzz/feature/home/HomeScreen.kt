@@ -82,6 +82,7 @@ internal fun HomeScreen(
         item {
             WaveCard(
                 isPlaying = state.isPlaying,
+                familiarity = state.familiarity,
                 onPlay = { onIntent(HomeIntent.PlayWave) },
                 onOpenSettings = onOpenWaveSettings,
                 modifier = Modifier.padding(horizontal = Spacing.screen, vertical = Spacing.s),

@@ -12,12 +12,14 @@ import dev.fuzz.engine.recommend.port.ExternalCatalog
 /**
  * Внешний каталог вне коллекции поверх [MusicSource]: Jamendo ([TrackOrigin.OpenCatalog]) или превью Deezer
  * ([TrackOrigin.Preview]). [provider] — ключ внешнего ID в TrackRef (`jamendo`, `deezer`).
+ * Выданные треки запоминаются в [registry], чтобы плеер потом получил для них ссылку на поток.
  * Поиск по тегам работает, если источник реализует [TagSearchable]; иначе возвращается пустой список.
  */
 class SourceExternalCatalog(
     private val source: MusicSource,
     override val origin: TrackOrigin,
     private val provider: String,
+    private val registry: ExternalTrackRegistry? = null,
 ) : ExternalCatalog {
     override suspend fun byArtist(artist: String, limit: Int): List<WaveTrack> =
         source.search(artist, limit).tracks()
@@ -35,7 +37,9 @@ class SourceExternalCatalog(
         }
 
     private fun PluginResult<SearchResult>.tracks(): List<WaveTrack> =
-        (this as? PluginResult.Ok)?.value?.tracks.orEmpty().mapNotNull { it.toWaveTrack(provider, origin) }
+        (this as? PluginResult.Ok)?.value?.tracks.orEmpty().mapNotNull { ref ->
+            ref.toWaveTrack(provider, origin)?.also { registry?.remember(it.id, source, ref, origin) }
+        }
 
     private companion object {
         const val FIND_LIMIT = 5

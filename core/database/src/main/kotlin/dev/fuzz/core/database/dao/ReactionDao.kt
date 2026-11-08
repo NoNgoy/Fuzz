@@ -17,6 +17,10 @@ interface ReactionDao {
     @Query("SELECT track_id FROM track_reactions WHERE reaction = 1 ORDER BY updated_at DESC")
     fun observeLikedOrdered(): Flow<List<String>>
 
+    /** Все оценки, включая снятые: для профиля вкуса снятие тоже событие. */
+    @Query("SELECT * FROM track_reactions")
+    suspend fun all(): List<ReactionEntity>
+
     @Upsert
     suspend fun upsert(entity: ReactionEntity)
 }
