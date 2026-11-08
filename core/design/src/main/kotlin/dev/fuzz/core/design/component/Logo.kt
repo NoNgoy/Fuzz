@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -22,7 +23,7 @@ fun FuzzLogo(
 ) {
     Canvas(modifier) {
         scale(size.minDimension / GRID, pivot = Offset.Zero) {
-            drawRoundRect(background, cornerRadius = CornerRadius(RADIUS))
+            drawRoundRect(background, size = Size(GRID, GRID), cornerRadius = CornerRadius(RADIUS))
             val stroke = Stroke(width = STROKE, cap = StrokeCap.Round, join = StrokeJoin.Round)
             drawPath(wavePath(), wave, style = stroke)
             drawPath(clipPath(), lamp, style = stroke)

@@ -11,7 +11,11 @@
 ./gradlew detekt spotlessCheck test   # статический анализ, форматирование, unit-тесты
 ./gradlew :app:lintDebug              # Android Lint по приложению и всем модулям
 ./gradlew assertModuleGraph           # правила зависимостей между модулями
+./gradlew recordRoborazziDebug        # перезаписать эталонные скриншоты экранов
+./gradlew verifyRoborazziDebug        # сравнить экраны с эталонами
 ```
+
+Скриншот-тесты (Roborazzi на Robolectric) снимают каждый экран в светлой, тёмной и AMOLED темах. Эталоны лежат в `feature/*/src/test/screenshots`, CI сверяет с ними каждый PR. Если вёрстка поменялась намеренно, перезапиши эталоны и закоммить их вместе с изменением.
 
 Ключи API в репозиторий не коммитятся: они подставляются из `local.properties` или вводятся в настройках приложения.
 

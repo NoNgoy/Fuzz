@@ -20,6 +20,11 @@ internal fun Project.configureAndroid(android: CommonExtension) {
         }
         testOptions.unitTests.isIncludeAndroidResources = true
         testOptions.unitTests.isReturnDefaultValues = true
+        // Robolectric сам качает android-all. Зеркало можно задать локально: fuzz.robolectric.repo в ~/.gradle/gradle.properties.
+        val robolectricRepo = providers.gradleProperty("fuzz.robolectric.repo").orNull
+        if (robolectricRepo != null) {
+            testOptions.unitTests.all { it.systemProperty("robolectric.dependency.repo.url", robolectricRepo) }
+        }
     }
     configureKotlin()
     allowModulesWithoutTests()

@@ -7,6 +7,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -401,13 +402,16 @@ private fun RowScope.Action(
     label: Int,
     onClick: () -> Unit,
 ) {
-    TextButton(onClick = onClick, modifier = Modifier.weight(1f)) {
+    // Без боковых отступов TextButton: пять подписей должны уместиться в строку на 393 dp.
+    TextButton(onClick = onClick, modifier = Modifier.weight(1f), contentPadding = PaddingValues(vertical = 6.dp)) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
                 stringResource(label),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                softWrap = false,
             )
         }
     }

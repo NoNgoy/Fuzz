@@ -7,7 +7,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -32,19 +32,14 @@ fun WaveBars(
     count: Int = 30,
 ) {
     val heights = remember(count) { List(count) { i -> barHeight(i) } }
-    val transition = rememberInfiniteTransition(label = "wave")
-    val phase by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(Motion.WAVE_PULSE), RepeatMode.Reverse),
-        label = "phase",
-    )
+    // На паузе анимация не создаётся вовсе: столбики стоят и не перерисовываются каждый кадр.
+    val phase = if (playing) rememberWavePhase() else null
     Canvas(modifier) {
         val gap = size.width * GAP_FRACTION / count
         val barWidth = (size.width - gap * (count - 1)) / count
         heights.forEachIndexed { i, h ->
             val offset = (i * DELAY_STEP) % 1f
-            val local = if (playing) abs(((phase + offset) % 1f) * 2f - 1f) else 1f
+            val local = phase?.let { abs(((it.value + offset) % 1f) * 2f - 1f) } ?: 1f
             val scale = MIN_SCALE + (1f - MIN_SCALE) * local
             val barHeight = size.height * h * scale
             drawRoundRect(
@@ -56,6 +51,15 @@ fun WaveBars(
         }
     }
 }
+
+@Composable
+private fun rememberWavePhase(): State<Float> =
+    rememberInfiniteTransition(label = "wave").animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(Motion.WAVE_PULSE), RepeatMode.Reverse),
+        label = "phase",
+    )
 
 private fun barHeight(i: Int): Float {
     val v = BASE + abs(sin(i * FREQ_A) * cos(i * FREQ_B)) * RANGE
