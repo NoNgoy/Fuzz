@@ -1,5 +1,6 @@
 package dev.fuzz.meta.lyrics
 
+import dev.fuzz.core.domain.plugin.LrcParser
 import dev.fuzz.core.domain.plugin.PluginResult
 import dev.fuzz.core.domain.plugin.TrackRef
 import io.ktor.client.HttpClient

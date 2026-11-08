@@ -1,6 +1,4 @@
-package dev.fuzz.meta.lyrics
-
-import dev.fuzz.core.domain.plugin.LyricsLine
+package dev.fuzz.core.domain.plugin
 
 /** Разбор синхронных текстов формата LRC: «[мм:сс.хх] строка», допускается несколько меток в строке. */
 object LrcParser {

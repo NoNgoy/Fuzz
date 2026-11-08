@@ -2,7 +2,9 @@ package dev.fuzz.connect.manifest
 
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Минимальный JSONPath без внешних зависимостей: `$`, `.поле`, `['поле']`, `[N]`, `[*]`.
@@ -23,6 +25,11 @@ object JsonPathLite {
         }
         return current
     }
+
+    /** Первое непустое скалярное значение по пути как строка. */
+    fun text(root: JsonElement, path: String): String? =
+        (select(root, path).firstOrNull() as? JsonPrimitive)
+            ?.takeIf { it !is JsonNull }?.content?.takeIf { it.isNotBlank() }
 
     private fun parse(path: String): List<Step>? {
         if (!path.startsWith("$")) return null
