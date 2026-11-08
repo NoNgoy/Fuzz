@@ -11,6 +11,7 @@ import dev.fuzz.core.database.FuzzDatabase
 import dev.fuzz.core.database.dao.ListenDao
 import dev.fuzz.core.database.dao.PlaylistDao
 import dev.fuzz.core.database.dao.ReactionDao
+import dev.fuzz.core.database.dao.SimilarityCacheDao
 import dev.fuzz.core.database.dao.TrackDao
 import javax.inject.Singleton
 
@@ -34,4 +35,7 @@ object DatabaseModule {
 
     @Provides
     fun provideReactionDao(db: FuzzDatabase): ReactionDao = db.reactionDao()
+
+    @Provides
+    fun provideSimilarityCacheDao(db: FuzzDatabase): SimilarityCacheDao = db.similarityCacheDao()
 }

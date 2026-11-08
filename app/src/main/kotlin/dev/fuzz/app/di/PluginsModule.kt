@@ -8,7 +8,9 @@ import dev.fuzz.app.BuildConfig
 import dev.fuzz.core.data.wave.ConnectedCatalog
 import dev.fuzz.core.data.wave.ExternalTrackRegistry
 import dev.fuzz.core.data.wave.ProviderSimilarityGraph
+import dev.fuzz.core.data.wave.RoomSimilarityStore
 import dev.fuzz.core.data.wave.SourceExternalCatalog
+import dev.fuzz.core.database.dao.SimilarityCacheDao
 import dev.fuzz.core.domain.connection.ConnectedSources
 import dev.fuzz.core.domain.plugin.MetadataProvider
 import dev.fuzz.core.domain.plugin.Providers
@@ -52,7 +54,10 @@ internal object PluginsModule {
 
     @Provides
     @Singleton
-    fun provideSimilarityGraph(client: HttpClient): SimilarityGraph {
+    fun provideSimilarityGraph(
+        client: HttpClient,
+        cache: SimilarityCacheDao,
+    ): SimilarityGraph {
         val providers =
             buildList<Pair<MetadataProvider, Float>> {
                 add(ListenBrainzProvider(client) to LISTENBRAINZ_WEIGHT)
@@ -60,7 +65,7 @@ internal object PluginsModule {
                     add(LastFmProvider(client, BuildConfig.LASTFM_API_KEY) to LASTFM_WEIGHT)
                 }
             }
-        return ProviderSimilarityGraph(providers)
+        return ProviderSimilarityGraph(providers, store = RoomSimilarityStore(cache))
     }
 
     @Provides

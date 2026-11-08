@@ -6,11 +6,13 @@ import androidx.room.RoomDatabase
 import dev.fuzz.core.database.dao.ListenDao
 import dev.fuzz.core.database.dao.PlaylistDao
 import dev.fuzz.core.database.dao.ReactionDao
+import dev.fuzz.core.database.dao.SimilarityCacheDao
 import dev.fuzz.core.database.dao.TrackDao
 import dev.fuzz.core.database.entity.ListenEntity
 import dev.fuzz.core.database.entity.PlaylistEntity
 import dev.fuzz.core.database.entity.PlaylistTrackEntity
 import dev.fuzz.core.database.entity.ReactionEntity
+import dev.fuzz.core.database.entity.SimilarityCacheEntity
 import dev.fuzz.core.database.entity.TrackEntity
 
 /**
@@ -24,10 +26,14 @@ import dev.fuzz.core.database.entity.TrackEntity
         PlaylistEntity::class,
         PlaylistTrackEntity::class,
         ListenEntity::class,
+        SimilarityCacheEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3),
+        AutoMigration(from = 3, to = 4),
+    ],
 )
 abstract class FuzzDatabase : RoomDatabase() {
     abstract fun trackDao(): TrackDao
@@ -37,4 +43,6 @@ abstract class FuzzDatabase : RoomDatabase() {
     abstract fun playlistDao(): PlaylistDao
 
     abstract fun listenDao(): ListenDao
+
+    abstract fun similarityCacheDao(): SimilarityCacheDao
 }
