@@ -41,10 +41,16 @@ import dev.fuzz.feature.wave.WaveRoute
 import dev.fuzz.feature.wave.waveScreen
 
 @Composable
-fun FuzzApp(navController: NavHostController = rememberNavController()) {
+fun FuzzApp(
+    showOnboarding: Boolean,
+    navController: NavHostController = rememberNavController(),
+) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destination = backStackEntry?.destination
-    val showChrome = destination?.hasRoute(PlayerRoute::class) != true
+    val showChrome =
+        destination != null &&
+            !destination.hasRoute(PlayerRoute::class) &&
+            !destination.hasRoute(OnboardingRoute::class)
 
     Scaffold(
         bottomBar = {
@@ -53,7 +59,7 @@ fun FuzzApp(navController: NavHostController = rememberNavController()) {
                     MiniPlayer(onExpand = { navController.navigate(PlayerRoute) })
                     NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                         TopLevelDestination.entries.forEach { tab ->
-                            val selected = destination?.hierarchy?.any { it.hasRoute(tab.routeClass) } == true
+                            val selected = destination.hierarchy.any { it.hasRoute(tab.routeClass) }
                             NavigationBarItem(
                                 selected = selected,
                                 onClick = { navController.navigateToTab(tab) },
@@ -79,7 +85,7 @@ fun FuzzApp(navController: NavHostController = rememberNavController()) {
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = HomeRoute,
+            startDestination = if (showOnboarding) OnboardingRoute else HomeRoute,
             modifier = Modifier.padding(padding),
         ) {
             homeScreen(
@@ -97,7 +103,14 @@ fun FuzzApp(navController: NavHostController = rememberNavController()) {
             importScreen()
             settingsScreen()
             connectionsScreen()
-            onboardingScreen()
+            onboardingScreen(
+                onFinished = {
+                    navController.navigate(HomeRoute) {
+                        popUpTo<OnboardingRoute> { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+            )
             playerScreen(onCollapse = navController::popBackStack)
         }
     }

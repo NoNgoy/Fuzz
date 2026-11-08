@@ -8,5 +8,6 @@ dependencies {
     implementation(projects.core.model)
     implementation(projects.core.common)
     implementation(projects.core.database)
+    implementation(projects.core.datastore)
     testImplementation(libs.robolectric)
 }
