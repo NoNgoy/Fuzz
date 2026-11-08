@@ -2,7 +2,9 @@ plugins {
     id("fuzz.android.library")
 }
 
-// Заглушка. Наполняет раздел «Бэкенд и API»: Ktor Client, очередь лимитов, кэш, детектор сети.
+// Ktor Client, очередь лимитов, safeCall. Наполняет раздел «Бэкенд и API».
 dependencies {
     implementation(projects.core.common)
+    api(projects.core.domain)
+    implementation(libs.kotlinx.coroutines.core)
 }
