@@ -52,6 +52,22 @@ class MigrationTest {
         }
     }
 
+    @Test
+    fun `3 to 4 adds similarity cache`() {
+        helper.createDatabase(DB, 3).close()
+
+        helper.runMigrationsAndValidate(DB, 4, true).use { db ->
+            db.execSQL(
+                "INSERT INTO similarity_cache (kind, `key`, payload, stored_at) VALUES ('artist', 'soad', 'x', 9)",
+            )
+            db.query("SELECT payload, stored_at FROM similarity_cache").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals("x", cursor.getString(0))
+                assertEquals(9, cursor.getLong(1))
+            }
+        }
+    }
+
     private companion object {
         const val DB = "migration-test"
     }
