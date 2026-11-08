@@ -20,6 +20,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * не дала ничего. Записи старше [maxAgeMs] удаляются при первой записи за запуск.
  *
  * @param providers провайдеры с весами; вес масштабирует их оценки близости
+ * @param extraProviders провайдеры, которые меняются на ходу (свои API на экране «Подключения»);
+ *   читаются при каждом запросе в сеть
  * @param mbidOf подсказка MBID артиста по имени (например, из локальной базы), нужна ListenBrainz
  */
 class ProviderSimilarityGraph(
@@ -30,6 +32,7 @@ class ProviderSimilarityGraph(
     private val storeTtlMs: Long = DEFAULT_STORE_TTL_MS,
     private val maxAgeMs: Long = DEFAULT_MAX_AGE_MS,
     private val now: () -> Long = System::currentTimeMillis,
+    private val extraProviders: () -> List<Pair<MetadataProvider, Float>> = { emptyList() },
 ) : SimilarityGraph {
     private val pruned = AtomicBoolean(false)
     private val artistCache = TtlCache<String, List<Weighted<String>>>(ttlMs)
@@ -69,7 +72,7 @@ class ProviderSimilarityGraph(
         val ref = TrackRef(title = track.title, artist = track.artist)
         val results =
             coroutineScope {
-                providers.map { (provider, weight) ->
+                active().map { (provider, weight) ->
                     async {
                         (provider.similarTracks(ref, limit) as? PluginResult.Ok)?.value.orEmpty()
                             .map { Weighted(TrackHint(it.item.artist, it.item.title), it.score * weight) }
@@ -96,7 +99,7 @@ class ProviderSimilarityGraph(
     ): List<Weighted<String>> {
         val results =
             coroutineScope {
-                providers.map { (provider, weight) ->
+                active().map { (provider, weight) ->
                     async { fetch(provider).map { Weighted(it.item, it.score * weight) } }
                 }.map { it.await() }
             }
@@ -110,6 +113,8 @@ class ProviderSimilarityGraph(
             .sortedByDescending { it.weight }
             .take(limit * OVERFETCH)
     }
+
+    private fun active() = providers + extraProviders()
 
     private fun Stored<*>.isFresh() = now() - storedAt <= storeTtlMs
 

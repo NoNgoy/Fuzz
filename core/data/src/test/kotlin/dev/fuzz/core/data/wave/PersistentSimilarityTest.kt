@@ -119,6 +119,18 @@ class PersistentSimilarityTest {
             assertEquals(listOf(Weighted("Tool", 0.5f)), store.artists("k")!!.value)
         }
 
+    @Test
+    fun extraProvidersAreReadOnEveryNetworkCall() =
+        runBlocking {
+            var extra = emptyList<Pair<MetadataProvider, Float>>()
+            val g = ProviderSimilarityGraph(emptyList(), extraProviders = { extra })
+            assertTrue(g.similarArtists("A", 5).isEmpty())
+            extra = listOf(meta to 0.5f)
+            val result = g.similarArtists("B", 5)
+            assertEquals("Tool", result.first().item)
+            assertEquals(0.35f, result.first().weight, 0.001f)
+        }
+
     private companion object {
         const val DAY = 24 * 60 * 60 * 1000L
     }
