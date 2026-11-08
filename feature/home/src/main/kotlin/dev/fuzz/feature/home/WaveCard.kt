@@ -38,6 +38,7 @@ import dev.fuzz.core.design.theme.Spacing
 @Composable
 internal fun WaveCard(
     isPlaying: Boolean,
+    familiarity: Int,
     onPlay: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
@@ -58,7 +59,7 @@ internal fun WaveCard(
     ) {
         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
             Tag(stringResource(R.string.feature_home_wave_tag))
-            Tag(stringResource(R.string.feature_home_wave_mix, DEFAULT_NEW_SHARE), ghost = true)
+            Tag(stringResource(mixLabel(familiarity), familiarity), ghost = true)
         }
         WaveBars(
             playing = isPlaying,
@@ -155,8 +156,16 @@ private fun WaveChip(
     }
 }
 
-/** Положение ползунка «Знакомое ↔ Новое» по умолчанию. */
-private const val DEFAULT_NEW_SHARE = 40
+/** Подпись положения ползунка «Знакомое ↔ Новое», как на экране настроек волны. */
+private fun mixLabel(familiarity: Int): Int =
+    when {
+        familiarity < FAMILIAR_BELOW -> R.string.feature_home_wave_mix_familiar
+        familiarity > ALL_NEW_ABOVE -> R.string.feature_home_wave_mix_all_new
+        else -> R.string.feature_home_wave_mix
+    }
+
+private const val FAMILIAR_BELOW = 20
+private const val ALL_NEW_ABOVE = 80
 private const val HUE_SHIFT = 70f
 private const val FULL_CIRCLE = 360f
 private const val BAR_ALPHA = 0.85f

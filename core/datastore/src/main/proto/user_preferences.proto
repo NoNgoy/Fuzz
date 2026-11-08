@@ -15,4 +15,14 @@ message UserPreferences {
   repeated MusicFolderProto music_folders = 2;
   // Пользователь хотя бы раз сохранял выбор папок: пустой список тогда значит «ничего», а не «по умолчанию».
   bool folders_chosen = 3;
+  // Нет поля — настройки волны по умолчанию.
+  optional WaveSettingsProto wave = 4;
+}
+
+// Настройки волны. Пустая строка в enum-полях значит «не выбрано».
+message WaveSettingsProto {
+  int32 familiarity = 1;
+  string activity = 2;
+  string mood = 3;
+  string character = 4;
 }

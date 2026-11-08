@@ -37,6 +37,21 @@ class MigrationTest {
         }
     }
 
+    @Test
+    fun `2 to 3 adds listening history`() {
+        helper.createDatabase(DB, 2).close()
+
+        helper.runMigrationsAndValidate(DB, 3, true).use { db ->
+            db.execSQL("INSERT INTO listen_events (track_id, started_at, played_ms, completed) VALUES ('t1', 5, 7, 1)")
+            db.query("SELECT track_id, played_ms, completed FROM listen_events").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals("t1", cursor.getString(0))
+                assertEquals(7, cursor.getLong(1))
+                assertEquals(1, cursor.getInt(2))
+            }
+        }
+    }
+
     private companion object {
         const val DB = "migration-test"
     }

@@ -18,8 +18,10 @@
     </string-array>
     <string name="feature_home_wave_tag">Моя волна</string>
     <string name="feature_home_wave_mix">Новое %1$d%%</string>
+    <string name="feature_home_wave_mix_familiar">Знакомое</string>
+    <string name="feature_home_wave_mix_all_new">Всё новое</string>
     <string name="feature_home_wave_title">Моя волна</string>
-    <string name="feature_home_wave_subtitle">Пока перемешивает коллекцию, умная волна появится на этапе 2</string>
+    <string name="feature_home_wave_subtitle">Знакомое и новое по твоему вкусу</string>
     <string name="feature_home_wave_play">Играть волну</string>
     <string name="feature_home_wave_pause">Пауза</string>
     <string name="feature_home_wave_activity">Занятие</string>

@@ -13,6 +13,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.androidx.room.ktx)
     implementation(projects.engine.match)
+    testImplementation(projects.core.testing)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.ext.junit)
 }
