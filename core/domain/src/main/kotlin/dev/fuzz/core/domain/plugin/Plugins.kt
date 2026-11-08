@@ -50,3 +50,11 @@ interface PlaylistImporter : Connection {
 interface CandidateGenerator : Connection {
     suspend fun candidates(seed: List<TrackRef>, limit: Int): PluginResult<List<TrackRef>>
 }
+
+/**
+ * Источник, чей поток требует заголовков (например, Basic у WebDAV). Плеер добавляет их к запросу
+ * ссылки из [MusicSource.playbackUri], чтобы пароль не попадал в URL и логи.
+ */
+interface AuthorizedPlayback {
+    suspend fun playbackHeaders(track: TrackRef): Map<String, String>
+}

@@ -12,5 +12,8 @@ object Providers {
     const val JAMENDO = "jamendo"
     const val LASTFM = "lastfm"
     const val SUBSONIC = "subsonic"
+    const val JELLYFIN = "jellyfin"
+    const val AMPACHE = "ampache"
+    const val WEBDAV = "webdav"
     const val LOCAL = "local"
 }
