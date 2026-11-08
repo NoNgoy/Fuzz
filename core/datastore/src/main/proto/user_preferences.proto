@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package dev.fuzz.core.datastore;
+
+option java_package = "dev.fuzz.core.datastore";
+option java_multiple_files = true;
+
+message MusicFolderProto {
+  string id = 1;
+  string label = 2;
+}
+
+message UserPreferences {
+  bool onboarding_completed = 1;
+  repeated MusicFolderProto music_folders = 2;
+  // Пользователь хотя бы раз сохранял выбор папок: пустой список тогда значит «ничего», а не «по умолчанию».
+  bool folders_chosen = 3;
+}

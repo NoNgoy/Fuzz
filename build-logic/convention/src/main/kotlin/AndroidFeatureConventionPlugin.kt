@@ -16,6 +16,7 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
         pluginManager.apply("fuzz.android.compose")
         pluginManager.apply("fuzz.hilt")
         pluginManager.apply(libs.pluginId("kotlin-serialization"))
+        pluginManager.apply(libs.pluginId("roborazzi"))
         dependencies {
             add("implementation", project(":core:model"))
             add("implementation", project(":core:domain"))
@@ -27,10 +28,9 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
             add("implementation", libs.lib("androidx-hilt-lifecycle-viewmodel-compose"))
             add("implementation", libs.lib("kotlinx-collections-immutable"))
             add("implementation", libs.lib("kotlinx-serialization-json"))
-            add("testImplementation", libs.lib("robolectric"))
-            add("testImplementation", libs.lib("roborazzi"))
-            add("testImplementation", libs.lib("roborazzi-compose"))
+            add("testImplementation", project(":core:testing"))
             add("testImplementation", libs.lib("roborazzi-junit-rule"))
+            add("testImplementation", libs.lib("compose-ui-test-manifest"))
         }
     }
 }

@@ -7,6 +7,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object HomeRoute
 
-fun NavGraphBuilder.homeScreen() {
-    composable<HomeRoute> { HomeScreen() }
+fun NavGraphBuilder.homeScreen(
+    onOpenWaveSettings: () -> Unit,
+    onAddMusic: () -> Unit,
+) {
+    composable<HomeRoute> { HomeEntry(onOpenWaveSettings = onOpenWaveSettings, onAddMusic = onAddMusic) }
 }

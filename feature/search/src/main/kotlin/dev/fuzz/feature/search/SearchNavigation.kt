@@ -8,5 +8,5 @@ import kotlinx.serialization.Serializable
 data object SearchRoute
 
 fun NavGraphBuilder.searchScreen() {
-    composable<SearchRoute> { SearchScreen() }
+    composable<SearchRoute> { SearchEntry() }
 }

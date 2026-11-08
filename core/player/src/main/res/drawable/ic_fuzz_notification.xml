@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Значок уведомления: монохромная волна Fuzz. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
+    android:viewportWidth="96"
+    android:viewportHeight="96">
     <path
         android:fillColor="#00000000"
-        android:pathData="M4,8 Q6,6 8,8 T12,8 T16,8 T20,8 M4,12 Q6,10 8,12 T12,12 T16,12 T20,12 M4,16 Q6,14 8,16 T12,16 T16,16 T20,16"
-        android:strokeWidth="1.8"
+        android:pathData="M10,52H22L29,30H43L55,66H67L74,52H86"
+        android:strokeWidth="9"
         android:strokeColor="#FFFFFFFF"
-        android:strokeLineCap="round" />
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
 </vector>

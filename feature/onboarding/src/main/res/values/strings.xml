@@ -1,4 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="feature_onboarding_title">Добро пожаловать</string>
+    <string name="feature_onboarding_next">Дальше</string>
+    <string name="feature_onboarding_done">Готово</string>
+    <string name="feature_onboarding_later">Сделаю позже</string>
+    <string name="feature_onboarding_step">Шаг %1$d из %2$d</string>
+
+    <string name="feature_onboarding_permissions_title">Найдём твою музыку</string>
+    <string name="feature_onboarding_permissions_body">Fuzz играет файлы с телефона. Нужен доступ к аудио и уведомление, чтобы управлять плеером со шторки и экрана блокировки.</string>
+    <string name="feature_onboarding_permission_audio">Музыка и аудио</string>
+    <string name="feature_onboarding_permission_audio_hint">Читать треки и обложки, ничего не удаляем</string>
+    <string name="feature_onboarding_permission_notifications">Уведомления</string>
+    <string name="feature_onboarding_permission_notifications_hint">Плеер в шторке и на экране блокировки</string>
+    <string name="feature_onboarding_permissions_grant">Разрешить</string>
+    <string name="feature_onboarding_permissions_denied">Без доступа к аудио коллекция останется пустой. Разрешение можно выдать в настройках приложения.</string>
+    <string name="feature_onboarding_open_app_settings">Открыть настройки приложения</string>
+
+    <string name="feature_onboarding_folders_title">Где лежат треки</string>
+    <string name="feature_onboarding_folders_body">Сканирование идёт фоном, слушать можно сразу. Папки потом меняются в настройках.</string>
+    <string name="feature_onboarding_folders_add">Добавить папку</string>
+    <string name="feature_onboarding_folders_storage">Память телефона</string>
+    <string name="feature_onboarding_folders_empty">Выбери хотя бы одну папку</string>
+
+    <string name="feature_onboarding_background_title">Чтобы музыка не обрывалась</string>
+    <string name="feature_onboarding_background_body">На Xiaomi и Poco фоновые приложения закрываются сами. Включим два переключателя, и плеер будет играть при выключенном экране.</string>
+    <string name="feature_onboarding_autostart">Автозапуск</string>
+    <string name="feature_onboarding_autostart_hint">Безопасность → Разрешения → Автозапуск</string>
+    <string name="feature_onboarding_battery">Без ограничений батареи</string>
+    <string name="feature_onboarding_battery_hint">Настройки → Батарея → Fuzz</string>
+    <string name="feature_onboarding_open_settings">Открыть настройки</string>
 </resources>

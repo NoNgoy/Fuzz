@@ -15,6 +15,7 @@ import dev.fuzz.core.model.TrackId
  */
 internal object MediaItemMapper {
     private const val EXTRA_DURATION = "fuzz.duration"
+    private const val EXTRA_FORMAT = "fuzz.format"
 
     fun toMediaItem(track: Track): MediaItem {
         val uri = track.playbackUri.toUri()
@@ -36,7 +37,7 @@ internal object MediaItemMapper {
                     .setIsBrowsable(false)
                     .setIsPlayable(true)
                     .setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
-                    .setExtras(bundleOf(EXTRA_DURATION to track.durationMs))
+                    .setExtras(bundleOf(EXTRA_DURATION to track.durationMs, EXTRA_FORMAT to track.format))
                     .build(),
             ).build()
     }
@@ -61,6 +62,7 @@ internal object MediaItemMapper {
             artworkUri = meta.artworkUri?.toString(),
             trackNumber = meta.trackNumber,
             year = meta.recordingYear,
+            format = meta.extras?.getString(EXTRA_FORMAT),
         )
     }
 

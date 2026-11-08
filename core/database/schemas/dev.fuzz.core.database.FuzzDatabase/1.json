@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "3a4673638b5f2182381923c396dbfb07",
+    "identityHash": "7e456026ac903b36b68601f95632f332",
     "entities": [
       {
         "tableName": "tracks",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `artist_name` TEXT NOT NULL, `album_title` TEXT, `duration_ms` INTEGER NOT NULL, `playback_uri` TEXT NOT NULL, `artwork_uri` TEXT, `track_number` INTEGER, `year` INTEGER, `source_id` TEXT NOT NULL, `updated_at` INTEGER NOT NULL, `deleted` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `artist_name` TEXT NOT NULL, `album_title` TEXT, `duration_ms` INTEGER NOT NULL, `playback_uri` TEXT NOT NULL, `artwork_uri` TEXT, `track_number` INTEGER, `year` INTEGER, `format` TEXT, `added_at` INTEGER NOT NULL, `source_id` TEXT NOT NULL, `updated_at` INTEGER NOT NULL, `deleted` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -57,6 +57,17 @@
             "fieldPath": "year",
             "columnName": "year",
             "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "format",
+            "columnName": "format",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "addedAt",
+            "columnName": "added_at",
+            "affinity": "INTEGER",
+            "notNull": true
           },
           {
             "fieldPath": "sourceId",
@@ -112,11 +123,41 @@
             "createSql": "CREATE INDEX IF NOT EXISTS `index_tracks_album_title` ON `${TABLE_NAME}` (`album_title`)"
           }
         ]
+      },
+      {
+        "tableName": "track_reactions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`track_id` TEXT NOT NULL, `reaction` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, PRIMARY KEY(`track_id`))",
+        "fields": [
+          {
+            "fieldPath": "trackId",
+            "columnName": "track_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reaction",
+            "columnName": "reaction",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "track_id"
+          ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3a4673638b5f2182381923c396dbfb07')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7e456026ac903b36b68601f95632f332')"
     ]
   }
 }

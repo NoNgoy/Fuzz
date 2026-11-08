@@ -23,6 +23,9 @@ data class TrackEntity(
     @ColumnInfo(name = "artwork_uri") val artworkUri: String?,
     @ColumnInfo(name = "track_number") val trackNumber: Int?,
     val year: Int?,
+    /** FLAC, MP3, Jamendo… для метки рядом с исполнителем. */
+    val format: String?,
+    @ColumnInfo(name = "added_at") val addedAt: Long,
     /** Идентификатор плагина-источника: local, jamendo, subsonic… */
     @ColumnInfo(name = "source_id") val sourceId: String,
     @ColumnInfo(name = "updated_at") val updatedAt: Long,

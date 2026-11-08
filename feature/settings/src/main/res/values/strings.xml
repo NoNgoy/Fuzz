@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_settings_title">Настройки</string>
-    <string name="feature_settings_profile">Профиль</string>
+    <string name="feature_settings_profile_name">Профиль</string>
+    <string name="feature_settings_profile_since">История копится на этом телефоне</string>
+    <string name="feature_settings_stat_hours">часов за месяц</string>
+    <string name="feature_settings_stat_new_tracks">новых треков</string>
+    <string name="feature_settings_stat_new_artists">новых артистов</string>
+    <string name="feature_settings_year_title">Итоги года</string>
+    <string name="feature_settings_year_body">Появятся в декабре</string>
+    <string name="feature_settings_menu_import">Импорт</string>
+    <string name="feature_settings_menu_import_hint">Файлы, плейлисты, история</string>
+    <string name="feature_settings_menu_connections">Подключения</string>
+    <string name="feature_settings_menu_connections_hint">Источники и свои API</string>
+    <string name="feature_settings_menu_sound">Звук</string>
+    <string name="feature_settings_menu_sound_hint">Эквалайзер, кроссфейд, громкость</string>
+    <string name="feature_settings_menu_wave">Волна</string>
+    <string name="feature_settings_menu_wave_hint">Пресеты и фильтры</string>
+    <string name="feature_settings_menu_backup">Резервная копия</string>
+    <string name="feature_settings_menu_backup_hint">Лайки, плейлисты, история и настройки в файл</string>
 </resources>

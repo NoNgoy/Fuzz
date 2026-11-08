@@ -7,4 +7,20 @@
     <string name="feature_player_shuffle">Перемешать</string>
     <string name="feature_player_repeat">Повтор</string>
     <string name="feature_player_collapse">Свернуть плеер</string>
+    <string name="feature_player_like">Нравится</string>
+    <string name="feature_player_dislike">Не нравится</string>
+    <string name="feature_player_seek">Позиция в треке</string>
+    <string name="feature_player_cover">Обложка: %1$s, %2$s</string>
+    <string name="feature_player_playing_from">Играет из</string>
+    <string name="feature_player_source_collection">Коллекция</string>
+    <string name="feature_player_action_lyrics">Текст</string>
+    <string name="feature_player_action_queue">Очередь</string>
+    <string name="feature_player_action_why">Почему?</string>
+    <string name="feature_player_action_sound">Звук</string>
+    <string name="feature_player_action_sleep">Сон</string>
+    <string name="feature_player_queue_count">Треков в очереди: %1$d</string>
+    <string name="feature_player_soon_lyrics">Тексты песен появятся на этапе 3</string>
+    <string name="feature_player_soon_why">«Почему этот трек?» появится вместе с волной на этапе 2</string>
+    <string name="feature_player_soon_sound">Эквалайзер и кроссфейд появятся на этапе 3</string>
+    <string name="feature_player_soon_sleep">Таймер сна появится на этапе 3</string>
 </resources>
