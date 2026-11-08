@@ -70,6 +70,7 @@ fun FuzzTheme(
             like = if (dark) Neutrals.Dark.Like else Neutrals.Light.Like,
             accentSoft = accent.accentSoft,
             line = scheme.outlineVariant,
+            accentHue = accent.accent.hue(),
         )
     CompositionLocalProvider(LocalFuzzColors provides extra) {
         MaterialTheme(

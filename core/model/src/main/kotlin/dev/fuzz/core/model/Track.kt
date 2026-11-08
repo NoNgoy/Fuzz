@@ -17,4 +17,8 @@ data class Track(
     val year: Int? = null,
     val artistId: ArtistId? = null,
     val albumId: AlbumId? = null,
+    /** Когда трек появился в коллекции, мс с эпохи. Нужен для «Новое в коллекции». */
+    val addedAtMs: Long = 0,
+    /** Формат или источник для метки рядом с исполнителем: FLAC, MP3, Jamendo, Превью. */
+    val format: String? = null,
 )

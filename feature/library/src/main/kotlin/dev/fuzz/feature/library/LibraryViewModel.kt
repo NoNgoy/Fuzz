@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.fuzz.core.domain.library.ObserveLibraryTracksUseCase
 import dev.fuzz.core.domain.player.PlayerController
+import dev.fuzz.core.domain.reaction.ReactionRepository
 import dev.fuzz.core.model.Track
 import dev.fuzz.core.model.TrackId
 import dev.fuzz.core.ui.mvi.MviViewModel
@@ -23,6 +24,7 @@ data class LibraryState(
     val isLoading: Boolean = true,
     val tracks: ImmutableList<Track> = persistentListOf(),
     val currentTrackId: TrackId? = null,
+    val likedCount: Int = 0,
 ) : UiState
 
 sealed interface LibraryIntent : UiIntent {
@@ -40,14 +42,23 @@ class LibraryViewModel
     @Inject
     constructor(
         observeTracks: ObserveLibraryTracksUseCase,
+        reactions: ReactionRepository,
         private val player: PlayerController,
     ) : MviViewModel<LibraryState, LibraryIntent, LibraryEffect>(LibraryState()) {
         init {
             combine(
                 observeTracks(),
                 player.state.map { it.currentTrack?.id }.distinctUntilChanged(),
-            ) { tracks, currentId ->
-                setState { copy(isLoading = false, tracks = tracks.toImmutableList(), currentTrackId = currentId) }
+                reactions.observeLiked(),
+            ) { tracks, currentId, liked ->
+                setState {
+                    copy(
+                        isLoading = false,
+                        tracks = tracks.toImmutableList(),
+                        currentTrackId = currentId,
+                        likedCount = tracks.count { it.id in liked },
+                    )
+                }
             }.launchIn(viewModelScope)
         }
 

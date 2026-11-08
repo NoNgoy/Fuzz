@@ -69,3 +69,6 @@ internal fun accentFor(
             accentSoft = Color.hsl(hue, 0.80f, 0.91f),
         )
     }
+
+/** Почти чёрный текст бренда на белых кнопках поверх градиентов. */
+val Onyx = Color(0xFF14142B)

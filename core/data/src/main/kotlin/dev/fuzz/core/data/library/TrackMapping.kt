@@ -15,4 +15,6 @@ internal fun TrackEntity.toModel(): Track =
         artworkUri = artworkUri,
         trackNumber = trackNumber,
         year = year,
+        addedAtMs = addedAt,
+        format = format,
     )

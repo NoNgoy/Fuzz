@@ -15,6 +15,16 @@ fun NavGraphBuilder.settingsScreen() {
     composable<SettingsRoute> { SettingsScreen() }
 }
 
-fun NavGraphBuilder.profileScreen() {
-    composable<ProfileRoute> { ProfileScreen() }
+fun NavGraphBuilder.profileScreen(
+    onOpenImport: () -> Unit,
+    onOpenConnections: () -> Unit,
+    onOpenSettings: () -> Unit,
+) {
+    composable<ProfileRoute> {
+        ProfileScreen(
+            onOpenImport = onOpenImport,
+            onOpenConnections = onOpenConnections,
+            onOpenSettings = onOpenSettings,
+        )
+    }
 }

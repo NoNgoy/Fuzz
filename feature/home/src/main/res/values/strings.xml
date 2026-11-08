@@ -1,4 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="feature_home_title">Главная</string>
+    <string name="feature_home_greeting">Привет!</string>
+    <string name="feature_home_avatar_letter">F</string>
+    <string name="feature_home_day_part">%1$s, %2$s</string>
+    <string name="feature_home_morning">утро</string>
+    <string name="feature_home_day">день</string>
+    <string name="feature_home_evening">вечер</string>
+    <string name="feature_home_night">ночь</string>
+    <string-array name="feature_home_weekdays">
+        <item>Понедельник</item>
+        <item>Вторник</item>
+        <item>Среда</item>
+        <item>Четверг</item>
+        <item>Пятница</item>
+        <item>Суббота</item>
+        <item>Воскресенье</item>
+    </string-array>
+    <string name="feature_home_wave_tag">Моя волна</string>
+    <string name="feature_home_wave_mix">Новое %1$d%%</string>
+    <string name="feature_home_wave_title">Моя волна</string>
+    <string name="feature_home_wave_subtitle">Пока перемешивает коллекцию, умная волна появится на этапе 2</string>
+    <string name="feature_home_wave_play">Играть волну</string>
+    <string name="feature_home_wave_pause">Пауза</string>
+    <string name="feature_home_wave_activity">Занятие</string>
+    <string name="feature_home_wave_mood">Настроение</string>
+    <string name="feature_home_wave_character">Характер</string>
+    <string name="feature_home_wave_settings">Настройки волны</string>
+    <string name="feature_home_recently_added">Новое в коллекции</string>
+    <string name="feature_home_empty_title">Добавьте музыку</string>
+    <string name="feature_home_empty_body">Выберите папки с музыкой на телефоне. Сканирование идёт в фоне, играть можно сразу.</string>
+    <string name="feature_home_empty_action">Выбрать папки</string>
+    <string name="feature_home_library_empty_toast">Сначала добавьте музыку в коллекцию</string>
 </resources>

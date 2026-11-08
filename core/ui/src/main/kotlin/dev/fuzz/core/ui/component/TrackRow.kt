@@ -1,13 +1,13 @@
 package dev.fuzz.core.ui.component
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,48 +15,56 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import dev.fuzz.core.design.component.FuzzBadge
+import dev.fuzz.core.design.theme.MonoLabel
 import dev.fuzz.core.design.theme.Spacing
 import dev.fuzz.core.model.Track
 
-/** Строка трека в списках: обложка, название, исполнитель и длительность. */
+/** Строка трека: обложка 48 dp, название, исполнитель с меткой формата и длительность. */
 @Composable
 fun TrackRow(
     track: Track,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     isCurrent: Boolean = false,
+    trailing: @Composable (() -> Unit)? = null,
 ) {
     Row(
         modifier =
             modifier
                 .fillMaxWidth()
                 .clickable(onClick = onClick)
-                .padding(horizontal = Spacing.l, vertical = Spacing.s),
+                .padding(horizontal = Spacing.screen, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {
-        Artwork(uri = track.artworkUri, modifier = Modifier.size(48.dp))
-        Spacer(Modifier.width(Spacing.m))
+        Artwork(uri = track.artworkUri, shape = RoundedCornerShape(11.dp), modifier = Modifier.size(48.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 text = track.title,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.titleSmall,
                 color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
-                text = track.artistName,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = track.artistName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                track.format?.let { FuzzBadge(it) }
+            }
         }
-        if (track.durationMs > 0) {
-            Spacer(Modifier.width(Spacing.s))
+        if (trailing != null) {
+            trailing()
+        } else if (track.durationMs > 0) {
             Text(
                 text = formatDuration(track.durationMs),
-                style = MaterialTheme.typography.labelMedium,
+                style = MonoLabel,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }

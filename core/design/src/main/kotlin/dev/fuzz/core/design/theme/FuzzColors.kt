@@ -12,6 +12,8 @@ data class FuzzColors(
     val like: Color,
     val accentSoft: Color,
     val line: Color,
+    /** Оттенок текущего акцента, 0..360: из него строятся градиенты карточки волны. */
+    val accentHue: Float,
 )
 
 internal val LocalFuzzColors =
@@ -22,5 +24,6 @@ internal val LocalFuzzColors =
             like = Neutrals.Dark.Like,
             accentSoft = Color.Unspecified,
             line = Neutrals.Dark.Line,
+            accentHue = BRAND_HUE,
         )
     }
