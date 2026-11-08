@@ -6,6 +6,7 @@ import dev.fuzz.core.domain.wave.WaveShare
 import dev.fuzz.core.domain.wave.WaveSource
 import dev.fuzz.core.domain.wave.WaveStartResult
 import dev.fuzz.core.domain.wave.WaveStatus
+import dev.fuzz.core.model.Track
 import dev.fuzz.core.model.wave.WaveActivity
 import dev.fuzz.core.model.wave.WaveCharacter
 import dev.fuzz.core.model.wave.WaveSeed
@@ -98,9 +99,12 @@ class WaveViewModelTest {
         var starts = 0
         var lastMix = -1
 
-        override suspend fun start(seed: WaveSeed): WaveStartResult {
+        override suspend fun startWith(
+            seed: WaveSeed,
+            play: ((List<Track>) -> Unit)?,
+        ): WaveStartResult {
             starts++
-            player.playQueue(emptyList())
+            play?.invoke(emptyList()) ?: player.playQueue(emptyList())
             status.value = WaveStatus(active = true, seed = seed)
             return WaveStartResult.Started
         }
