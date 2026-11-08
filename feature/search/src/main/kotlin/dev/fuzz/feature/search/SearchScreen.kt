@@ -95,11 +95,7 @@ private fun LazyListScope.results(
     state: SearchState,
     onIntent: (SearchIntent) -> Unit,
 ) {
-    if (state.source == SearchSource.Jamendo || state.source == SearchSource.Preview) {
-        item { Hint(stringResource(R.string.feature_search_online_soon)) }
-        return
-    }
-    if (state.searched && state.artists.isEmpty() && state.tracks.isEmpty()) {
+    if (state.nothingFound) {
         item { Hint(stringResource(R.string.feature_search_nothing, state.query)) }
         return
     }
@@ -114,6 +110,15 @@ private fun LazyListScope.results(
         itemsIndexed(state.tracks, key = { _, t -> t.id.value }) { index, track ->
             TrackRow(track = track, onClick = { onIntent(SearchIntent.PlayTrack(index)) })
         }
+    }
+    if (state.online.isNotEmpty() || state.onlineLoading) {
+        item { SectionHeader(stringResource(R.string.feature_search_online)) }
+    }
+    if (state.onlineLoading && state.online.isEmpty()) {
+        item { Hint(stringResource(R.string.feature_search_online_loading)) }
+    }
+    itemsIndexed(state.online, key = { _, t -> "online:" + t.id.value }) { index, track ->
+        TrackRow(track = track, onClick = { onIntent(SearchIntent.PlayOnline(index)) })
     }
 }
 
@@ -180,6 +185,7 @@ private fun SearchSource.label() =
     when (this) {
         SearchSource.Everywhere -> R.string.feature_search_source_all
         SearchSource.Collection -> R.string.feature_search_source_collection
+        SearchSource.Servers -> R.string.feature_search_source_servers
         SearchSource.Jamendo -> R.string.feature_search_source_jamendo
         SearchSource.Preview -> R.string.feature_search_source_preview
     }

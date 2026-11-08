@@ -2,7 +2,7 @@
 <resources>
     <string name="feature_connections_title">Подключения</string>
     <string name="feature_connections_back">Назад</string>
-    <string name="feature_connections_intro">Свои серверы и API. Треки с них попадают в волну, а пароли хранятся на телефоне зашифрованными.</string>
+    <string name="feature_connections_intro">Свои серверы и API. Их треки находятся в поиске и попадают в волну, а пароли хранятся на телефоне зашифрованными.</string>
     <string name="feature_connections_mine">Мои подключения</string>
     <string name="feature_connections_add">Добавить</string>
     <string name="feature_connections_new">Новое подключение</string>

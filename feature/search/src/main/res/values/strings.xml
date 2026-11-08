@@ -5,6 +5,7 @@
     <string name="feature_search_clear">Очистить</string>
     <string name="feature_search_source_all">Везде</string>
     <string name="feature_search_source_collection">Коллекция</string>
+    <string name="feature_search_source_servers">Мои серверы</string>
     <string name="feature_search_source_jamendo">Jamendo</string>
     <string name="feature_search_source_preview">Превью</string>
     <string name="feature_search_moods">Настроение</string>
@@ -23,6 +24,7 @@
     <string name="feature_search_tracks">Треки</string>
     <string name="feature_search_artist_tracks">У тебя треков: %1$d</string>
     <string name="feature_search_play_artist">Включить артиста</string>
-    <string name="feature_search_nothing">По запросу «%1$s» в коллекции ничего нет</string>
-    <string name="feature_search_online_soon">Поиск по Jamendo и превью появится на этапе 4 вместе с открытиями</string>
+    <string name="feature_search_nothing">По запросу «%1$s» ничего не нашлось</string>
+    <string name="feature_search_online">В сети</string>
+    <string name="feature_search_online_loading">Ищу на серверах и в каталогах…</string>
 </resources>

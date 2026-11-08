@@ -14,6 +14,8 @@ import dev.fuzz.core.database.dao.SimilarityCacheDao
 import dev.fuzz.core.domain.connection.ConnectedSources
 import dev.fuzz.core.domain.plugin.MetadataProvider
 import dev.fuzz.core.domain.plugin.Providers
+import dev.fuzz.core.domain.search.CatalogSource
+import dev.fuzz.core.domain.search.OnlineOrigin
 import dev.fuzz.engine.recommend.model.TrackOrigin
 import dev.fuzz.engine.recommend.port.ExternalCatalog
 import dev.fuzz.engine.recommend.port.SimilarityGraph
@@ -82,6 +84,23 @@ internal object PluginsModule {
             if (BuildConfig.JAMENDO_CLIENT_ID.isNotBlank()) {
                 val jamendo = JamendoSource(client, BuildConfig.JAMENDO_CLIENT_ID)
                 add(SourceExternalCatalog(jamendo, TrackOrigin.OpenCatalog, Providers.JAMENDO, registry))
+            }
+        }
+
+    /** Встроенные каталоги для экрана поиска; Jamendo только с ключом. */
+    @Provides
+    @Singleton
+    fun provideSearchCatalogs(client: HttpClient): List<@JvmSuppressWildcards CatalogSource> =
+        buildList {
+            add(CatalogSource(DeezerPreviewSource(client), OnlineOrigin.Preview, Providers.DEEZER))
+            if (BuildConfig.JAMENDO_CLIENT_ID.isNotBlank()) {
+                add(
+                    CatalogSource(
+                        JamendoSource(client, BuildConfig.JAMENDO_CLIENT_ID),
+                        OnlineOrigin.OpenCatalog,
+                        Providers.JAMENDO,
+                    ),
+                )
             }
         }
 

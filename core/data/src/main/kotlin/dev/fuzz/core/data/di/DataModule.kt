@@ -12,6 +12,7 @@ import dev.fuzz.core.data.library.OfflineLibraryRepository
 import dev.fuzz.core.data.onboarding.DataStoreOnboardingRepository
 import dev.fuzz.core.data.playlist.OfflinePlaylistRepository
 import dev.fuzz.core.data.reaction.OfflineReactionRepository
+import dev.fuzz.core.data.search.PluginOnlineSearch
 import dev.fuzz.core.data.sync.RoomLocalLibraryStore
 import dev.fuzz.core.data.wave.DataStoreWaveSettingsRepository
 import dev.fuzz.core.data.wave.ExternalTrackRegistry
@@ -26,6 +27,7 @@ import dev.fuzz.core.domain.onboarding.OnboardingRepository
 import dev.fuzz.core.domain.player.PlaybackHeaders
 import dev.fuzz.core.domain.playlist.PlaylistRepository
 import dev.fuzz.core.domain.reaction.ReactionRepository
+import dev.fuzz.core.domain.search.OnlineSearch
 import dev.fuzz.core.domain.wave.WavePlayer
 import dev.fuzz.core.domain.wave.WaveSettingsRepository
 import dev.fuzz.engine.recommend.port.WaveLibrary
@@ -75,6 +77,9 @@ internal interface DataModule {
 
     @Binds
     fun bindSecretCipher(impl: KeystoreSecretCipher): SecretCipher
+
+    @Binds
+    fun bindOnlineSearch(impl: PluginOnlineSearch): OnlineSearch
 
     @Binds
     fun bindPlaybackHeaders(impl: ExternalTrackRegistry): PlaybackHeaders
