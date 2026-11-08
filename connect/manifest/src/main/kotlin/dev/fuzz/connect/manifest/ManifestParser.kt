@@ -8,7 +8,8 @@ object ManifestParser {
     const val SUPPORTED_VERSION = 1
     private val json = Json { ignoreUnknownKeys = false }
     private val idPattern = Regex("[a-z0-9][a-z0-9-]{1,31}")
-    private val authTypes = setOf("none", "apiKey", "bearer", "basic")
+    private val authTypes = setOf("none", "apiKey", "bearer", "basic", "oauth2")
+    private val grants = setOf("client_credentials", "refresh_token")
 
     sealed interface Result {
         data class Valid(val manifest: Manifest) : Result
@@ -65,9 +66,16 @@ object ManifestParser {
     /** Необязательные разделы: тексты и похожие. */
     private fun validateExtras(m: Manifest): List<String> =
         buildList {
+            if (m.auth.type == "oauth2") addAll(validateOAuth(m.auth))
             m.lyrics?.let { addAll(validateLyrics(it)) }
             m.similar?.tracks?.let { addAll(validateSimilar("similar.tracks", it, needsTitle = true)) }
             m.similar?.artists?.let { addAll(validateSimilar("similar.artists", it, needsTitle = false)) }
+        }
+
+    private fun validateOAuth(a: AuthSpec): List<String> =
+        buildList {
+            if (a.tokenUrl?.startsWith("https://") != true) add("auth.tokenUrl должен начинаться с https://")
+            if (a.grant !in grants) add("auth.grant должен быть client_credentials или refresh_token")
         }
 
     private fun validateLyrics(l: LyricsSpec): List<String> =

@@ -23,12 +23,21 @@ data class Manifest(
 
 @Serializable
 data class AuthSpec(
-    /** none, apiKey, bearer или basic. */
+    /** none, apiKey, bearer, basic или oauth2. */
     val type: String = "none",
     /** Для apiKey: куда класть ключ, query или header. */
     val `in`: String = "query",
     /** Для apiKey: имя параметра или заголовка. */
     val name: String = "api_key",
+    /** Для oauth2: адрес выдачи токена (https). */
+    val tokenUrl: String? = null,
+    /**
+     * Для oauth2: `client_credentials` (секрет `client_id:client_secret`) или `refresh_token`
+     * (секрет `client_id:client_secret:refresh_token`, client_secret может быть пустым).
+     */
+    val grant: String = "client_credentials",
+    /** Для oauth2: необязательный scope. */
+    val scope: String? = null,
 )
 
 @Serializable

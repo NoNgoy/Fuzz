@@ -12,6 +12,7 @@ import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -27,7 +28,15 @@ internal class ManifestHttp(
     private val manifest: Manifest,
     private val secret: String?,
     private val limiter: RateLimiter,
+    onRefreshTokenRotated: (String) -> Unit = {},
+    private val now: () -> Long = System::currentTimeMillis,
 ) {
+    val journal = RequestJournal()
+
+    private val oauth =
+        secret?.takeIf { manifest.auth.type == "oauth2" }
+            ?.let { OAuth2Tokens(client, manifest.auth, it, onRefreshTokenRotated, now) }
+
     suspend fun getJson(
         path: String,
         query: Map<String, String>,
@@ -36,33 +45,13 @@ internal class ManifestHttp(
         val result =
             safeCall {
                 limiter.run {
-                    val response =
-                        client.get(manifest.baseUrl.trimEnd('/') + path) {
-                            query.forEach { (key, template) -> parameter(key, substitute(template, vars)) }
-                            authorize()
-                        }
-                    when (response.status) {
-                        HttpStatusCode.OK -> {
-                            parse(response.bodyAsText())
-                        }
-
-                        HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden -> {
-                            PluginResult.Failure(
-                                PluginResult.Kind.UNAUTHORIZED,
-                            )
-                        }
-
-                        HttpStatusCode.NotFound -> {
-                            PluginResult.Failure(PluginResult.Kind.NOT_FOUND)
-                        }
-
-                        HttpStatusCode.TooManyRequests -> {
-                            PluginResult.Failure(PluginResult.Kind.RATE_LIMITED)
-                        }
-
-                        else -> {
-                            throw IOException("HTTP ${response.status.value}")
-                        }
+                    val first = attempt(path, query, vars)
+                    if (first.status == HttpStatusCode.Unauthorized && first.token != null) {
+                        // Токен OAuth истёк раньше срока или отозван: один раз берём новый.
+                        oauth?.invalidate(first.token)
+                        attempt(path, query, vars).toResult()
+                    } else {
+                        first.toResult()
                     }
                 }
             }
@@ -71,6 +60,58 @@ internal class ManifestHttp(
             is PluginResult.Failure -> result
         }
     }
+
+    private class Attempt(val status: HttpStatusCode, val body: String?, val token: String?)
+
+    private suspend fun attempt(path: String, query: Map<String, String>, vars: Map<String, String>): Attempt {
+        val started = now()
+        try {
+            val token = oauth?.accessToken()
+            val response =
+                client.get(manifest.baseUrl.trimEnd('/') + path) {
+                    query.forEach { (key, template) -> parameter(key, substitute(template, vars)) }
+                    authorize(token)
+                }
+            val body = if (response.status == HttpStatusCode.OK) response.bodyAsText() else null
+            journal.add(RequestLogEntry(started, path, response.status.value, now() - started))
+            return Attempt(response.status, body, token)
+        } catch (e: OAuthRejected) {
+            journal.add(RequestLogEntry(started, path, null, now() - started, e.message))
+            return Attempt(HttpStatusCode.Unauthorized, null, null)
+        } catch (e: IOException) {
+            journal.add(RequestLogEntry(started, path, null, now() - started, e.message))
+            throw e
+        } catch (e: CancellationException) {
+            // Таймаут safeCall приходит сюда отменой: в журнал, и дальше как было.
+            journal.add(RequestLogEntry(started, path, null, now() - started, "Нет ответа вовремя"))
+            throw e
+        }
+    }
+
+    private fun Attempt.toResult(): PluginResult<JsonElement> =
+        when (status) {
+            HttpStatusCode.OK -> {
+                parse(body.orEmpty())
+            }
+
+            HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden -> {
+                PluginResult.Failure(
+                    PluginResult.Kind.UNAUTHORIZED,
+                )
+            }
+
+            HttpStatusCode.NotFound -> {
+                PluginResult.Failure(PluginResult.Kind.NOT_FOUND)
+            }
+
+            HttpStatusCode.TooManyRequests -> {
+                PluginResult.Failure(PluginResult.Kind.RATE_LIMITED)
+            }
+
+            else -> {
+                throw IOException("HTTP ${status.value}")
+            }
+        }
 
     /** Подстановки для запросов о треке. */
     fun trackVars(track: TrackRef): Map<String, String> =
@@ -94,7 +135,11 @@ internal class ManifestHttp(
     private fun substitute(template: String, vars: Map<String, String>): String =
         PLACEHOLDER.replace(template) { m -> vars[m.groupValues[1]] ?: m.value }
 
-    private fun HttpRequestBuilder.authorize() {
+    private fun HttpRequestBuilder.authorize(oauthToken: String?) {
+        if (oauthToken != null) {
+            header(HttpHeaders.Authorization, "Bearer $oauthToken")
+            return
+        }
         val key = secret ?: return
         when (manifest.auth.type) {
             "bearer" -> {
