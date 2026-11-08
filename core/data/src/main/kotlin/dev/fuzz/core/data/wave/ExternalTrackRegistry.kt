@@ -1,5 +1,7 @@
 package dev.fuzz.core.data.wave
 
+import dev.fuzz.core.domain.player.PlaybackHeaders
+import dev.fuzz.core.domain.plugin.AuthorizedPlayback
 import dev.fuzz.core.domain.plugin.MusicSource
 import dev.fuzz.core.domain.plugin.PluginResult
 import dev.fuzz.core.domain.plugin.TrackRef
@@ -17,7 +19,7 @@ import javax.inject.Singleton
 @Singleton
 class ExternalTrackRegistry
     @Inject
-    constructor() {
+    constructor() : PlaybackHeaders {
         private class Entry(
             val source: MusicSource,
             val ref: TrackRef,
@@ -25,6 +27,11 @@ class ExternalTrackRegistry
         )
 
         private val entries = ConcurrentHashMap<TrackId, Entry>()
+
+        /** Заголовки для ссылок источников с [AuthorizedPlayback], по ссылке на поток. */
+        private val headers = ConcurrentHashMap<String, Map<String, String>>()
+
+        override fun forUri(uri: String): Map<String, String> = headers[uri].orEmpty()
 
         fun remember(
             id: TrackId,
@@ -40,6 +47,10 @@ class ExternalTrackRegistry
         suspend fun resolve(id: TrackId): Track? {
             val entry = entries[id] ?: return null
             val uri = (entry.source.playbackUri(entry.ref) as? PluginResult.Ok)?.value ?: return null
+            (entry.source as? AuthorizedPlayback)?.let { source ->
+                if (headers.size >= MAX_ENTRIES) headers.clear()
+                headers[uri] = source.playbackHeaders(entry.ref)
+            }
             return Track(
                 id = id,
                 title = entry.ref.title,

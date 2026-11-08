@@ -4,6 +4,9 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dev.fuzz.core.data.connection.DefaultConnectionsRepository
+import dev.fuzz.core.data.connection.KeystoreSecretCipher
+import dev.fuzz.core.data.connection.SecretCipher
 import dev.fuzz.core.data.importer.EnginePlaylistMatcher
 import dev.fuzz.core.data.library.OfflineLibraryRepository
 import dev.fuzz.core.data.onboarding.DataStoreOnboardingRepository
@@ -11,12 +14,16 @@ import dev.fuzz.core.data.playlist.OfflinePlaylistRepository
 import dev.fuzz.core.data.reaction.OfflineReactionRepository
 import dev.fuzz.core.data.sync.RoomLocalLibraryStore
 import dev.fuzz.core.data.wave.DataStoreWaveSettingsRepository
+import dev.fuzz.core.data.wave.ExternalTrackRegistry
 import dev.fuzz.core.data.wave.RoomWaveLibrary
 import dev.fuzz.core.data.wave.WaveRunner
+import dev.fuzz.core.domain.connection.ConnectedSources
+import dev.fuzz.core.domain.connection.ConnectionsRepository
 import dev.fuzz.core.domain.importer.PlaylistMatcher
 import dev.fuzz.core.domain.library.LibraryRepository
 import dev.fuzz.core.domain.library.LocalLibraryStore
 import dev.fuzz.core.domain.onboarding.OnboardingRepository
+import dev.fuzz.core.domain.player.PlaybackHeaders
 import dev.fuzz.core.domain.playlist.PlaylistRepository
 import dev.fuzz.core.domain.reaction.ReactionRepository
 import dev.fuzz.core.domain.wave.WavePlayer
@@ -59,4 +66,16 @@ internal interface DataModule {
 
     @Binds
     fun bindPlaylistMatcher(impl: EnginePlaylistMatcher): PlaylistMatcher
+
+    @Binds
+    fun bindConnectionsRepository(impl: DefaultConnectionsRepository): ConnectionsRepository
+
+    @Binds
+    fun bindConnectedSources(impl: DefaultConnectionsRepository): ConnectedSources
+
+    @Binds
+    fun bindSecretCipher(impl: KeystoreSecretCipher): SecretCipher
+
+    @Binds
+    fun bindPlaybackHeaders(impl: ExternalTrackRegistry): PlaybackHeaders
 }
