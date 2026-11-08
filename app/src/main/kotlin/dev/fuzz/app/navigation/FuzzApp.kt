@@ -1,0 +1,91 @@
+package dev.fuzz.app.navigation
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import dev.fuzz.feature.connections.connectionsScreen
+import dev.fuzz.feature.home.HomeRoute
+import dev.fuzz.feature.home.homeScreen
+import dev.fuzz.feature.importer.importScreen
+import dev.fuzz.feature.library.libraryScreen
+import dev.fuzz.feature.onboarding.onboardingScreen
+import dev.fuzz.feature.player.MiniPlayer
+import dev.fuzz.feature.player.PlayerRoute
+import dev.fuzz.feature.player.playerScreen
+import dev.fuzz.feature.search.searchScreen
+import dev.fuzz.feature.settings.profileScreen
+import dev.fuzz.feature.settings.settingsScreen
+import dev.fuzz.feature.wave.waveScreen
+
+@Composable
+fun FuzzApp(navController: NavHostController = rememberNavController()) {
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val destination = backStackEntry?.destination
+    val showChrome = destination?.hasRoute(PlayerRoute::class) != true
+
+    Scaffold(
+        bottomBar = {
+            if (showChrome) {
+                Column {
+                    MiniPlayer(onExpand = { navController.navigate(PlayerRoute) })
+                    NavigationBar {
+                        TopLevelDestination.entries.forEach { tab ->
+                            val selected = destination?.hierarchy?.any { it.hasRoute(tab.routeClass) } == true
+                            NavigationBarItem(
+                                selected = selected,
+                                onClick = { navController.navigateToTab(tab) },
+                                icon = {
+                                    Icon(
+                                        imageVector = if (selected) tab.selectedIcon else tab.icon,
+                                        contentDescription = null,
+                                    )
+                                },
+                                label = { Text(stringResource(tab.label)) },
+                            )
+                        }
+                    }
+                }
+            }
+        },
+    ) { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = HomeRoute,
+            modifier = Modifier.padding(padding),
+        ) {
+            homeScreen()
+            searchScreen()
+            libraryScreen()
+            profileScreen()
+            waveScreen()
+            importScreen()
+            settingsScreen()
+            connectionsScreen()
+            onboardingScreen()
+            playerScreen(onCollapse = navController::popBackStack)
+        }
+    }
+}
+
+private fun NavHostController.navigateToTab(tab: TopLevelDestination) {
+    navigate(tab.route) {
+        popUpTo(graph.findStartDestination().id) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
+}
