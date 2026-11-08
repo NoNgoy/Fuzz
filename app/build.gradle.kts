@@ -39,6 +39,7 @@ dependencies {
     implementation(projects.core.data)
     implementation(projects.core.database)
     implementation(projects.core.player)
+    implementation(projects.source.local)
 
     implementation(projects.feature.home)
     implementation(projects.feature.wave)

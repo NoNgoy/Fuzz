@@ -9,5 +9,7 @@ dependencies {
     implementation(projects.core.common)
     implementation(projects.core.database)
     implementation(projects.core.datastore)
+    implementation(libs.androidx.room.ktx)
     testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.ext.junit)
 }
