@@ -1,8 +1,8 @@
 package dev.fuzz.core.player
 
 import androidx.annotation.OptIn
-import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.ForwardingPlayer
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 
 /**

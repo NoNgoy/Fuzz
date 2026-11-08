@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Android SDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Стиль и статический анализ
+        run: ./gradlew spotlessCheck detekt assertModuleGraph --continue
+
+      - name: Тесты
+        run: ./gradlew test --continue
+
+      - name: Сборка и lint
+        run: ./gradlew :app:assembleDebug :app:lintDebug --max-workers=2
+
+      - name: Отчёты
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: '**/build/reports/**'
+          retention-days: 7
