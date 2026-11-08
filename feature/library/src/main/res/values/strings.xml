@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_library_title">Коллекция</string>
+    <string name="feature_library_shuffle_all">Перемешать всё</string>
+    <string name="feature_library_empty_title">Коллекция пока пуста</string>
+    <string name="feature_library_empty_body">Выберите папки с музыкой, и треки появятся здесь.</string>
+</resources>

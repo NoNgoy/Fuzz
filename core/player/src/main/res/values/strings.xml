@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_browse_root">Fuzz</string>
+    <string name="player_browse_all_tracks">Все треки</string>
+</resources>
