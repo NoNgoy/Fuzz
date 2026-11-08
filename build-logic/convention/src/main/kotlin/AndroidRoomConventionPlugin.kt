@@ -1,4 +1,5 @@
 import androidx.room.gradle.RoomExtension
+import com.android.build.api.dsl.LibraryExtension
 import dev.fuzz.buildlogic.lib
 import dev.fuzz.buildlogic.libs
 import dev.fuzz.buildlogic.pluginId
@@ -14,6 +15,10 @@ class AndroidRoomConventionPlugin : Plugin<Project> {
         extensions.configure<RoomExtension> {
             // Схемы коммитятся в репозиторий: по ним пишутся и проверяются миграции.
             schemaDirectory("$projectDir/schemas")
+        }
+        // MigrationTestHelper в Robolectric-тестах читает схемы из assets тестового набора.
+        extensions.configure<LibraryExtension> {
+            sourceSets.getByName("test").assets.directories.add("$projectDir/schemas")
         }
         dependencies {
             add("implementation", libs.lib("androidx-room-runtime"))

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="core_ui_cancel">Отмена</string>
+    <string name="core_ui_save">Сохранить</string>
+    <string name="core_ui_track_menu">Действия с треком</string>
+    <string name="core_ui_add_to_playlist">Добавить в плейлист</string>
+    <string name="core_ui_new_playlist">Новый плейлист</string>
+    <string name="core_ui_playlist_name">Название</string>
+    <plurals name="core_ui_tracks">
+        <item quantity="one">%1$d трек</item>
+        <item quantity="few">%1$d трека</item>
+        <item quantity="many">%1$d треков</item>
+        <item quantity="other">%1$d трека</item>
+    </plurals>
+</resources>

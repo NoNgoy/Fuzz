@@ -18,6 +18,8 @@ class ToggleReactionUseCaseTest {
         override fun observeLiked(): Flow<Set<TrackId>> =
             state.map { map -> map.filterValues { it == Reaction.Like }.keys }
 
+        override fun observeLikedOrdered(): Flow<List<TrackId>> = observeLiked().map { it.toList() }
+
         override suspend fun set(
             trackId: TrackId,
             reaction: Reaction,

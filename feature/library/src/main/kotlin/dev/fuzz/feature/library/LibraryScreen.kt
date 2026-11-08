@@ -1,6 +1,7 @@
 package dev.fuzz.feature.library
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,24 +12,31 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.ShoppingBag
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -45,12 +53,45 @@ import dev.fuzz.core.design.component.ScreenTitle
 import dev.fuzz.core.design.component.SectionHeader
 import dev.fuzz.core.design.theme.FuzzTheme
 import dev.fuzz.core.design.theme.Spacing
+import dev.fuzz.core.model.Playlist
+import dev.fuzz.core.model.PlaylistId
+import dev.fuzz.core.model.TrackId
+import dev.fuzz.core.ui.component.AddToPlaylistSheet
+import dev.fuzz.core.ui.component.NameDialog
 import dev.fuzz.core.ui.component.TrackRow
+import dev.fuzz.core.ui.mvi.CollectEffects
+import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-internal fun LibraryEntry(viewModel: LibraryViewModel = hiltViewModel()) {
+internal fun LibraryEntry(
+    onOpenLiked: () -> Unit,
+    onOpenPlaylist: (PlaylistId) -> Unit,
+    viewModel: LibraryViewModel = hiltViewModel(),
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    LibraryScreen(state = state, onIntent = viewModel::onIntent)
+    val snackbar = remember { SnackbarHostState() }
+    val addedTo = stringResource(R.string.feature_library_added_to)
+    val alreadyIn = stringResource(R.string.feature_library_already_in)
+    CollectEffects(viewModel.effects) { effect ->
+        when (effect) {
+            is LibraryEffect.OpenPlaylist -> {
+                onOpenPlaylist(effect.id)
+            }
+
+            is LibraryEffect.AddedToPlaylist -> {
+                snackbar.showSnackbar((if (effect.added) addedTo else alreadyIn).format(effect.playlistName))
+            }
+        }
+    }
+    Box {
+        LibraryScreen(
+            state = state,
+            onIntent = viewModel::onIntent,
+            onOpenLiked = onOpenLiked,
+            onOpenPlaylist = onOpenPlaylist,
+        )
+        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
+    }
 }
 
 private enum class LibraryFilter(
@@ -68,8 +109,12 @@ internal fun LibraryScreen(
     state: LibraryState,
     onIntent: (LibraryIntent) -> Unit,
     modifier: Modifier = Modifier,
+    onOpenLiked: () -> Unit = {},
+    onOpenPlaylist: (PlaylistId) -> Unit = {},
 ) {
     var filter by rememberSaveable { mutableStateOf(LibraryFilter.All) }
+    var menuTrack by rememberSaveable { mutableStateOf<String?>(null) }
+    var creating by rememberSaveable { mutableStateOf(false) }
     LazyColumn(
         modifier = modifier.statusBarsPadding(),
         contentPadding = PaddingValues(vertical = Spacing.s),
@@ -109,6 +154,7 @@ internal fun LibraryScreen(
                     subtitle = tracksCount(state.likedCount),
                     container = FuzzTheme.colors.like,
                     content = Color.White,
+                    onClick = onOpenLiked,
                 )
             }
             item {
@@ -138,8 +184,12 @@ internal fun LibraryScreen(
                 item { Loading() }
             }
 
-            filter == LibraryFilter.Playlists || filter == LibraryFilter.Albums || filter == LibraryFilter.Artists -> {
+            filter == LibraryFilter.Albums || filter == LibraryFilter.Artists -> {
                 item { Hint(stringResource(R.string.feature_library_stage3)) }
+            }
+
+            filter == LibraryFilter.Playlists -> {
+                playlistSection(state.playlists, onCreate = { creating = true }, onOpen = onOpenPlaylist)
             }
 
             state.tracks.isEmpty() -> {
@@ -147,21 +197,90 @@ internal fun LibraryScreen(
             }
 
             else -> {
+                if (filter == LibraryFilter.All) {
+                    playlistSection(state.playlists, onCreate = { creating = true }, onOpen = onOpenPlaylist)
+                }
                 item { SectionHeader(stringResource(R.string.feature_library_all_tracks)) }
                 itemsIndexed(state.tracks, key = { _, track -> track.id.value }) { index, track ->
                     TrackRow(
                         track = track,
                         isCurrent = track.id == state.currentTrackId,
                         onClick = { onIntent(LibraryIntent.PlayTrack(index)) },
+                        trailing = { TrackMenuButton { menuTrack = track.id.value } },
                     )
                 }
             }
         }
     }
+    menuTrack?.let { trackId ->
+        AddToPlaylistSheet(
+            playlists = state.playlists,
+            onPick = {
+                menuTrack = null
+                onIntent(LibraryIntent.AddToPlaylist(it, TrackId(trackId)))
+            },
+            onCreate = {
+                menuTrack = null
+                onIntent(LibraryIntent.CreatePlaylist(it, withTrack = TrackId(trackId)))
+            },
+            onDismiss = { menuTrack = null },
+        )
+    }
+    if (creating) {
+        NameDialog(
+            title = stringResource(R.string.feature_library_new_playlist),
+            initial = "",
+            onConfirm = {
+                creating = false
+                onIntent(LibraryIntent.CreatePlaylist(it))
+            },
+            onDismiss = { creating = false },
+        )
+    }
+}
+
+private fun LazyListScope.playlistSection(
+    playlists: ImmutableList<Playlist>,
+    onCreate: () -> Unit,
+    onOpen: (PlaylistId) -> Unit,
+) {
+    item {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(end = Spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            SectionHeader(stringResource(R.string.feature_library_playlists), Modifier.weight(1f))
+            IconButton(onClick = onCreate) {
+                Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.feature_library_new_playlist))
+            }
+        }
+    }
+    if (playlists.isEmpty()) {
+        item { Hint(stringResource(R.string.feature_library_no_playlists)) }
+    }
+    items(playlists, key = { "playlist:" + it.id.value }) { playlist ->
+        QuickEntry(
+            icon = Icons.AutoMirrored.Rounded.QueueMusic,
+            title = playlist.name,
+            subtitle = tracksCount(playlist.trackCount),
+            onClick = { onOpen(playlist.id) },
+        )
+    }
 }
 
 @Composable
-private fun tracksCount(count: Int) = pluralStringResource(R.plurals.feature_library_tracks, count, count)
+internal fun TrackMenuButton(onClick: () -> Unit) {
+    IconButton(onClick = onClick) {
+        Icon(
+            Icons.Rounded.MoreVert,
+            contentDescription = stringResource(dev.fuzz.core.ui.R.string.core_ui_track_menu),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+internal fun tracksCount(count: Int) = pluralStringResource(R.plurals.feature_library_tracks, count, count)
 
 @Composable
 private fun QuickEntry(
@@ -170,9 +289,14 @@ private fun QuickEntry(
     subtitle: String,
     container: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     content: Color = MaterialTheme.colorScheme.primary,
+    onClick: (() -> Unit)? = null,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.screen, vertical = Spacing.s),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+                .padding(horizontal = Spacing.screen, vertical = Spacing.s),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {

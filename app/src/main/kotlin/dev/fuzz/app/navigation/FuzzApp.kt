@@ -27,7 +27,9 @@ import dev.fuzz.feature.home.HomeRoute
 import dev.fuzz.feature.home.homeScreen
 import dev.fuzz.feature.importer.ImportRoute
 import dev.fuzz.feature.importer.importScreen
+import dev.fuzz.feature.library.TrackListRoute
 import dev.fuzz.feature.library.libraryScreen
+import dev.fuzz.feature.library.trackListScreen
 import dev.fuzz.feature.onboarding.OnboardingRoute
 import dev.fuzz.feature.onboarding.onboardingScreen
 import dev.fuzz.feature.player.MiniPlayer
@@ -93,7 +95,11 @@ fun FuzzApp(
                 onAddMusic = { navController.navigate(OnboardingRoute) },
             )
             searchScreen()
-            libraryScreen()
+            libraryScreen(
+                onOpenLiked = { navController.navigate(TrackListRoute()) },
+                onOpenPlaylist = { navController.navigate(TrackListRoute(playlistId = it)) },
+            )
+            trackListScreen(onBack = navController::popBackStack)
             profileScreen(
                 onOpenImport = { navController.navigate(ImportRoute) },
                 onOpenConnections = { navController.navigate(ConnectionsRoute) },
