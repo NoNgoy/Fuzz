@@ -7,6 +7,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object ConnectionsRoute
 
-fun NavGraphBuilder.connectionsScreen() {
-    composable<ConnectionsRoute> { ConnectionsScreen() }
+fun NavGraphBuilder.connectionsScreen(onBack: () -> Unit) {
+    composable<ConnectionsRoute> { ConnectionsEntry(onBack = onBack) }
 }

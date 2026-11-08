@@ -17,6 +17,7 @@ message UserPreferences {
   bool folders_chosen = 3;
   // Нет поля — настройки волны по умолчанию.
   optional WaveSettingsProto wave = 4;
+  repeated ConnectionProto connections = 5;
 }
 
 // Настройки волны. Пустая строка в enum-полях значит «не выбрано».
@@ -25,4 +26,16 @@ message WaveSettingsProto {
   string activity = 2;
   string mood = 3;
   string character = 4;
+}
+
+// Своё подключение (раздел 8.4 ТЗ). Секрет зашифрован ключом из Android Keystore: IV + шифротекст AES-GCM.
+message ConnectionProto {
+  string id = 1;
+  string kind = 2;
+  string name = 3;
+  string base_url = 4;
+  string username = 5;
+  string manifest = 6;
+  bool enabled = 7;
+  bytes secret = 8;
 }

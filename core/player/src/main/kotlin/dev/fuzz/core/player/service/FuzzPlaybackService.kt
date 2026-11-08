@@ -10,6 +10,7 @@ import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import dagger.hilt.android.AndroidEntryPoint
 import dev.fuzz.core.domain.library.LibraryRepository
+import dev.fuzz.core.domain.player.PlaybackHeaders
 import dev.fuzz.core.domain.playlist.PlaylistRepository
 import dev.fuzz.core.domain.reaction.ReactionRepository
 import dev.fuzz.core.domain.reaction.ToggleReactionUseCase
@@ -62,6 +63,8 @@ class FuzzPlaybackService : MediaLibraryService() {
 
     @Inject lateinit var snapshots: PlaybackSnapshotStore
 
+    @Inject lateinit var playbackHeaders: PlaybackHeaders
+
     /** id текущего трека: по нему кнопка «Нравится» показывает, лайкнут ли он. */
     private val currentTrackId = MutableStateFlow<String?>(null)
 
@@ -72,7 +75,7 @@ class FuzzPlaybackService : MediaLibraryService() {
 
     override fun onCreate() {
         super.onCreate()
-        val player = PlayerFactory.create(this).also { player = it }
+        val player = PlayerFactory.create(this, playbackHeaders).also { player = it }
         player.addListener(SnapshotListener())
         val buttons = ReactionButtons(this)
         val catalog =
