@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "batchSize": 10,
+  "weights": {
+    "tasteTags": 1.0,
+    "artist": 0.8,
+    "audio": 0.4,
+    "contextFit": 1.5,
+    "novelty": 0.6,
+    "popularity": 0.15,
+    "source": 0.7,
+    "recent": 1.2,
+    "skips": 1.0,
+    "jitter": 0.25
+  },
+  "profile": {
+    "like": 3.0,
+    "completed": 1.0,
+    "addedToPlaylist": 2.0,
+    "earlySkip": -1.0,
+    "dislike": -3.0,
+    "earlySkipMs": 30000,
+    "lateSkip": 0.3,
+    "halfLifeDays": 30.0,
+    "collectionPrior": 0.3,
+    "sessionBoost": 3.0,
+    "recentHalfLifeHours": 72.0
+  },
+  "mix": [
+    { "familiarity": 0,   "shares": { "FAVORITES": 0.70, "UNHEARD": 0.12, "SIMILAR": 0.18, "OPEN_CATALOG": 0.00, "PREVIEW": 0.00 } },
+    { "familiarity": 50,  "shares": { "FAVORITES": 0.35, "UNHEARD": 0.25, "SIMILAR": 0.25, "OPEN_CATALOG": 0.07, "PREVIEW": 0.08 } },
+    { "familiarity": 70,  "shares": { "FAVORITES": 0.18, "UNHEARD": 0.30, "SIMILAR": 0.27, "OPEN_CATALOG": 0.11, "PREVIEW": 0.14 } },
+    { "familiarity": 100, "shares": { "FAVORITES": 0.04, "UNHEARD": 0.32, "SIMILAR": 0.26, "OPEN_CATALOG": 0.16, "PREVIEW": 0.22 } }
+  ],
+  "characters": {
+    "Favorite":   { "familiarity": 10 },
+    "Unfamiliar": { "familiarity": 90 },
+    "Popular":    { "familiarity": 45, "popularityWeight": 1.2 }
+  },
+  "activities": {
+    "WakingUp":      { "bpmMin": 90,  "bpmMax": 125, "energyMin": 0.35, "energyMax": 0.7,  "valenceMin": 0.5, "tags": ["indie pop", "acoustic", "morning", "chill", "pop", "soul"] },
+    "Commuting":     { "bpmMin": 95,  "bpmMax": 140, "energyMin": 0.45, "energyMax": 0.85, "tags": ["indie", "rock", "electronic", "hip hop", "alternative"] },
+    "Working":       { "bpmMin": 70,  "bpmMax": 125, "energyMin": 0.2,  "energyMax": 0.6,  "tags": ["instrumental", "ambient", "lo-fi", "post-rock", "electronic", "classical", "jazz"], "avoidTags": ["hardcore", "grindcore"] },
+    "Workout":       { "bpmMin": 120, "bpmMax": 180, "energyMin": 0.7,  "energyMax": 1.0,  "tags": ["metal", "drum and bass", "hip hop", "edm", "punk", "hard rock", "workout"], "avoidTags": ["ambient", "sleep", "lullaby"] },
+    "Relaxing":      { "bpmMin": 60,  "bpmMax": 110, "energyMin": 0.1,  "energyMax": 0.5,  "tags": ["chill", "ambient", "downtempo", "acoustic", "jazz", "lo-fi"], "avoidTags": ["metal", "hardcore"] },
+    "FallingAsleep": { "bpmMin": 50,  "bpmMax": 95,  "energyMin": 0.0,  "energyMax": 0.3,  "tags": ["ambient", "sleep", "piano", "classical", "drone", "lullaby"], "avoidTags": ["metal", "hardcore", "punk", "drum and bass", "edm"] }
+  },
+  "moods": {
+    "Energetic":  { "energyMin": 0.65, "energyMax": 1.0, "tags": ["energetic", "upbeat", "dance", "rock", "edm"] },
+    "Happy":      { "energyMin": 0.4,  "valenceMin": 0.6, "tags": ["happy", "feel good", "summer", "funk", "pop"] },
+    "Calm":       { "energyMax": 0.45, "tags": ["calm", "chill", "ambient", "acoustic", "mellow"], "avoidTags": ["metal", "hardcore"] },
+    "Sad":        { "energyMax": 0.55, "valenceMax": 0.4, "tags": ["sad", "melancholic", "melancholy", "depressive", "emo"] },
+    "Aggressive": { "energyMin": 0.75, "valenceMax": 0.5, "tags": ["aggressive", "metal", "hardcore", "nu metal", "industrial", "punk"], "avoidTags": ["lullaby", "sleep"] }
+  },
+  "assembly": {
+    "mmrLambda": 0.6,
+    "similarityWindow": 5,
+    "maxSameArtistInRow": 2,
+    "maxSameArtistPerBatch": 3,
+    "bpmJumpScale": 40.0,
+    "energyJumpScale": 0.5,
+    "transitionWeight": 0.4
+  },
+  "pool": {
+    "targetSize": 1000,
+    "perGeneratorLimit": 200,
+    "refillFactor": 3,
+    "startTimeoutMs": 600,
+    "generatorTimeoutMs": 5000,
+    "minRepeatGap": 150
+  }
+}

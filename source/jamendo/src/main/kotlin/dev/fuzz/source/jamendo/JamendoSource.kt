@@ -6,6 +6,7 @@ import dev.fuzz.core.domain.plugin.PluginResult
 import dev.fuzz.core.domain.plugin.Providers
 import dev.fuzz.core.domain.plugin.SearchResult
 import dev.fuzz.core.domain.plugin.SourceCapability
+import dev.fuzz.core.domain.plugin.TagSearchable
 import dev.fuzz.core.domain.plugin.TrackRef
 import dev.fuzz.core.network.safeCall
 import io.ktor.client.HttpClient
@@ -24,7 +25,7 @@ class JamendoSource(
     private val client: HttpClient,
     private val clientId: String,
     private val baseUrl: String = "https://api.jamendo.com/v3.0",
-) : MusicSource {
+) : MusicSource, TagSearchable {
     override val id = "jamendo"
     override val displayName = "Jamendo"
     override val capabilities = setOf(SourceCapability.STREAM, SourceCapability.DOWNLOAD)
@@ -38,6 +39,19 @@ class JamendoSource(
                         parameter("limit", limit)
                     }.map { it.toRef() },
             )
+        }
+
+    /** Треки по тегам Jamendo (`tags=rock+energetic` — пересечение), с пагинацией. */
+    override suspend fun byTags(tags: List<String>, limit: Int, offset: Int): PluginResult<SearchResult> =
+        safeCall {
+            val found =
+                fetch {
+                    parameter("tags", tags.joinToString("+"))
+                    parameter("limit", limit)
+                    parameter("offset", offset)
+                    parameter("order", "popularity_total")
+                }
+            SearchResult(tracks = found.map { it.toRef() })
         }
 
     override suspend fun playbackUri(track: TrackRef): PluginResult<String> {

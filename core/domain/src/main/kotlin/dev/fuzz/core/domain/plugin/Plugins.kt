@@ -19,6 +19,11 @@ interface MusicSource : Connection {
         PluginResult.Failure(PluginResult.Kind.UNAVAILABLE_IN_REGION, "download not supported")
 }
 
+/** Источник, умеющий искать треки по тегам (жанрам и настроениям), например Jamendo. */
+interface TagSearchable {
+    suspend fun byTags(tags: List<String>, limit: Int, offset: Int): PluginResult<SearchResult>
+}
+
 interface MetadataProvider : Connection {
     suspend fun similarArtists(artist: ArtistRef, limit: Int = 20): PluginResult<List<Similar<ArtistRef>>>
 

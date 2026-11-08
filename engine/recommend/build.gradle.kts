@@ -1,8 +1,10 @@
 plugins {
     id("fuzz.jvm.library")
+    alias(libs.plugins.kotlin.serialization)
 }
 
 dependencies {
-    implementation(projects.core.model)
-    implementation(projects.core.common)
+    api(projects.core.model)
+    api(projects.core.common)
+    implementation(libs.kotlinx.serialization.json)
 }

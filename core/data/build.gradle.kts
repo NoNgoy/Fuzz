@@ -9,6 +9,8 @@ dependencies {
     implementation(projects.core.common)
     implementation(projects.core.database)
     implementation(projects.core.datastore)
+    implementation(projects.engine.recommend)
+    implementation(libs.kotlinx.coroutines.core)
     implementation(libs.androidx.room.ktx)
     implementation(projects.engine.match)
     testImplementation(libs.robolectric)
