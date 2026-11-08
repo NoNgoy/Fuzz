@@ -25,7 +25,7 @@ object ManifestParser {
             } catch (e: IllegalArgumentException) {
                 return Result.Invalid(listOf("Неверный формат: ${e.message?.lineSequence()?.first()}"))
             }
-        val errors = validate(manifest)
+        val errors = validate(manifest) + validateExtras(manifest)
         return if (errors.isEmpty()) Result.Valid(manifest) else Result.Invalid(errors)
     }
 
@@ -60,6 +60,31 @@ object ManifestParser {
                 add("stream.url должен начинаться с https:// и содержать {id}")
             }
             if (hostOf(m.stream.url) != hostOf(m.baseUrl)) add("stream.url должен вести на тот же домен, что и baseUrl")
+        }
+
+    /** Необязательные разделы: тексты и похожие. */
+    private fun validateExtras(m: Manifest): List<String> =
+        buildList {
+            m.lyrics?.let { addAll(validateLyrics(it)) }
+            m.similar?.tracks?.let { addAll(validateSimilar("similar.tracks", it, needsTitle = true)) }
+            m.similar?.artists?.let { addAll(validateSimilar("similar.artists", it, needsTitle = false)) }
+        }
+
+    private fun validateLyrics(l: LyricsSpec): List<String> =
+        buildList {
+            if (!l.path.startsWith("/")) add("lyrics.path должен начинаться с /")
+            if (l.synced == null && l.plain == null) add("lyrics: нужен путь synced или plain")
+            listOfNotNull(l.synced, l.plain).filterNot(JsonPathLite::isValid)
+                .forEach { add("Неверное JSONPath-выражение: $it") }
+        }
+
+    private fun validateSimilar(name: String, q: SimilarQuery, needsTitle: Boolean): List<String> =
+        buildList {
+            if (!q.path.startsWith("/")) add("$name.path должен начинаться с /")
+            if (needsTitle && q.title == null) add("$name: нужен путь title")
+            if (q.scoreScale <= 0) add("$name.scoreScale должен быть больше нуля")
+            listOfNotNull(q.results, q.artist, q.title, q.id, q.score).filterNot(JsonPathLite::isValid)
+                .forEach { add("Неверное JSONPath-выражение: $it") }
         }
 
     internal fun hostOf(url: String): String =

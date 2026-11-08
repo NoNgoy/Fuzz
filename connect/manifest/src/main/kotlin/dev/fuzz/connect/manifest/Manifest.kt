@@ -15,6 +15,10 @@ data class Manifest(
     val auth: AuthSpec = AuthSpec(),
     val search: SearchSpec,
     val stream: StreamSpec,
+    /** Необязательно: тексты песен. */
+    val lyrics: LyricsSpec? = null,
+    /** Необязательно: похожие треки и артисты для волны. */
+    val similar: SimilarSpec? = null,
 )
 
 @Serializable
@@ -53,4 +57,39 @@ data class TrackMapping(
 data class StreamSpec(
     /** Шаблон ссылки на поток; подстановка {id} из внешнего ID трека. */
     val url: String,
+)
+
+/**
+ * Запрос текста. В значениях [query] работают подстановки {title}, {artist}, {album}, {durationSec}, {id}.
+ * Нужен хотя бы один из путей: [synced] (текст LRC с метками времени) или [plain] (обычный текст).
+ */
+@Serializable
+data class LyricsSpec(
+    val path: String,
+    val query: Map<String, String> = emptyMap(),
+    val synced: String? = null,
+    val plain: String? = null,
+)
+
+@Serializable
+data class SimilarSpec(
+    /** Похожие треки: в [SimilarQuery.title] обязателен путь к названию. */
+    val tracks: SimilarQuery? = null,
+    val artists: SimilarQuery? = null,
+)
+
+/**
+ * Запрос похожих. Подстановки {artist}, {title}, {id}, {limit}. [score] — путь к близости; если его нет,
+ * близость убывает по порядку ответа. [scoreScale] делит её, например 100 для шкалы 0–100.
+ */
+@Serializable
+data class SimilarQuery(
+    val path: String,
+    val query: Map<String, String> = emptyMap(),
+    val results: String,
+    val artist: String,
+    val title: String? = null,
+    val id: String? = null,
+    val score: String? = null,
+    val scoreScale: Double = 1.0,
 )

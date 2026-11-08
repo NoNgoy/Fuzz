@@ -1,5 +1,6 @@
 package dev.fuzz.meta.lyrics
 
+import dev.fuzz.core.domain.plugin.LrcParser
 import dev.fuzz.core.domain.plugin.Lyrics
 import dev.fuzz.core.domain.plugin.LyricsLine
 import dev.fuzz.core.domain.plugin.LyricsProvider
