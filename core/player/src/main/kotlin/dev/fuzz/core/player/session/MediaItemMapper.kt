@@ -66,10 +66,40 @@ internal object MediaItemMapper {
         )
     }
 
-    fun browsable(
+    fun toMediaItem(node: BrowseNode): MediaItem =
+        when (node) {
+            is BrowseNode.Song -> {
+                // Без URI: выбор в машине должен прийти в сессию как id из дерева и развернуться в список.
+                toMediaItem(node.track)
+                    .buildUpon()
+                    .setMediaId(node.id)
+                    .setUri(null as String?)
+                    .setRequestMetadata(MediaItem.RequestMetadata.EMPTY)
+                    .build()
+            }
+
+            is BrowseNode.Wave -> {
+                node(node.id, node.title, browsable = false, playable = true, MediaMetadata.MEDIA_TYPE_RADIO_STATION)
+            }
+
+            is BrowseNode.Folder -> {
+                val type =
+                    when (node.kind) {
+                        FolderKind.Mixed -> MediaMetadata.MEDIA_TYPE_FOLDER_MIXED
+                        FolderKind.Playlist -> MediaMetadata.MEDIA_TYPE_PLAYLIST
+                        FolderKind.Playlists -> MediaMetadata.MEDIA_TYPE_FOLDER_PLAYLISTS
+                    }
+                // Список треков можно и открыть, и сразу включить целиком.
+                node(node.id, node.title, browsable = true, playable = node.kind == FolderKind.Playlist, type)
+            }
+        }
+
+    private fun node(
         id: String,
         title: String,
-        mediaType: Int = MediaMetadata.MEDIA_TYPE_FOLDER_MIXED,
+        browsable: Boolean,
+        playable: Boolean,
+        mediaType: Int,
     ): MediaItem =
         MediaItem
             .Builder()
@@ -78,8 +108,8 @@ internal object MediaItemMapper {
                 MediaMetadata
                     .Builder()
                     .setTitle(title)
-                    .setIsBrowsable(true)
-                    .setIsPlayable(false)
+                    .setIsBrowsable(browsable)
+                    .setIsPlayable(playable)
                     .setMediaType(mediaType)
                     .build(),
             ).build()

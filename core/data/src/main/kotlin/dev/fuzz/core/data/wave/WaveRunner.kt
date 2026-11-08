@@ -11,6 +11,7 @@ import dev.fuzz.core.domain.wave.WaveStartResult
 import dev.fuzz.core.domain.wave.WaveStatus
 import dev.fuzz.core.model.PlaybackState
 import dev.fuzz.core.model.Reaction
+import dev.fuzz.core.model.Track
 import dev.fuzz.core.model.TrackId
 import dev.fuzz.core.model.wave.WaveSeed
 import dev.fuzz.engine.recommend.WaveEngine
@@ -75,7 +76,10 @@ class WaveRunner
             this.scope = scope
         }
 
-        override suspend fun start(seed: WaveSeed): WaveStartResult {
+        override suspend fun startWith(
+            seed: WaveSeed,
+            play: ((List<Track>) -> Unit)?,
+        ): WaveStartResult {
             val scope = checkNotNull(scope) { "WaveRunner.attach не вызван" }
             mutableStatus.value = WaveStatus(starting = true, seed = seed)
             job?.cancelAndJoin()
@@ -97,7 +101,7 @@ class WaveRunner
             }
             issued.clear()
             issued += first.map { it.id }
-            player.playQueue(first)
+            if (play != null) play(first) else player.playQueue(first)
             mutableStatus.value = WaveStatus(active = true, seed = seed)
             job = scope.launch { follow(session) }
             return WaveStartResult.Started

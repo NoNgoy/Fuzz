@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_browse_root">Fuzz</string>
+    <string name="player_browse_wave">Моя волна</string>
+    <string name="player_browse_liked">Мне нравится</string>
+    <string name="player_browse_playlists">Плейлисты</string>
     <string name="player_browse_all_tracks">Все треки</string>
+    <string name="player_action_like">Нравится</string>
+    <string name="player_action_unlike">Убрать из «Мне нравится»</string>
+    <string name="player_action_dislike">Не нравится</string>
 </resources>

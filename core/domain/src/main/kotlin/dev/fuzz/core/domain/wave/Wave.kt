@@ -1,5 +1,6 @@
 package dev.fuzz.core.domain.wave
 
+import dev.fuzz.core.model.Track
 import dev.fuzz.core.model.wave.WaveSeed
 import dev.fuzz.core.model.wave.WaveSettings
 import kotlinx.coroutines.flow.Flow
@@ -41,7 +42,16 @@ sealed interface WaveStartResult {
 interface WavePlayer {
     val status: StateFlow<WaveStatus>
 
-    suspend fun start(seed: WaveSeed = WaveSeed.MyWave): WaveStartResult
+    suspend fun start(seed: WaveSeed = WaveSeed.MyWave): WaveStartResult = startWith(seed, null)
+
+    /**
+     * Как [start], но первую пачку ставит в плеер [play], если он задан. Так делает сессия плеера,
+     * когда волну включают из Android Auto: она сама отдаёт очередь машине.
+     */
+    suspend fun startWith(
+        seed: WaveSeed,
+        play: ((List<Track>) -> Unit)?,
+    ): WaveStartResult
 
     /** Пропорции корзин при таком положении ползунка с учётом доступных подключений. */
     fun mix(familiarity: Int): List<WaveShare>
