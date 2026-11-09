@@ -12,6 +12,8 @@ import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.URLBuilder
+import io.ktor.http.encodeURLParameter
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -68,7 +70,15 @@ internal class ManifestHttp(
         try {
             val token = oauth?.accessToken()
             val response =
-                client.get(manifest.baseUrl.trimEnd('/') + path) {
+                client.get(
+                    manifest.baseUrl.trimEnd('/') +
+                        substitute(
+                            path,
+                            vars.mapValues {
+                                it.value.encodeURLParameter()
+                            },
+                        ),
+                ) {
                     query.forEach { (key, template) -> parameter(key, substitute(template, vars)) }
                     authorize(token)
                 }
@@ -112,6 +122,39 @@ internal class ManifestHttp(
                 throw IOException("HTTP ${status.value}")
             }
         }
+
+    /**
+     * Ссылка на поток для плеера. Ключ из запроса (apiKey в query) добавляется к ней, как к поиску:
+     * без него сервисы вроде Jamendo, Jellyfin и Subsonic не отдают звук.
+     */
+    fun streamUrl(id: String): String {
+        val url = manifest.stream.url.replace("{id}", id.encodeURLParameter())
+        val key = secret?.takeIf { manifest.auth.type == "apiKey" && manifest.auth.`in` == "query" } ?: return url
+        return URLBuilder(url).apply { parameters.append(manifest.auth.name, key) }.buildString()
+    }
+
+    /** Заголовки авторизации для запроса потока: те же, что у поиска, кроме ключа в query. */
+    suspend fun streamHeaders(): Map<String, String> {
+        oauth?.accessToken()?.let { return mapOf(HttpHeaders.Authorization to "Bearer $it") }
+        val key = secret ?: return emptyMap()
+        return when (manifest.auth.type) {
+            "bearer" -> {
+                mapOf(HttpHeaders.Authorization to "Bearer $key")
+            }
+
+            "basic" -> {
+                mapOf(HttpHeaders.Authorization to "Basic " + Base64.getEncoder().encodeToString(key.toByteArray()))
+            }
+
+            "apiKey" -> {
+                if (manifest.auth.`in` == "header") mapOf(manifest.auth.name to key) else emptyMap()
+            }
+
+            else -> {
+                emptyMap()
+            }
+        }
+    }
 
     /** Подстановки для запросов о треке. */
     fun trackVars(track: TrackRef): Map<String, String> =

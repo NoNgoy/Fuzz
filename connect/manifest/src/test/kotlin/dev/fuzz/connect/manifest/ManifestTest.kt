@@ -73,8 +73,46 @@ class ManifestTest {
     fun streamUrlTemplateEncodesId() =
         runBlocking {
             val ref = TrackRef("x", "y", externalIds = listOf(ExternalId("my-api", "a b/1")))
-            val uri = (source().playbackUri(ref) as PluginResult.Ok).value
+            val uri = (source(secret = null).playbackUri(ref) as PluginResult.Ok).value
             assertEquals("https://api.example.com/stream/a%20b%2F1.mp3", uri)
+        }
+
+    @Test
+    fun streamUrlCarriesQueryKeyLikeSearch() =
+        runBlocking {
+            val ref = TrackRef("x", "y", externalIds = listOf(ExternalId("my-api", "7")))
+            val uri = (source().playbackUri(ref) as PluginResult.Ok).value
+            assertEquals("https://api.example.com/stream/7.mp3?key=k1", uri)
+            assertTrue(source().playbackHeaders(ref).isEmpty())
+        }
+
+    @Test
+    fun streamHeadersCarryBearerToken() =
+        runBlocking {
+            val bearer =
+                manifestJson.replace(
+                    "{\"type\": \"apiKey\", \"in\": \"query\", \"name\": \"key\"}",
+                    "{\"type\": \"bearer\"}",
+                )
+            val manifest = (ManifestParser.parse(bearer) as ManifestParser.Result.Valid).manifest
+            val source = ManifestSource(HttpClient(MockEngine { respond("{}") }), manifest, "t1", RateLimiter(0))
+            val ref = TrackRef("x", "y", externalIds = listOf(ExternalId("my-api", "7")))
+            assertEquals(mapOf("Authorization" to "Bearer t1"), source.playbackHeaders(ref))
+            assertEquals("https://api.example.com/stream/7.mp3", (source.playbackUri(ref) as PluginResult.Ok).value)
+        }
+
+    @Test
+    fun pathPlaceholdersAreSubstituted() =
+        runBlocking {
+            val withPath = manifestJson.replace("\"path\": \"/search\"", "\"path\": \"/search/{query}\"")
+            val manifest = (ManifestParser.parse(withPath) as ManifestParser.Result.Valid).manifest
+            val engine =
+                MockEngine { request ->
+                    last = request
+                    respond(response, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                }
+            ManifestSource(HttpClient(engine), manifest, "k1", RateLimiter(0)).search("a b/c", 1)
+            assertEquals("/search/a%20b%2Fc", last!!.url.encodedPath)
         }
 
     @Test

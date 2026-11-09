@@ -1,5 +1,6 @@
 package dev.fuzz.connect.manifest
 
+import dev.fuzz.core.domain.plugin.AuthorizedPlayback
 import dev.fuzz.core.domain.plugin.ExternalId
 import dev.fuzz.core.domain.plugin.MusicSource
 import dev.fuzz.core.domain.plugin.PluginResult
@@ -8,7 +9,6 @@ import dev.fuzz.core.domain.plugin.SourceCapability
 import dev.fuzz.core.domain.plugin.TrackRef
 import dev.fuzz.core.network.RateLimiter
 import io.ktor.client.HttpClient
-import io.ktor.http.encodeURLParameter
 import kotlinx.serialization.json.JsonElement
 
 /**
@@ -20,7 +20,8 @@ import kotlinx.serialization.json.JsonElement
 class ManifestSource internal constructor(
     private val manifest: Manifest,
     private val http: ManifestHttp,
-) : MusicSource {
+) : MusicSource,
+    AuthorizedPlayback {
     constructor(
         client: HttpClient,
         manifest: Manifest,
@@ -45,8 +46,10 @@ class ManifestSource internal constructor(
         val externalId =
             track.externalIds.firstOrNull { it.provider == manifest.id }?.id
                 ?: return PluginResult.Failure(PluginResult.Kind.NOT_FOUND, "no ${manifest.id} id")
-        return PluginResult.Ok(manifest.stream.url.replace("{id}", externalId.encodeURLParameter()))
+        return PluginResult.Ok(http.streamUrl(externalId))
     }
+
+    override suspend fun playbackHeaders(track: TrackRef): Map<String, String> = http.streamHeaders()
 
     private fun extractTracks(root: JsonElement): List<TrackRef> {
         val map = manifest.search.map
