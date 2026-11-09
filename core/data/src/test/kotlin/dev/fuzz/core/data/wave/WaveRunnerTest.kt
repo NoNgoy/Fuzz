@@ -198,6 +198,12 @@ class WaveRunnerTest {
             ids: List<String>,
             now: Long,
         ) = Unit
+
+        override suspend fun setHidden(
+            id: String,
+            hidden: Boolean,
+            now: Long,
+        ) = Unit
     }
 
     private class FakeListenDao : ListenDao {

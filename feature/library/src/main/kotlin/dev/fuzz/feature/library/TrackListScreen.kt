@@ -58,7 +58,17 @@ internal fun TrackListEntry(
             TrackListEffect.Closed -> onBack()
         }
     }
-    TrackListScreen(state = state, onIntent = viewModel::onIntent, onBack = onBack)
+    val deleteFromDevice =
+        rememberDeleteFromDevice(
+            onDeleted = { viewModel.onIntent(TrackListIntent.DeletedFromDevice(it)) },
+            onFailed = {},
+        )
+    TrackListScreen(
+        state = state,
+        onIntent = viewModel::onIntent,
+        onBack = onBack,
+        onDeleteFromDevice = deleteFromDevice,
+    )
 }
 
 @Composable
@@ -67,9 +77,9 @@ internal fun TrackListScreen(
     onIntent: (TrackListIntent) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onDeleteFromDevice: (Track) -> Unit = {},
 ) {
     val isPlaylist = state.kind is TrackListKind.Playlist
-    val downloaded = state.kind == TrackListKind.Downloaded
     val title =
         state.title ?: when (state.kind) {
             TrackListKind.Liked -> stringResource(R.string.feature_library_liked)
@@ -123,7 +133,7 @@ internal fun TrackListScreen(
                         track = track,
                         isCurrent = track.id == state.currentTrackId,
                         onClick = { onIntent(TrackListIntent.Play(index)) },
-                        trailing = if (downloaded) null else ({ RemoveMenu(isPlaylist, track, onIntent) }),
+                        trailing = { RemoveMenu(state.kind, track, onIntent, onDeleteFromDevice) },
                     )
                 }
             }
@@ -235,9 +245,10 @@ private fun Header(
 
 @Composable
 private fun RemoveMenu(
-    isPlaylist: Boolean,
+    kind: TrackListKind,
     track: Track,
     onIntent: (TrackListIntent) -> Unit,
+    onDeleteFromDevice: (Track) -> Unit,
 ) {
     var open by rememberSaveable { mutableStateOf(false) }
     Box {
@@ -247,10 +258,10 @@ private fun RemoveMenu(
                 text = {
                     Text(
                         stringResource(
-                            if (isPlaylist) {
-                                R.string.feature_library_remove_from_playlist
-                            } else {
-                                R.string.feature_library_remove_like
+                            when (kind) {
+                                is TrackListKind.Playlist -> R.string.feature_library_remove_from_playlist
+                                TrackListKind.Liked -> R.string.feature_library_remove_like
+                                TrackListKind.Downloaded -> dev.fuzz.core.ui.R.string.core_ui_hide_from_collection
                             },
                         ),
                     )
@@ -260,6 +271,15 @@ private fun RemoveMenu(
                     onIntent(TrackListIntent.Remove(track.id))
                 },
             )
+            if (kind == TrackListKind.Downloaded && track.isDeviceFile()) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(dev.fuzz.core.ui.R.string.core_ui_delete_from_device)) },
+                    onClick = {
+                        open = false
+                        onDeleteFromDevice(track)
+                    },
+                )
+            }
         }
     }
 }

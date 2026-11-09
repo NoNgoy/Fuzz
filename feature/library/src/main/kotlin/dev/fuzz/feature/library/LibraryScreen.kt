@@ -31,11 +31,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -54,12 +56,14 @@ import dev.fuzz.core.design.theme.FuzzTheme
 import dev.fuzz.core.design.theme.Spacing
 import dev.fuzz.core.model.Playlist
 import dev.fuzz.core.model.PlaylistId
+import dev.fuzz.core.model.Track
 import dev.fuzz.core.model.TrackId
 import dev.fuzz.core.ui.component.AddToPlaylistSheet
 import dev.fuzz.core.ui.component.NameDialog
 import dev.fuzz.core.ui.component.TrackRow
 import dev.fuzz.core.ui.mvi.CollectEffects
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun LibraryEntry(
@@ -73,6 +77,16 @@ internal fun LibraryEntry(
     val snackbar = remember { SnackbarHostState() }
     val addedTo = stringResource(R.string.feature_library_added_to)
     val alreadyIn = stringResource(R.string.feature_library_already_in)
+    val hidden = stringResource(R.string.feature_library_hidden)
+    val undo = stringResource(R.string.feature_library_undo)
+    val deletedText = stringResource(R.string.feature_library_deleted_from_device)
+    val deleteFailed = stringResource(R.string.feature_library_delete_failed)
+    val scope = rememberCoroutineScope()
+    val deleteFromDevice =
+        rememberDeleteFromDevice(
+            onDeleted = { viewModel.onIntent(LibraryIntent.Deleted(it)) },
+            onFailed = { scope.launch { snackbar.showSnackbar(deleteFailed) } },
+        )
     CollectEffects(viewModel.effects) { effect ->
         when (effect) {
             is LibraryEffect.OpenPlaylist -> {
@@ -81,6 +95,15 @@ internal fun LibraryEntry(
 
             is LibraryEffect.AddedToPlaylist -> {
                 snackbar.showSnackbar((if (effect.added) addedTo else alreadyIn).format(effect.playlistName))
+            }
+
+            is LibraryEffect.Hidden -> {
+                val result = snackbar.showSnackbar(hidden.format(effect.title), actionLabel = undo)
+                if (result == SnackbarResult.ActionPerformed) viewModel.onIntent(LibraryIntent.Restore(effect.track))
+            }
+
+            is LibraryEffect.DeletedFromDevice -> {
+                snackbar.showSnackbar(deletedText.format(effect.title))
             }
         }
     }
@@ -92,6 +115,7 @@ internal fun LibraryEntry(
             onOpenPlaylist = onOpenPlaylist,
             onOpenDownloaded = onOpenDownloaded,
             onOpenFolders = onOpenFolders,
+            onDeleteFromDevice = deleteFromDevice,
         )
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
     }
@@ -116,6 +140,7 @@ internal fun LibraryScreen(
     onOpenPlaylist: (PlaylistId) -> Unit = {},
     onOpenDownloaded: () -> Unit = {},
     onOpenFolders: () -> Unit = {},
+    onDeleteFromDevice: (Track) -> Unit = {},
 ) {
     var filter by rememberSaveable { mutableStateOf(LibraryFilter.All) }
     var menuTrack by rememberSaveable { mutableStateOf<String?>(null) }
@@ -213,7 +238,20 @@ internal fun LibraryScreen(
         }
     }
     menuTrack?.let { trackId ->
+        val track = state.tracks.firstOrNull { it.id.value == trackId }
         AddToPlaylistSheet(
+            title = track?.title,
+            onHide = {
+                menuTrack = null
+                onIntent(LibraryIntent.Hide(TrackId(trackId)))
+            },
+            onDeleteFromDevice =
+                track?.takeIf { it.isDeviceFile() }?.let {
+                    {
+                        menuTrack = null
+                        onDeleteFromDevice(it)
+                    }
+                },
             playlists = state.playlists,
             onPick = {
                 menuTrack = null

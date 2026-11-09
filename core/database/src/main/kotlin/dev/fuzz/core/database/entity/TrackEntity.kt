@@ -30,4 +30,6 @@ data class TrackEntity(
     @ColumnInfo(name = "source_id") val sourceId: String,
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
     val deleted: Boolean = false,
+    /** Человек убрал трек из коллекции: файл остаётся на телефоне, но сканер его больше не возвращает. */
+    @ColumnInfo(defaultValue = "0") val hidden: Boolean = false,
 )

@@ -26,7 +26,8 @@ internal class RoomLocalLibraryStore
                 val changed =
                     tracks.mapNotNull { track ->
                         val old = existing[track.id]
-                        val entity = track.toEntity(now)
+                        // Скрытый человеком трек остаётся скрытым и после пересканирования.
+                        val entity = track.toEntity(now).copy(hidden = old?.hidden ?: false)
                         when {
                             old == null -> entity.also { added++ }
                             old.deleted || old.sameContentAs(entity).not() -> entity.also { updated++ }
