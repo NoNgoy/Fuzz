@@ -49,6 +49,8 @@ class FakePlayerController : PlayerController {
 
     override fun togglePlayPause() = mutable.update { it.copy(isPlaying = !it.isPlaying) }
 
+    override fun pause() = mutable.update { it.copy(isPlaying = false) }
+
     override fun skipToNext() = mutable.update { it.copy(positionMs = 0).at(it.currentIndex + 1) }
 
     override fun skipToPrevious() = mutable.update { it.copy(positionMs = 0).at(it.currentIndex - 1) }

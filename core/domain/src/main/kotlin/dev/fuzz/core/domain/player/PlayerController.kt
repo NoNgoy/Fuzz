@@ -34,6 +34,9 @@ interface PlayerController {
 
     fun togglePlayPause()
 
+    /** Пауза без переключения: ничего не делает, если плеер уже стоит. */
+    fun pause()
+
     fun skipToNext()
 
     fun skipToPrevious()

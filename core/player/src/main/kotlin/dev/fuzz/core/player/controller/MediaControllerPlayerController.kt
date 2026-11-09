@@ -93,6 +93,8 @@ internal class MediaControllerPlayerController
                 c.play()
             }
 
+        override fun pause() = withController { it.pause() }
+
         override fun togglePlayPause() =
             withController { c ->
                 if (c.isPlaying) {
