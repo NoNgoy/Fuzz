@@ -35,6 +35,9 @@ interface SimilarityGraph {
 interface ExternalCatalog {
     val origin: TrackOrigin
 
+    /** false — каталог ищет только по артисту (свои серверы, плагины), и волна спрашивает его по артистам вкуса. */
+    val searchesByTags: Boolean get() = true
+
     suspend fun byArtist(
         artist: String,
         limit: Int,

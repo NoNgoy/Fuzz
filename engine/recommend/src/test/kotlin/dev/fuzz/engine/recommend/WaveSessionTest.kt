@@ -121,6 +121,30 @@ class WaveSessionTest {
         }
 
     @Test
+    fun `wave takes favourite artists from own servers even without similarity`() =
+        runBlocking {
+            val server =
+                FakeServer(
+                    mapOf(
+                        "Artist 0" to
+                            (1..4).map {
+                                track("s$it", "Artist 0", mapOf("metal" to 1f), origin = TrackOrigin.OpenCatalog)
+                            },
+                    ),
+                )
+            val engine = WaveEngine(FakeLibrary(collection), FakeGraph(emptyMap()), listOf(server), clock = { NOW })
+            val session =
+                engine.session(
+                    WaveSeed.MyWave,
+                    WaveSettings(familiarity = 30),
+                    likedMetalProfile(engine),
+                    randomSeed = 1,
+                )
+            val picks = session.start() + (0 until 4).flatMap { session.nextBatch() }
+            assertTrue(picks.any { it.track.id.value.startsWith("s") }, "треки с сервера не попали в волну")
+        }
+
+    @Test
     fun `failing network only narrows the wave`() =
         runBlocking {
             val engine = engine(FakeGraph(emptyMap(), failing = true))

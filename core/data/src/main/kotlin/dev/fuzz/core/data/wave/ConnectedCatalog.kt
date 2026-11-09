@@ -23,10 +23,15 @@ class ConnectedCatalog(
 ) : ExternalCatalog {
     override val origin: TrackOrigin = TrackOrigin.OpenCatalog
 
+    override val searchesByTags: Boolean = false
+
     override suspend fun byArtist(
         artist: String,
         limit: Int,
-    ): List<WaveTrack> = searchAll(artist, limit).filter { it.artist.contains(artist, ignoreCase = true) }
+    ): List<WaveTrack> {
+        val key = WaveTrack.keyOf(artist)
+        return searchAll(artist, limit).filter { it.artistKey.contains(key) }
+    }
 
     /** Теги серверы не отдают в поиске: эту корзину питают Jamendo и Last.fm. */
     override suspend fun byTags(
