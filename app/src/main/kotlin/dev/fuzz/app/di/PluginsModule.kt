@@ -61,6 +61,7 @@ internal object PluginsModule {
     fun provideSimilarityGraph(
         client: HttpClient,
         cache: SimilarityCacheDao,
+        connected: ConnectedSources,
     ): SimilarityGraph {
         val providers =
             buildList<Pair<MetadataProvider, Float>> {
@@ -69,7 +70,11 @@ internal object PluginsModule {
                     add(LastFmProvider(client, BuildConfig.LASTFM_API_KEY) to LASTFM_WEIGHT)
                 }
             }
-        return ProviderSimilarityGraph(providers, store = RoomSimilarityStore(cache))
+        return ProviderSimilarityGraph(
+            providers,
+            store = RoomSimilarityStore(cache),
+            extraProviders = { connected.metadata.value.map { it to CUSTOM_API_WEIGHT } },
+        )
     }
 
     @Provides
@@ -116,4 +121,5 @@ internal object PluginsModule {
     private const val USER_AGENT = "Fuzz/0.1 (+https://github.com/NoNgoy/Fuzz)"
     private const val LASTFM_WEIGHT = 1f
     private const val LISTENBRAINZ_WEIGHT = 0.8f
+    private const val CUSTOM_API_WEIGHT = 0.6f
 }
