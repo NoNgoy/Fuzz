@@ -3,6 +3,7 @@ import com.android.build.api.dsl.LibraryExtension
 import dev.fuzz.buildlogic.lib
 import dev.fuzz.buildlogic.libs
 import dev.fuzz.buildlogic.pluginId
+import dev.fuzz.buildlogic.serializeKspTasks
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -12,6 +13,7 @@ class AndroidRoomConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
         pluginManager.apply(libs.pluginId("room"))
         pluginManager.apply(libs.pluginId("ksp"))
+        serializeKspTasks()
         extensions.configure<RoomExtension> {
             // Схемы коммитятся в репозиторий: по ним пишутся и проверяются миграции.
             schemaDirectory("$projectDir/schemas")
