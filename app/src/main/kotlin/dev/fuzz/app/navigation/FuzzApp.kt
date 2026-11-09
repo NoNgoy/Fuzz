@@ -8,9 +8,14 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -20,6 +25,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import dev.fuzz.app.R
 import dev.fuzz.core.design.theme.FuzzTheme
 import dev.fuzz.feature.connections.ConnectionsRoute
 import dev.fuzz.feature.connections.connectionsScreen
@@ -41,12 +47,22 @@ import dev.fuzz.feature.settings.profileScreen
 import dev.fuzz.feature.settings.settingsScreen
 import dev.fuzz.feature.wave.WaveRoute
 import dev.fuzz.feature.wave.waveScreen
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
 fun FuzzApp(
     showOnboarding: Boolean,
+    playerErrors: Flow<String> = emptyFlow(),
     navController: NavHostController = rememberNavController(),
 ) {
+    val snackbar = remember { SnackbarHostState() }
+    val errorText = stringResource(R.string.player_error)
+    LaunchedEffect(playerErrors) {
+        playerErrors.collect { error ->
+            snackbar.showSnackbar(errorText.format(error), withDismissAction = true, duration = SnackbarDuration.Long)
+        }
+    }
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destination = backStackEntry?.destination
     val showChrome =
@@ -55,6 +71,7 @@ fun FuzzApp(
             !destination.hasRoute(OnboardingRoute::class)
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
             if (showChrome) {
                 Column {

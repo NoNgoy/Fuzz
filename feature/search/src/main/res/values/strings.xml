@@ -27,4 +27,5 @@
     <string name="feature_search_nothing">По запросу «%1$s» ничего не нашлось</string>
     <string name="feature_search_online">В сети</string>
     <string name="feature_search_online_loading">Ищу на серверах и в каталогах…</string>
+    <string name="feature_search_not_playable">Не нашлось ссылки на звук для этого трека</string>
 </resources>
