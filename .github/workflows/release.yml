@@ -37,7 +37,13 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0"
 
+      # Берём кэш Gradle от задачи check из CI: там уже лежит дистрибутив Gradle. Скачивание
+      # с services.gradle.org (через релизы GitHub) бывает недоступно часами, и релиз падал на старте.
       - uses: gradle/actions/setup-gradle@v4
+        env:
+          GRADLE_BUILD_ACTION_CACHE_KEY_JOB: check
+        with:
+          cache-read-only: true
 
       - name: Ключ подписи
         env:
