@@ -6,6 +6,7 @@ import androidx.room.RoomDatabase
 import dev.fuzz.core.database.dao.BackupDao
 import dev.fuzz.core.database.dao.DownloadDao
 import dev.fuzz.core.database.dao.ListenDao
+import dev.fuzz.core.database.dao.LyricsDao
 import dev.fuzz.core.database.dao.PlaylistDao
 import dev.fuzz.core.database.dao.ReactionDao
 import dev.fuzz.core.database.dao.RecapDao
@@ -16,6 +17,7 @@ import dev.fuzz.core.database.dao.TrackDao
 import dev.fuzz.core.database.dao.WishDao
 import dev.fuzz.core.database.entity.DownloadEntity
 import dev.fuzz.core.database.entity.ListenEntity
+import dev.fuzz.core.database.entity.LyricsEntity
 import dev.fuzz.core.database.entity.PlaylistEntity
 import dev.fuzz.core.database.entity.PlaylistTrackEntity
 import dev.fuzz.core.database.entity.ReactionEntity
@@ -39,14 +41,15 @@ import dev.fuzz.core.database.entity.WishEntity
         SavedRefEntity::class,
         DownloadEntity::class,
         WishEntity::class,
+        LyricsEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3),
         AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5),
         AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7),
-        AutoMigration(from = 7, to = 8),
+        AutoMigration(from = 7, to = 8), AutoMigration(from = 8, to = 9),
     ],
 )
 abstract class FuzzDatabase : RoomDatabase() {
@@ -71,4 +74,6 @@ abstract class FuzzDatabase : RoomDatabase() {
     abstract fun wishDao(): WishDao
 
     abstract fun recapDao(): RecapDao
+
+    abstract fun lyricsDao(): LyricsDao
 }

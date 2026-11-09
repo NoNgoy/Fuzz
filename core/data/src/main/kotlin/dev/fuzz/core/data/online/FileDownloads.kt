@@ -10,6 +10,7 @@ import dev.fuzz.core.database.entity.DownloadEntity
 import dev.fuzz.core.domain.download.DownloadEvent
 import dev.fuzz.core.domain.download.DownloadStart
 import dev.fuzz.core.domain.download.Downloads
+import dev.fuzz.core.domain.lyrics.LyricsRepository
 import dev.fuzz.core.model.Track
 import dev.fuzz.core.model.TrackId
 import kotlinx.coroutines.CancellationException
@@ -43,6 +44,7 @@ internal class FileDownloads
         private val saved: SavedOnlineTracks,
         private val registry: ExternalTrackRegistry,
         private val clock: Clock,
+        private val lyrics: LyricsRepository,
     ) : Downloads {
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         private val running = ConcurrentHashMap.newKeySet<String>()
@@ -100,6 +102,8 @@ internal class FileDownloads
                     running.remove(id)
                 }
             eventFlow.emit(DownloadEvent(track.title, ok))
+            // Скачанный трек слушают без сети, поэтому и текст берём заранее: он сохранится на диск.
+            if (ok) lyrics.lyrics(track)
         }
 
         private fun folder(): File {

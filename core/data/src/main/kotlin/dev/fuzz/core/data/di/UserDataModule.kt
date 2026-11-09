@@ -7,6 +7,8 @@ import dagger.hilt.components.SingletonComponent
 import dev.fuzz.core.data.artist.DefaultArtistPages
 import dev.fuzz.core.data.backup.FileBackupRepository
 import dev.fuzz.core.data.library.RoomCollectionEditor
+import dev.fuzz.core.data.lyrics.LyricsStore
+import dev.fuzz.core.data.lyrics.RoomLyricsStore
 import dev.fuzz.core.data.online.FileDownloads
 import dev.fuzz.core.data.online.SavedOnlineTracks
 import dev.fuzz.core.data.settings.DataStoreAppearanceRepository
@@ -53,4 +55,7 @@ internal interface UserDataModule {
 
     @Binds
     fun bindYearRecap(impl: RoomYearRecap): YearRecapRepository
+
+    @Binds
+    fun bindLyricsStore(impl: RoomLyricsStore): LyricsStore
 }

@@ -88,7 +88,10 @@ class FuzzPlaybackService : MediaLibraryService() {
         super.onCreate()
         val player = PlayerFactory.create(this, playbackHeaders, savedStreams).also { player = it }
         player.addListener(SnapshotListener())
-        sound = SoundController(player.engine, soundEffects, soundSettings.settings, scope)
+        sound =
+            SoundController(player.engine, soundEffects, soundSettings.settings, scope) {
+                PlayerFactory.createTail(this, playbackHeaders, savedStreams)
+            }
         val buttons = ReactionButtons(this)
         val catalog =
             BrowseCatalog(
