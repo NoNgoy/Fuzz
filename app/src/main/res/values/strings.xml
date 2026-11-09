@@ -5,4 +5,10 @@
     <string name="tab_search">Поиск</string>
     <string name="tab_library">Коллекция</string>
     <string name="tab_profile">Профиль</string>
+    <string name="crash_title">Fuzz упал</string>
+    <string name="crash_hint">Нажми «Скопировать ошибку» и пришли текст разработчику. По нему видно, что сломалось.</string>
+    <string name="crash_copy">Скопировать ошибку</string>
+    <string name="crash_copied">Ошибка скопирована</string>
+    <string name="crash_share">Отправить…</string>
+    <string name="crash_restart">Открыть Fuzz снова</string>
 </resources>

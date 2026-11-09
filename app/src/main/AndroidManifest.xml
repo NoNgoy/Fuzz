@@ -19,6 +19,14 @@
             android:name="com.google.android.gms.car.application"
             android:resource="@xml/automotive_app_desc" />
 
+        <!-- Экран ошибки в отдельном процессе: открывается, даже если основной упал при старте. -->
+        <activity
+            android:name=".crash.CrashActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:process=":crash"
+            android:theme="@android:style/Theme.DeviceDefault.DayNight" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
