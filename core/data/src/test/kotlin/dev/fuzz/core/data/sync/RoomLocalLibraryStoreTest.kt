@@ -2,9 +2,11 @@ package dev.fuzz.core.data.sync
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import dev.fuzz.core.data.library.RoomCollectionEditor
 import dev.fuzz.core.database.FuzzDatabase
 import dev.fuzz.core.domain.library.ScannedTrack
 import dev.fuzz.core.domain.library.SyncStats
+import dev.fuzz.core.model.TrackId
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -74,6 +76,20 @@ class RoomLocalLibraryStoreTest {
 
             assertEquals(SyncStats(added = 0, updated = 1, removed = 1), stats)
             assertEquals(listOf("Кукушка"), db.trackDao().observeAll().first().map { it.title })
+        }
+
+    @Test
+    fun `track removed from the collection stays hidden after a rescan`() =
+        runTest {
+            val editor = RoomCollectionEditor(db.trackDao(), clock)
+            store.replaceLocal(listOf(track(1), track(2)))
+
+            editor.hide(TrackId(track(1).id))
+            store.replaceLocal(listOf(track(1, title = "Кукушка"), track(2)))
+            assertEquals(listOf(track(2).id), db.trackDao().observeAll().first().map { it.id })
+
+            editor.restore(TrackId(track(1).id))
+            assertEquals(2, db.trackDao().observeAll().first().size)
         }
 
     @Test

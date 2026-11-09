@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.fuzz.core.domain.library.CollectionEditor
 import dev.fuzz.core.domain.library.ObserveLibraryTracksUseCase
 import dev.fuzz.core.domain.player.PlayerController
 import dev.fuzz.core.domain.playlist.PlaylistRepository
@@ -64,6 +65,11 @@ sealed interface TrackListIntent : UiIntent {
     ) : TrackListIntent
 
     data object Delete : TrackListIntent
+
+    /** Файл уже удалён с телефона системным запросом. */
+    data class DeletedFromDevice(
+        val track: TrackId,
+    ) : TrackListIntent
 }
 
 sealed interface TrackListEffect : UiEffect {
@@ -79,6 +85,7 @@ class TrackListViewModel
         private val reactions: ReactionRepository,
         private val playlists: PlaylistRepository,
         private val player: PlayerController,
+        private val collection: CollectionEditor,
     ) : MviViewModel<TrackListState, TrackListIntent, TrackListEffect>(TrackListState(kindOf(savedState))) {
         init {
             val kind = currentState.kind
@@ -133,7 +140,7 @@ class TrackListViewModel
                     viewModelScope.launch {
                         when (val kind = currentState.kind) {
                             TrackListKind.Liked -> reactions.set(intent.track, Reaction.None)
-                            TrackListKind.Downloaded -> Unit
+                            TrackListKind.Downloaded -> collection.hide(intent.track)
                             is TrackListKind.Playlist -> playlists.removeTrack(kind.id, intent.track)
                         }
                     }
@@ -145,6 +152,10 @@ class TrackListViewModel
 
                 TrackListIntent.Delete -> {
                     playlistId()?.let { id -> viewModelScope.launch { playlists.delete(id) } }
+                }
+
+                is TrackListIntent.DeletedFromDevice -> {
+                    viewModelScope.launch { collection.forgetDeleted(intent.track) }
                 }
             }
         }

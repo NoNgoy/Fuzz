@@ -9,6 +9,7 @@ import dev.fuzz.core.data.connection.KeystoreSecretCipher
 import dev.fuzz.core.data.connection.SecretCipher
 import dev.fuzz.core.data.importer.EnginePlaylistMatcher
 import dev.fuzz.core.data.library.OfflineLibraryRepository
+import dev.fuzz.core.data.library.RoomCollectionEditor
 import dev.fuzz.core.data.lyrics.ProviderLyricsRepository
 import dev.fuzz.core.data.onboarding.DataStoreOnboardingRepository
 import dev.fuzz.core.data.player.DataStoreSoundSettingsRepository
@@ -24,6 +25,7 @@ import dev.fuzz.core.data.wave.WaveRunner
 import dev.fuzz.core.domain.connection.ConnectedSources
 import dev.fuzz.core.domain.connection.ConnectionsRepository
 import dev.fuzz.core.domain.importer.PlaylistMatcher
+import dev.fuzz.core.domain.library.CollectionEditor
 import dev.fuzz.core.domain.library.LibraryRepository
 import dev.fuzz.core.domain.library.LocalLibraryStore
 import dev.fuzz.core.domain.lyrics.LyricsRepository
@@ -45,6 +47,9 @@ internal interface DataModule {
     @Binds
     @Singleton
     fun bindLibraryRepository(impl: OfflineLibraryRepository): LibraryRepository
+
+    @Binds
+    fun bindCollectionEditor(impl: RoomCollectionEditor): CollectionEditor
 
     @Binds
     @Singleton

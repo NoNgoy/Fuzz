@@ -4,6 +4,9 @@
     <string name="core_ui_save">Сохранить</string>
     <string name="core_ui_track_menu">Действия с треком</string>
     <string name="core_ui_add_to_playlist">Добавить в плейлист</string>
+    <string name="core_ui_hide_from_collection">Убрать из коллекции</string>
+    <string name="core_ui_hide_from_collection_hint">Файл останется на телефоне</string>
+    <string name="core_ui_delete_from_device">Удалить с телефона</string>
     <string name="core_ui_new_playlist">Новый плейлист</string>
     <string name="core_ui_playlist_name">Название</string>
     <plurals name="core_ui_tracks">

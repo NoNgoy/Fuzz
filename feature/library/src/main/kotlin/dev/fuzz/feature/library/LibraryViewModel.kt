@@ -2,6 +2,7 @@ package dev.fuzz.feature.library
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.fuzz.core.domain.library.CollectionEditor
 import dev.fuzz.core.domain.library.ObserveLibraryTracksUseCase
 import dev.fuzz.core.domain.player.PlayerController
 import dev.fuzz.core.domain.playlist.PlaylistRepository
@@ -49,6 +50,21 @@ sealed interface LibraryIntent : UiIntent {
         val playlist: PlaylistId,
         val track: TrackId,
     ) : LibraryIntent
+
+    /** Убрать из коллекции: файл остаётся на телефоне. */
+    data class Hide(
+        val track: TrackId,
+    ) : LibraryIntent
+
+    /** «Вернуть» из подсказки после [Hide]. */
+    data class Restore(
+        val track: TrackId,
+    ) : LibraryIntent
+
+    /** Файл уже удалён с телефона системным запросом. */
+    data class Deleted(
+        val track: TrackId,
+    ) : LibraryIntent
 }
 
 sealed interface LibraryEffect : UiEffect {
@@ -60,6 +76,15 @@ sealed interface LibraryEffect : UiEffect {
     data class OpenPlaylist(
         val id: PlaylistId,
     ) : LibraryEffect
+
+    data class Hidden(
+        val track: TrackId,
+        val title: String,
+    ) : LibraryEffect
+
+    data class DeletedFromDevice(
+        val title: String,
+    ) : LibraryEffect
 }
 
 @HiltViewModel
@@ -68,6 +93,7 @@ class LibraryViewModel
     constructor(
         observeTracks: ObserveLibraryTracksUseCase,
         reactions: ReactionRepository,
+        private val collection: CollectionEditor,
         private val playlists: PlaylistRepository,
         private val player: PlayerController,
     ) : MviViewModel<LibraryState, LibraryIntent, LibraryEffect>(LibraryState()) {
@@ -121,6 +147,31 @@ class LibraryViewModel
                         sendEffect(LibraryEffect.AddedToPlaylist(name, added))
                     }
                 }
+
+                is LibraryIntent.Hide -> {
+                    val title = titleOf(intent.track)
+                    viewModelScope.launch {
+                        collection.hide(intent.track)
+                        sendEffect(LibraryEffect.Hidden(intent.track, title))
+                    }
+                }
+
+                is LibraryIntent.Restore -> {
+                    viewModelScope.launch { collection.restore(intent.track) }
+                }
+
+                is LibraryIntent.Deleted -> {
+                    val title = titleOf(intent.track)
+                    viewModelScope.launch {
+                        collection.forgetDeleted(intent.track)
+                        sendEffect(LibraryEffect.DeletedFromDevice(title))
+                    }
+                }
             }
         }
+
+        private fun titleOf(track: TrackId): String =
+            currentState.tracks.firstOrNull {
+                it.id == track
+            }?.title.orEmpty()
     }

@@ -15,6 +15,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.fuzz.core.design.theme.Spacing
 import dev.fuzz.core.model.Playlist
@@ -37,7 +40,11 @@ import dev.fuzz.core.model.PlaylistId
 import dev.fuzz.core.ui.R
 import kotlinx.collections.immutable.ImmutableList
 
-/** Шторка «Добавить в плейлист»: выбрать существующий или сразу создать новый. */
+/**
+ * Шторка «Добавить в плейлист»: выбрать существующий или сразу создать новый.
+ * Если переданы [onHide] или [onDeleteFromDevice], сверху появляются действия с самим треком,
+ * а заголовком становится [title] — обычно название трека.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddToPlaylistSheet(
@@ -45,15 +52,51 @@ fun AddToPlaylistSheet(
     onPick: (PlaylistId) -> Unit,
     onCreate: (String) -> Unit,
     onDismiss: () -> Unit,
+    title: String? = null,
+    onHide: (() -> Unit)? = null,
+    onDeleteFromDevice: (() -> Unit)? = null,
 ) {
     var naming by rememberSaveable { mutableStateOf(false) }
+    val hasTrackActions = onHide != null || onDeleteFromDevice != null
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Text(
-            stringResource(R.string.core_ui_add_to_playlist),
+            title ?: stringResource(R.string.core_ui_add_to_playlist),
             style = MaterialTheme.typography.titleLarge,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = Spacing.screen, vertical = Spacing.s),
         )
         LazyColumn(Modifier.navigationBarsPadding().padding(bottom = Spacing.l)) {
+            if (onHide != null) {
+                item {
+                    SheetRow(
+                        Icons.Rounded.VisibilityOff,
+                        stringResource(R.string.core_ui_hide_from_collection),
+                        stringResource(R.string.core_ui_hide_from_collection_hint),
+                        onClick = onHide,
+                    )
+                }
+            }
+            if (onDeleteFromDevice != null) {
+                item {
+                    SheetRow(
+                        Icons.Rounded.DeleteOutline,
+                        stringResource(R.string.core_ui_delete_from_device),
+                        null,
+                        onClick = onDeleteFromDevice,
+                    )
+                }
+            }
+            if (hasTrackActions) {
+                item {
+                    Text(
+                        stringResource(R.string.core_ui_add_to_playlist),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = Spacing.screen, end = Spacing.screen, top = Spacing.m),
+                    )
+                }
+            }
             item {
                 SheetRow(Icons.Rounded.Add, stringResource(R.string.core_ui_new_playlist), null) { naming = true }
             }

@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TrackDao {
-    @Query("SELECT * FROM tracks WHERE deleted = 0")
+    @Query("SELECT * FROM tracks WHERE deleted = 0 AND hidden = 0")
     fun observeAll(): Flow<List<TrackEntity>>
 
-    @Query("SELECT * FROM tracks WHERE id IN (:ids) AND deleted = 0")
+    @Query("SELECT * FROM tracks WHERE id IN (:ids) AND deleted = 0 AND hidden = 0")
     suspend fun getByIds(ids: List<String>): List<TrackEntity>
 
     @Query("SELECT * FROM tracks WHERE source_id = :sourceId")
@@ -23,6 +23,13 @@ interface TrackDao {
     @Query("UPDATE tracks SET deleted = 1, updated_at = :now WHERE id IN (:ids)")
     suspend fun markDeleted(
         ids: List<String>,
+        now: Long,
+    )
+
+    @Query("UPDATE tracks SET hidden = :hidden, updated_at = :now WHERE id = :id")
+    suspend fun setHidden(
+        id: String,
+        hidden: Boolean,
         now: Long,
     )
 }

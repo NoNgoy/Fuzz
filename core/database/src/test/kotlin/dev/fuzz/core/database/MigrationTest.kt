@@ -68,6 +68,26 @@ class MigrationTest {
         }
     }
 
+    @Test
+    fun `4 to 5 keeps tracks visible`() {
+        helper.createDatabase(DB, 4).use { db ->
+            db.execSQL(
+                """
+                INSERT INTO tracks (id, title, artist_name, album_title, duration_ms, playback_uri, artwork_uri,
+                    track_number, year, format, added_at, source_id, updated_at, deleted)
+                VALUES ('t1', 'Кукушка', 'Кино', NULL, 1, 'content://1', NULL, NULL, NULL, 'FLAC', 0, 'local', 0, 0)
+                """.trimIndent(),
+            )
+        }
+
+        helper.runMigrationsAndValidate(DB, 5, true).use { db ->
+            db.query("SELECT hidden FROM tracks WHERE id = 't1'").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(0, cursor.getInt(0))
+            }
+        }
+    }
+
     private companion object {
         const val DB = "migration-test"
     }
