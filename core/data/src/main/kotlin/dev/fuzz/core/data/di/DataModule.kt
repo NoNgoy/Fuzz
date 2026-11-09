@@ -11,6 +11,7 @@ import dev.fuzz.core.data.importer.EnginePlaylistMatcher
 import dev.fuzz.core.data.library.OfflineLibraryRepository
 import dev.fuzz.core.data.lyrics.ProviderLyricsRepository
 import dev.fuzz.core.data.onboarding.DataStoreOnboardingRepository
+import dev.fuzz.core.data.player.DataStoreSoundSettingsRepository
 import dev.fuzz.core.data.player.DefaultSleepTimer
 import dev.fuzz.core.data.playlist.OfflinePlaylistRepository
 import dev.fuzz.core.data.reaction.OfflineReactionRepository
@@ -29,6 +30,7 @@ import dev.fuzz.core.domain.lyrics.LyricsRepository
 import dev.fuzz.core.domain.onboarding.OnboardingRepository
 import dev.fuzz.core.domain.player.PlaybackHeaders
 import dev.fuzz.core.domain.player.SleepTimer
+import dev.fuzz.core.domain.player.SoundSettingsRepository
 import dev.fuzz.core.domain.playlist.PlaylistRepository
 import dev.fuzz.core.domain.reaction.ReactionRepository
 import dev.fuzz.core.domain.search.OnlineSearch
@@ -63,6 +65,9 @@ internal interface DataModule {
     @Binds
     @Singleton
     fun bindWaveSettingsRepository(impl: DataStoreWaveSettingsRepository): WaveSettingsRepository
+
+    @Binds
+    fun bindSoundSettings(impl: DataStoreSoundSettingsRepository): SoundSettingsRepository
 
     @Binds
     fun bindSleepTimer(impl: DefaultSleepTimer): SleepTimer

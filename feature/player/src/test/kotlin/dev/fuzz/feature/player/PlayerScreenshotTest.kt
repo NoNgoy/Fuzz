@@ -88,6 +88,32 @@ class PlayerScreenshotTest {
         }
 
     @Test
+    fun sound() =
+        captureThemedScreens("player_sound") {
+            androidx.compose.material3.Surface {
+                SoundContent(
+                    SoundState(
+                        settings =
+                            dev.fuzz.core.domain.player.SoundSettings(
+                                equalizerEnabled = true,
+                                preset = dev.fuzz.core.domain.player.EqualizerPreset.Rock,
+                                bassBoost = 0.3f,
+                                fadeSeconds = 5,
+                            ),
+                        bands =
+                            dev.fuzz.core.domain.player.EqualizerBands(
+                                dev.fuzz.core.domain.player.EqualizerPreset.REFERENCE_HZ,
+                                minDb = -15f,
+                                maxDb = 15f,
+                                hasBassBoost = true,
+                            ),
+                    ),
+                    onIntent = {},
+                )
+            }
+        }
+
+    @Test
     fun miniPlayer() =
         captureThemedScreens("mini_player") {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {

@@ -44,8 +44,6 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -90,31 +88,28 @@ internal fun PlayerScreen(
     viewModel: PlayerViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val snackbar = remember { SnackbarHostState() }
     var showQueue by remember { mutableStateOf(false) }
     var showLyrics by remember { mutableStateOf(false) }
     var showSleep by remember { mutableStateOf(false) }
     var showWhy by remember { mutableStateOf(false) }
-    val upcoming = upcomingMessages()
+    var showSound by remember { mutableStateOf(false) }
     CollectEffects(viewModel.effects) { effect ->
         when (effect) {
-            is PlayerEffect.ShowUpcoming -> snackbar.showSnackbar(upcoming.getValue(effect.feature))
+            PlayerEffect.ShowSound -> showSound = true
             PlayerEffect.ShowLyrics -> showLyrics = true
             PlayerEffect.ShowSleep -> showSleep = true
             PlayerEffect.ShowWhy -> showWhy = true
         }
     }
-    Box {
-        PlayerContent(
-            state = state,
-            onCollapse = onCollapse,
-            onIntent = viewModel::onIntent,
-            onOpenQueue = { showQueue = true },
-        )
-        SnackbarHost(snackbar, modifier = Modifier.align(Alignment.BottomCenter).safeDrawingPadding())
-    }
+    PlayerContent(
+        state = state,
+        onCollapse = onCollapse,
+        onIntent = viewModel::onIntent,
+        onOpenQueue = { showQueue = true },
+    )
     if (showLyrics) LyricsSheet(onDismiss = { showLyrics = false })
     if (showWhy) WhySheet(onDismiss = { showWhy = false })
+    if (showSound) SoundSheet(onDismiss = { showSound = false })
     if (showSleep) SleepSheet(sleep = state.sleep, onIntent = viewModel::onIntent, onDismiss = { showSleep = false })
     if (showQueue) {
         QueueSheet(
@@ -124,12 +119,6 @@ internal fun PlayerScreen(
         )
     }
 }
-
-@Composable
-private fun upcomingMessages(): Map<UpcomingFeature, String> =
-    mapOf(
-        UpcomingFeature.Sound to stringResource(R.string.feature_player_soon_sound),
-    )
 
 @Composable
 internal fun PlayerContent(
@@ -396,7 +385,7 @@ private fun Actions(
             onIntent(PlayerIntent.OpenWhy)
         }
         Action(Icons.Rounded.Equalizer, R.string.feature_player_action_sound) {
-            onIntent(PlayerIntent.OpenUpcoming(UpcomingFeature.Sound))
+            onIntent(PlayerIntent.OpenSound)
         }
         Action(
             icon = Icons.Rounded.Bedtime,
