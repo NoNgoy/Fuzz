@@ -40,8 +40,11 @@ import dev.fuzz.feature.onboarding.OnboardingRoute
 import dev.fuzz.feature.onboarding.onboardingScreen
 import dev.fuzz.feature.player.MiniPlayer
 import dev.fuzz.feature.player.PlayerRoute
+import dev.fuzz.feature.player.SoundRoute
 import dev.fuzz.feature.player.playerScreen
+import dev.fuzz.feature.player.soundScreen
 import dev.fuzz.feature.search.searchScreen
+import dev.fuzz.feature.settings.SettingsActions
 import dev.fuzz.feature.settings.SettingsRoute
 import dev.fuzz.feature.settings.profileScreen
 import dev.fuzz.feature.settings.settingsScreen
@@ -115,12 +118,16 @@ fun FuzzApp(
             libraryScreen(
                 onOpenLiked = { navController.navigate(TrackListRoute()) },
                 onOpenPlaylist = { navController.navigate(TrackListRoute(playlistId = it)) },
+                onOpenDownloaded = { navController.navigate(TrackListRoute(downloaded = true)) },
+                onOpenFolders = { navController.navigate(OnboardingRoute) },
             )
             trackListScreen(onBack = navController::popBackStack)
             profileScreen(
                 onOpenImport = { navController.navigate(ImportRoute) },
                 onOpenConnections = { navController.navigate(ConnectionsRoute) },
                 onOpenSettings = { navController.navigate(SettingsRoute) },
+                onOpenSound = { navController.navigate(SoundRoute) },
+                onOpenWave = { navController.navigate(WaveRoute) },
             )
             waveScreen(onBack = navController::popBackStack)
             importScreen(
@@ -131,7 +138,17 @@ fun FuzzApp(
                     }
                 },
             )
-            settingsScreen()
+            settingsScreen(
+                SettingsActions(
+                    onBack = navController::popBackStack,
+                    onOpenFolders = { navController.navigate(OnboardingRoute) },
+                    onOpenSound = { navController.navigate(SoundRoute) },
+                    onOpenWave = { navController.navigate(WaveRoute) },
+                    onOpenConnections = { navController.navigate(ConnectionsRoute) },
+                    onOpenImport = { navController.navigate(ImportRoute) },
+                ),
+            )
+            soundScreen(onBack = navController::popBackStack)
             connectionsScreen(onBack = navController::popBackStack)
             onboardingScreen(
                 onFinished = {

@@ -69,7 +69,13 @@ internal fun TrackListScreen(
     modifier: Modifier = Modifier,
 ) {
     val isPlaylist = state.kind is TrackListKind.Playlist
-    val title = state.title ?: if (isPlaylist) "" else stringResource(R.string.feature_library_liked)
+    val downloaded = state.kind == TrackListKind.Downloaded
+    val title =
+        state.title ?: when (state.kind) {
+            TrackListKind.Liked -> stringResource(R.string.feature_library_liked)
+            TrackListKind.Downloaded -> stringResource(R.string.feature_library_downloaded)
+            is TrackListKind.Playlist -> ""
+        }
     var renaming by rememberSaveable { mutableStateOf(false) }
     var deleting by rememberSaveable { mutableStateOf(false) }
     LazyColumn(
@@ -98,10 +104,10 @@ internal fun TrackListScreen(
                 item {
                     Text(
                         stringResource(
-                            if (isPlaylist) {
-                                R.string.feature_library_playlist_empty
-                            } else {
-                                R.string.feature_library_liked_empty
+                            when (state.kind) {
+                                TrackListKind.Liked -> R.string.feature_library_liked_empty
+                                TrackListKind.Downloaded -> R.string.feature_library_empty_body
+                                is TrackListKind.Playlist -> R.string.feature_library_playlist_empty
                             },
                         ),
                         style = MaterialTheme.typography.bodyMedium,
@@ -117,7 +123,7 @@ internal fun TrackListScreen(
                         track = track,
                         isCurrent = track.id == state.currentTrackId,
                         onClick = { onIntent(TrackListIntent.Play(index)) },
-                        trailing = { RemoveMenu(isPlaylist, track, onIntent) },
+                        trailing = if (downloaded) null else ({ RemoveMenu(isPlaylist, track, onIntent) }),
                     )
                 }
             }

@@ -16,6 +16,8 @@
     <string name="feature_settings_menu_sound_hint">Эквалайзер, кроссфейд, громкость</string>
     <string name="feature_settings_menu_wave">Волна</string>
     <string name="feature_settings_menu_wave_hint">Пресеты и фильтры</string>
-    <string name="feature_settings_menu_backup">Резервная копия</string>
-    <string name="feature_settings_menu_backup_hint">Лайки, плейлисты, история и настройки в файл</string>
+    <string name="feature_settings_folders">Папки с музыкой</string>
+    <string name="feature_settings_folders_hint">Откуда брать треки на телефоне</string>
+    <string name="feature_settings_back">Назад</string>
+    <string name="feature_settings_version">Fuzz %1$s</string>
 </resources>

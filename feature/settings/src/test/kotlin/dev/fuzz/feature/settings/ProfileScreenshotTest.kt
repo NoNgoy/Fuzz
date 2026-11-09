@@ -16,4 +16,10 @@ class ProfileScreenshotTest {
         captureThemedScreens("profile") {
             ProfileScreen(onOpenImport = {}, onOpenConnections = {}, onOpenSettings = {})
         }
+
+    @Test
+    fun settings() =
+        captureThemedScreens("settings") {
+            SettingsScreen(SettingsActions(), version = "0.1.6")
+        }
 }

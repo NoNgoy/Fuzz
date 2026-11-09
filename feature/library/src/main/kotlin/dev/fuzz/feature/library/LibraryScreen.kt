@@ -20,7 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.outlined.Folder
-import androidx.compose.material.icons.outlined.ShoppingBag
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Favorite
@@ -66,6 +65,8 @@ import kotlinx.collections.immutable.ImmutableList
 internal fun LibraryEntry(
     onOpenLiked: () -> Unit,
     onOpenPlaylist: (PlaylistId) -> Unit,
+    onOpenDownloaded: () -> Unit,
+    onOpenFolders: () -> Unit,
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -89,6 +90,8 @@ internal fun LibraryEntry(
             onIntent = viewModel::onIntent,
             onOpenLiked = onOpenLiked,
             onOpenPlaylist = onOpenPlaylist,
+            onOpenDownloaded = onOpenDownloaded,
+            onOpenFolders = onOpenFolders,
         )
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
     }
@@ -111,6 +114,8 @@ internal fun LibraryScreen(
     modifier: Modifier = Modifier,
     onOpenLiked: () -> Unit = {},
     onOpenPlaylist: (PlaylistId) -> Unit = {},
+    onOpenDownloaded: () -> Unit = {},
+    onOpenFolders: () -> Unit = {},
 ) {
     var filter by rememberSaveable { mutableStateOf(LibraryFilter.All) }
     var menuTrack by rememberSaveable { mutableStateOf<String?>(null) }
@@ -162,6 +167,7 @@ internal fun LibraryScreen(
                     icon = Icons.Rounded.Download,
                     title = stringResource(R.string.feature_library_downloaded),
                     subtitle = tracksCount(state.tracks.size),
+                    onClick = onOpenDownloaded,
                 )
             }
             item {
@@ -169,13 +175,7 @@ internal fun LibraryScreen(
                     icon = Icons.Outlined.Folder,
                     title = stringResource(R.string.feature_library_folders),
                     subtitle = stringResource(R.string.feature_library_folders_hint),
-                )
-            }
-            item {
-                QuickEntry(
-                    icon = Icons.Outlined.ShoppingBag,
-                    title = stringResource(R.string.feature_library_wishlist),
-                    subtitle = stringResource(R.string.feature_library_wishlist_hint),
+                    onClick = onOpenFolders,
                 )
             }
         }

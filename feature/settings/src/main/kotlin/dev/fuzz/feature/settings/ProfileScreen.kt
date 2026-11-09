@@ -15,7 +15,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Backup
 import androidx.compose.material.icons.outlined.Equalizer
 import androidx.compose.material.icons.outlined.Power
 import androidx.compose.material.icons.outlined.Settings
@@ -48,6 +47,8 @@ internal fun ProfileScreen(
     onOpenConnections: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenSound: () -> Unit = {},
+    onOpenWave: () -> Unit = {},
 ) {
     Column(
         modifier =
@@ -106,19 +107,13 @@ internal fun ProfileScreen(
                 Icons.Outlined.Equalizer,
                 R.string.feature_settings_menu_sound,
                 R.string.feature_settings_menu_sound_hint,
-                onOpenSettings,
+                onOpenSound,
             )
             MenuRow(
                 Icons.Rounded.GraphicEq,
                 R.string.feature_settings_menu_wave,
                 R.string.feature_settings_menu_wave_hint,
-                onOpenSettings,
-            )
-            MenuRow(
-                Icons.Outlined.Backup,
-                R.string.feature_settings_menu_backup,
-                R.string.feature_settings_menu_backup_hint,
-                onOpenSettings,
+                onOpenWave,
             )
         }
     }
@@ -170,7 +165,7 @@ private fun YearBanner() {
 }
 
 @Composable
-private fun MenuRow(
+internal fun MenuRow(
     icon: ImageVector,
     title: Int,
     subtitle: Int,

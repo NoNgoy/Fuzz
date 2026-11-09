@@ -11,8 +11,6 @@
     <string name="feature_library_downloaded">Скачанное</string>
     <string name="feature_library_folders">Папки</string>
     <string name="feature_library_folders_hint">Музыка, Загрузки, SD-карта</string>
-    <string name="feature_library_wishlist">Хочу добавить</string>
-    <string name="feature_library_wishlist_hint">Появится вместе с импортом плейлистов</string>
     <string name="feature_library_all_tracks">Все треки</string>
     <string name="feature_library_stage3">Альбомы и артисты появятся на следующем этапе</string>
     <string name="feature_library_playlists">Плейлисты</string>
