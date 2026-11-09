@@ -47,4 +47,44 @@ class PlayerScreenshotTest {
                 MiniPlayerContent(state = playing, onExpand = {}, onIntent = {})
             }
         }
+
+    @Test
+    fun lyrics() =
+        captureThemedScreens("player_lyrics") {
+            androidx.compose.material3.Surface {
+                LyricsContentView(
+                    state =
+                        LyricsState(
+                            title = "Ночной трамвай",
+                            artist = "Тестовая группа",
+                            content =
+                                LyricsContent.Text(
+                                    kotlinx.collections.immutable.persistentListOf(
+                                        dev.fuzz.core.domain.plugin.LyricsLine(
+                                            1_000,
+                                            "Первая строка придуманного текста",
+                                        ),
+                                        dev.fuzz.core.domain.plugin.LyricsLine(
+                                            5_000,
+                                            "Вторая строка звучит прямо сейчас",
+                                        ),
+                                        dev.fuzz.core.domain.plugin.LyricsLine(
+                                            9_000,
+                                            "Третья строка ждёт своей очереди",
+                                        ),
+                                        dev.fuzz.core.domain.plugin.LyricsLine(13_000, ""),
+                                        dev.fuzz.core.domain.plugin.LyricsLine(
+                                            15_000,
+                                            "Припев после проигрыша",
+                                        ),
+                                    ),
+                                    synced = true,
+                                    source = "LRCLIB",
+                                ),
+                            currentLine = 1,
+                        ),
+                    onIntent = {},
+                )
+            }
+        }
 }

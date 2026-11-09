@@ -28,7 +28,7 @@ data class PlayerUiState(
 ) : UiState
 
 /** Разделы плеера, которые появятся на следующих этапах. */
-enum class UpcomingFeature { Lyrics, Why, Sound, Sleep }
+enum class UpcomingFeature { Why, Sound, Sleep }
 
 sealed interface PlayerIntent : UiIntent {
     data object TogglePlay : PlayerIntent
@@ -56,12 +56,16 @@ sealed interface PlayerIntent : UiIntent {
 
     data object ToggleDislike : PlayerIntent
 
+    data object OpenLyrics : PlayerIntent
+
     data class OpenUpcoming(
         val feature: UpcomingFeature,
     ) : PlayerIntent
 }
 
 sealed interface PlayerEffect : UiEffect {
+    data object ShowLyrics : PlayerEffect
+
     data class ShowUpcoming(
         val feature: UpcomingFeature,
     ) : PlayerEffect
@@ -100,6 +104,7 @@ class PlayerViewModel
                 PlayerIntent.ToggleLike -> react(Reaction.Like)
                 PlayerIntent.Like -> if (currentState.reaction != Reaction.Like) react(Reaction.Like)
                 PlayerIntent.ToggleDislike -> react(Reaction.Dislike)
+                PlayerIntent.OpenLyrics -> sendEffect(PlayerEffect.ShowLyrics)
                 is PlayerIntent.OpenUpcoming -> sendEffect(PlayerEffect.ShowUpcoming(intent.feature))
             }
         }
