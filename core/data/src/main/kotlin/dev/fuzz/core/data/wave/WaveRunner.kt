@@ -4,6 +4,7 @@ import dev.fuzz.core.data.sync.Clock
 import dev.fuzz.core.domain.player.PlayerController
 import dev.fuzz.core.domain.reaction.ReactionRepository
 import dev.fuzz.core.domain.wave.WavePlayer
+import dev.fuzz.core.domain.wave.WaveReason
 import dev.fuzz.core.domain.wave.WaveSettingsRepository
 import dev.fuzz.core.domain.wave.WaveShare
 import dev.fuzz.core.domain.wave.WaveSource
@@ -69,6 +70,9 @@ class WaveRunner
         private var scope: CoroutineScope? = null
         private var job: Job? = null
 
+        /** Сессия текущей волны: у неё спрашиваем, почему трек попал в очередь. */
+        @Volatile private var session: WaveSession? = null
+
         /** Треки, которые волна положила в очередь. Только их сигналы идут в сессию. */
         private val issued: MutableSet<TrackId> = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
@@ -103,6 +107,7 @@ class WaveRunner
             issued += first.map { it.id }
             if (play != null) play(first) else player.playQueue(first)
             mutableStatus.value = WaveStatus(active = true, seed = seed)
+            this.session = session
             job = scope.launch { follow(session) }
             return WaveStartResult.Started
         }
@@ -128,6 +133,9 @@ class WaveRunner
             val shares = BucketMix.redistribute(BucketMix.shares(WaveConfig.Default.mix, familiarity), available)
             return WaveSource.entries.mapNotNull { source -> shares[source.bucket]?.let { WaveShare(source, it) } }
         }
+
+        override suspend fun reason(trackId: TrackId): WaveReason? =
+            if (trackId in issued) session?.reason(trackId)?.toDomain() else null
 
         private suspend fun follow(session: WaveSession) =
             coroutineScope {
@@ -192,6 +200,7 @@ class WaveRunner
             }
 
             private fun release() {
+                this@WaveRunner.session = null
                 mutableStatus.value = WaveStatus()
                 job?.cancel()
             }

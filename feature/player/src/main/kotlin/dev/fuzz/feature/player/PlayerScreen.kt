@@ -94,12 +94,14 @@ internal fun PlayerScreen(
     var showQueue by remember { mutableStateOf(false) }
     var showLyrics by remember { mutableStateOf(false) }
     var showSleep by remember { mutableStateOf(false) }
+    var showWhy by remember { mutableStateOf(false) }
     val upcoming = upcomingMessages()
     CollectEffects(viewModel.effects) { effect ->
         when (effect) {
             is PlayerEffect.ShowUpcoming -> snackbar.showSnackbar(upcoming.getValue(effect.feature))
             PlayerEffect.ShowLyrics -> showLyrics = true
             PlayerEffect.ShowSleep -> showSleep = true
+            PlayerEffect.ShowWhy -> showWhy = true
         }
     }
     Box {
@@ -112,6 +114,7 @@ internal fun PlayerScreen(
         SnackbarHost(snackbar, modifier = Modifier.align(Alignment.BottomCenter).safeDrawingPadding())
     }
     if (showLyrics) LyricsSheet(onDismiss = { showLyrics = false })
+    if (showWhy) WhySheet(onDismiss = { showWhy = false })
     if (showSleep) SleepSheet(sleep = state.sleep, onIntent = viewModel::onIntent, onDismiss = { showSleep = false })
     if (showQueue) {
         QueueSheet(
@@ -125,7 +128,6 @@ internal fun PlayerScreen(
 @Composable
 private fun upcomingMessages(): Map<UpcomingFeature, String> =
     mapOf(
-        UpcomingFeature.Why to stringResource(R.string.feature_player_soon_why),
         UpcomingFeature.Sound to stringResource(R.string.feature_player_soon_sound),
     )
 
@@ -391,7 +393,7 @@ private fun Actions(
         }
         Action(Icons.AutoMirrored.Rounded.QueueMusic, R.string.feature_player_action_queue, onOpenQueue)
         Action(Icons.Rounded.AutoAwesome, R.string.feature_player_action_why) {
-            onIntent(PlayerIntent.OpenUpcoming(UpcomingFeature.Why))
+            onIntent(PlayerIntent.OpenWhy)
         }
         Action(Icons.Rounded.Equalizer, R.string.feature_player_action_sound) {
             onIntent(PlayerIntent.OpenUpcoming(UpcomingFeature.Sound))

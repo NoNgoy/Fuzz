@@ -1,6 +1,7 @@
 package dev.fuzz.core.domain.wave
 
 import dev.fuzz.core.model.Track
+import dev.fuzz.core.model.TrackId
 import dev.fuzz.core.model.wave.WaveSeed
 import dev.fuzz.core.model.wave.WaveSettings
 import kotlinx.coroutines.flow.Flow
@@ -55,4 +56,7 @@ interface WavePlayer {
 
     /** Пропорции корзин при таком положении ползунка с учётом доступных подключений. */
     fun mix(familiarity: Int): List<WaveShare>
+
+    /** Почему волна поставила трек; null, если трек не из текущей волны. */
+    suspend fun reason(trackId: TrackId): WaveReason? = null
 }
