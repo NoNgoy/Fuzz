@@ -45,4 +45,13 @@
     <string name="feature_connections_error_network">Сервер не отвечает. Проверьте адрес и интернет.</string>
     <string name="feature_connections_error_invalid">Не получилось подключиться с такими настройками.</string>
     <string name="feature_connections_error_invalid_reason">Не получилось подключиться: %1$s</string>
+    <string name="feature_connections_kind_script">JS-плагин</string>
+    <string name="feature_connections_hint_script">Свой источник на JavaScript</string>
+    <string name="feature_connections_help_script">Вставьте описание плагина и его код. Код работает в песочнице: ему видны только домены из описания, а телефон и файлы недоступны.</string>
+    <string name="feature_connections_field_script_header">Описание плагина JSON</string>
+    <string name="feature_connections_field_script_code">Код JavaScript</string>
+    <string name="feature_connections_test">Проверить</string>
+    <string name="feature_connections_test_ok">Работает</string>
+    <string name="feature_connections_journal">Последние запросы</string>
+    <string name="feature_connections_journal_time">%1$s · %2$d мс</string>
 </resources>

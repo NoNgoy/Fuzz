@@ -51,6 +51,7 @@ internal class ConnectionsStore
                         .setBaseUrl(config.baseUrl)
                         .setUsername(config.username)
                         .setManifest(config.manifest)
+                        .setScript(config.script)
                         .setEnabled(config.enabled)
                         .setSecret(encrypted)
                         .build()
@@ -67,6 +68,15 @@ internal class ConnectionsStore
         ) {
             val current = connections.first().firstOrNull { it.id == id } ?: return
             put(change(current), secret = null)
+        }
+
+        /** Сервер выдал новый секрет (refresh token): заменить, ничего больше не трогая. */
+        suspend fun rotateSecret(
+            id: String,
+            secret: String,
+        ) {
+            val current = connections.first().firstOrNull { it.id == id } ?: return
+            put(current, secret)
         }
 
         suspend fun remove(id: String) {
@@ -88,6 +98,7 @@ internal class ConnectionsStore
                 baseUrl = baseUrl,
                 username = username,
                 manifest = manifest,
+                script = script,
                 enabled = enabled,
                 hasSecret = !secret.isEmpty,
             )

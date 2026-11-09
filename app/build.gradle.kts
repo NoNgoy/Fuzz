@@ -73,6 +73,7 @@ dependencies {
     implementation(projects.source.subsonic)
     implementation(projects.connect.templates)
     implementation(projects.connect.manifest)
+    implementation(projects.connect.script)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.content.negotiation)

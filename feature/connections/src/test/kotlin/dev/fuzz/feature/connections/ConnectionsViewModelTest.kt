@@ -4,6 +4,7 @@ import dev.fuzz.core.domain.connection.ConnectionCheck
 import dev.fuzz.core.domain.connection.ConnectionConfig
 import dev.fuzz.core.domain.connection.ConnectionKind
 import dev.fuzz.core.domain.connection.ConnectionsRepository
+import dev.fuzz.core.domain.connection.RequestLine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -99,6 +101,37 @@ class ConnectionsViewModelTest {
         assertEquals(false, vm.state.value.connections.single().enabled)
     }
 
+    @Test
+    fun `JS-плагин сохраняется с описанием и кодом, имя берётся из описания`() {
+        val vm = ConnectionsViewModel(repository)
+        vm.onIntent(ConnectionsIntent.Add(ConnectionKind.Script))
+        assertFalse(vm.state.value.editor!!.canSave)
+        vm.onIntent(
+            ConnectionsIntent.Change {
+                it.copy(manifest = """{"version":1,"id":"demo","name":"Демо"}""", script = "const plugin = {};")
+            },
+        )
+        vm.onIntent(ConnectionsIntent.Save)
+
+        val saved = repository.items.value.single()
+        assertEquals("Демо", saved.name)
+        assertEquals("const plugin = {};", saved.script)
+    }
+
+    @Test
+    fun `кнопка «Проверить» показывает итог и журнал`() {
+        repository.items.value = listOf(config)
+        val vm = ConnectionsViewModel(repository)
+        vm.onIntent(ConnectionsIntent.Edit(config.id))
+        assertTrue(vm.state.value.editor!!.journal.isEmpty())
+
+        vm.onIntent(ConnectionsIntent.Test)
+        val editor = vm.state.value.editor!!
+        assertEquals(ConnectionCheck.Ok, editor.testResult)
+        assertEquals(1, editor.journal.size)
+        assertFalse(editor.testing)
+    }
+
     private val config =
         ConnectionConfig("c1", ConnectionKind.Subsonic, "Navidrome", "https://nd.example.ru", username = "sasha")
 
@@ -127,5 +160,14 @@ class ConnectionsViewModelTest {
         ) = items.update { list -> list.map { if (it.id == id) it.copy(enabled = enabled) else it } }
 
         override suspend fun remove(id: String) = items.update { list -> list.filterNot { it.id == id } }
+
+        var checked = 0
+
+        override suspend fun check(id: String): ConnectionCheck {
+            checked++
+            return next
+        }
+
+        override fun journal(id: String) = List(checked) { RequestLine(it.toLong(), "/search", 200, 10) }
     }
 }

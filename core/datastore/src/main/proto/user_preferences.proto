@@ -38,4 +38,6 @@ message ConnectionProto {
   string manifest = 6;
   bool enabled = 7;
   bytes secret = 8;
+  // Код JS-плагина; описание лежит в manifest.
+  string script = 9;
 }

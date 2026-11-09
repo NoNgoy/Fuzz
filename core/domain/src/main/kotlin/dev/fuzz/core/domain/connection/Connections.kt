@@ -16,6 +16,9 @@ enum class ConnectionKind {
 
     /** Свой REST API, описанный JSON-манифестом. */
     Manifest,
+
+    /** Плагин на JavaScript: описание и код, работает в песочнице без доступа к телефону. */
+    Script,
 }
 
 /**
@@ -29,8 +32,10 @@ data class ConnectionConfig(
     /** Адрес сервера; для манифеста берётся из него самого. */
     val baseUrl: String,
     val username: String = "",
-    /** Текст манифеста для [ConnectionKind.Manifest]. */
+    /** Текст манифеста для [ConnectionKind.Manifest] или описание плагина для [ConnectionKind.Script]. */
     val manifest: String = "",
+    /** Код плагина для [ConnectionKind.Script]. */
+    val script: String = "",
     val enabled: Boolean = true,
     /** Сохранён ли секрет: экран показывает «пароль сохранён», не раскрывая его. */
     val hasSecret: Boolean = false,
@@ -70,13 +75,33 @@ interface ConnectionsRepository {
     )
 
     suspend fun remove(id: String)
+
+    /** Проверка сохранённого подключения тем же пробным поиском, что и при сохранении. */
+    suspend fun check(id: String): ConnectionCheck
+
+    /** Последние запросы подключения, новые сверху. Пусто, если подключение журнал не ведёт. */
+    fun journal(id: String): List<RequestLine>
 }
 
+/** Запись журнала запросов: без ключей и токенов, только путь, итог и время. */
+data class RequestLine(
+    val atMs: Long,
+    val path: String,
+    /** HTTP-код или null, если ответа не было. */
+    val status: Int?,
+    val durationMs: Long,
+    val error: String? = null,
+)
+
 /** Что даёт одно подключение: всегда источник музыки, свой API может ещё тексты и похожих. */
-data class ConnectionPlugins(
+class ConnectionPlugins(
     val source: MusicSource,
     val lyrics: LyricsProvider? = null,
     val metadata: MetadataProvider? = null,
+    /** Журнал запросов, если подключение его ведёт (свой API). */
+    val journal: () -> List<RequestLine> = { emptyList() },
+    /** Освобождает ресурсы: песочницу JS-плагина. Вызывается, когда подключение пересобрано или удалено. */
+    val close: () -> Unit = {},
 )
 
 /** Включённые подключения: источники видят поиск и волна, тексты — плеер. */
@@ -90,9 +115,13 @@ interface ConnectedSources {
 
 /** Собирает плагины подключения из настроек. Живёт в app: только он знает все плагины. */
 interface MusicSourceFactory {
-    /** Плагины или [IllegalArgumentException] с понятной причиной (битый манифест, неверный адрес). */
+    /**
+     * Плагины или [IllegalArgumentException] с понятной причиной (битый манифест, неверный адрес).
+     * [onSecretRotated] получает новый секрет, если сервер его сменил (refresh token в OAuth 2).
+     */
     fun create(
         config: ConnectionConfig,
         secret: String?,
+        onSecretRotated: (String) -> Unit = {},
     ): ConnectionPlugins
 }
