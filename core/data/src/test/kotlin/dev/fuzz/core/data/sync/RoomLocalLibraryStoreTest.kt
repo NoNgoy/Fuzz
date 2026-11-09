@@ -93,6 +93,21 @@ class RoomLocalLibraryStoreTest {
         }
 
     @Test
+    fun `restore all brings every hidden track back`() =
+        runTest {
+            val editor = RoomCollectionEditor(db.trackDao(), clock)
+            store.replaceLocal(listOf(track(1), track(2), track(3)))
+            editor.hide(TrackId(track(1).id))
+            editor.hide(TrackId(track(2).id))
+            assertEquals(2, editor.observeHiddenCount().first())
+
+            editor.restoreAll()
+
+            assertEquals(0, editor.observeHiddenCount().first())
+            assertEquals(3, db.trackDao().observeAll().first().size)
+        }
+
+    @Test
     fun `returning file is restored`() =
         runTest {
             store.replaceLocal(listOf(track(1)))

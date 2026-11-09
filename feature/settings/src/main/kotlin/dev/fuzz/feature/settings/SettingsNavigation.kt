@@ -22,7 +22,7 @@ class SettingsActions(
 data object ProfileRoute
 
 fun NavGraphBuilder.settingsScreen(actions: SettingsActions) {
-    composable<SettingsRoute> { SettingsScreen(actions) }
+    composable<SettingsRoute> { SettingsEntry(actions) }
 }
 
 fun NavGraphBuilder.profileScreen(

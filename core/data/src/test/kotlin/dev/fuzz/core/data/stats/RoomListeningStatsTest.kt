@@ -76,9 +76,20 @@ class RoomListeningStatsTest {
             db.listenDao().insert(listen("new1", daysAgo(1), playedMs = 3_600_000))
             db.listenDao().insert(listen("old", daysAgo(40), playedMs = 9_000_000))
 
-            val stats = RoomListeningStats(db.statsDao(), clock).observeLastMonth().first()
+            val stats = RoomListeningStats(db.statsDao(), db.listenDao(), clock).observeLastMonth().first()
 
             // Кино уже было в коллекции, поэтому новый артист только Сплин; скрытый трек не считается.
             assertEquals(ListeningStats(listenedMs = 3_600_000, newTracks = 2, newArtists = 1), stats)
+        }
+
+    @Test
+    fun `clearing history resets listened hours`() =
+        runTest {
+            db.listenDao().insert(listen("t", daysAgo(1), playedMs = 3_600_000))
+            val stats = RoomListeningStats(db.statsDao(), db.listenDao(), clock)
+
+            stats.clearHistory()
+
+            assertEquals(0L, stats.observeLastMonth().first().listenedMs)
         }
 }
