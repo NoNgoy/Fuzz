@@ -8,4 +8,12 @@
     <string name="player_action_like">Нравится</string>
     <string name="player_action_unlike">Убрать из «Мне нравится»</string>
     <string name="player_action_dislike">Не нравится</string>
+    <string name="player_widget_name">Fuzz: сейчас играет</string>
+    <string name="player_widget_description">Что играет и кнопки управления</string>
+    <string name="player_widget_idle_title">Fuzz</string>
+    <string name="player_widget_idle_subtitle">Нажмите ▶, чтобы продолжить</string>
+    <string name="player_widget_play">Играть</string>
+    <string name="player_widget_pause">Пауза</string>
+    <string name="player_widget_next">Следующий</string>
+    <string name="player_widget_previous">Предыдущий</string>
 </resources>

@@ -7,6 +7,7 @@ import dagger.hilt.components.SingletonComponent
 import dev.fuzz.core.data.artist.DefaultArtistPages
 import dev.fuzz.core.data.backup.FileBackupRepository
 import dev.fuzz.core.data.library.RoomCollectionEditor
+import dev.fuzz.core.data.library.RoomSmartPlaylists
 import dev.fuzz.core.data.lyrics.LyricsStore
 import dev.fuzz.core.data.lyrics.RoomLyricsStore
 import dev.fuzz.core.data.online.FileDownloads
@@ -19,6 +20,7 @@ import dev.fuzz.core.domain.artist.ArtistPages
 import dev.fuzz.core.domain.backup.BackupRepository
 import dev.fuzz.core.domain.download.Downloads
 import dev.fuzz.core.domain.library.CollectionEditor
+import dev.fuzz.core.domain.library.SmartPlaylists
 import dev.fuzz.core.domain.player.SavedStreams
 import dev.fuzz.core.domain.settings.AppearanceRepository
 import dev.fuzz.core.domain.stats.ListeningStatsRepository
@@ -58,4 +60,7 @@ internal interface UserDataModule {
 
     @Binds
     fun bindLyricsStore(impl: RoomLyricsStore): LyricsStore
+
+    @Binds
+    fun bindSmartPlaylists(impl: RoomSmartPlaylists): SmartPlaylists
 }

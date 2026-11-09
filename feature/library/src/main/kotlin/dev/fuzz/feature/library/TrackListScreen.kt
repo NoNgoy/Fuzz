@@ -183,12 +183,14 @@ private fun defaultTitle(kind: TrackListKind): String =
         is TrackListKind.Album -> kind.title
         is TrackListKind.Artist -> kind.name
         is TrackListKind.Playlist -> ""
+        is TrackListKind.Smart -> stringResource(kind.playlist.title)
     }
 
 private fun emptyText(kind: TrackListKind): Int =
     when (kind) {
         TrackListKind.Liked -> R.string.feature_library_liked_empty
         is TrackListKind.Playlist -> R.string.feature_library_playlist_empty
+        is TrackListKind.Smart -> kind.playlist.empty
         else -> R.string.feature_library_empty_body
     }
 
@@ -297,6 +299,7 @@ private fun TrackActions(
                                 TrackListKind.Downloaded,
                                 is TrackListKind.Album,
                                 is TrackListKind.Artist,
+                                is TrackListKind.Smart,
                                 -> dev.fuzz.core.ui.R.string.core_ui_hide_from_collection
                             },
                         ),
