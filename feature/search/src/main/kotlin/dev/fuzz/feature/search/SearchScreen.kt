@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +33,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -102,7 +106,20 @@ private fun SearchBody(
     state: SearchState,
     onIntent: (SearchIntent) -> Unit,
 ) {
+    val listState = rememberLazyListState()
+    // До конца осталось несколько строк: просим следующую страницу онлайн-результатов.
+    val nearEnd by remember {
+        derivedStateOf {
+            val info = listState.layoutInfo
+            val last = info.visibleItemsInfo.lastOrNull()?.index ?: 0
+            info.totalItemsCount > 0 && last >= info.totalItemsCount - LOAD_MORE_AHEAD
+        }
+    }
+    LaunchedEffect(nearEnd, state.online.size, state.onlineHasMore) {
+        if (nearEnd && state.onlineHasMore && !state.showBrowse) onIntent(SearchIntent.LoadMoreOnline)
+    }
     LazyColumn(
+        state = listState,
         contentPadding = PaddingValues(vertical = Spacing.s),
         verticalArrangement = Arrangement.spacedBy(Spacing.s),
     ) {
@@ -145,6 +162,13 @@ private fun LazyListScope.results(
     }
     itemsIndexed(state.online, key = { _, t -> "online:" + t.id.value }) { index, track ->
         TrackRow(track = track, onClick = { onIntent(SearchIntent.PlayOnline(index)) })
+    }
+    if (state.onlineLoadingMore) {
+        item(key = "online:more") {
+            Box(Modifier.fillMaxWidth().padding(Spacing.m), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
+            }
+        }
     }
 }
 
@@ -320,3 +344,5 @@ private fun Hint(text: String) {
         modifier = Modifier.padding(horizontal = Spacing.screen, vertical = Spacing.l),
     )
 }
+
+private const val LOAD_MORE_AHEAD = 5

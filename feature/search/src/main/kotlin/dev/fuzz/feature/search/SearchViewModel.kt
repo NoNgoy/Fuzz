@@ -18,6 +18,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -51,6 +52,9 @@ data class SearchState(
     /** Найденное в сети: свои серверы, Jamendo, превью. */
     val online: ImmutableList<Track> = persistentListOf(),
     val onlineLoading: Boolean = false,
+    /** Источники могут отдать ещё: при прокрутке до конца подгружается следующая страница. */
+    val onlineHasMore: Boolean = false,
+    val onlineLoadingMore: Boolean = false,
 ) : UiState {
     val showBrowse: Boolean get() = query.isBlank()
     val nothingFound: Boolean
@@ -77,6 +81,9 @@ sealed interface SearchIntent : UiIntent {
     data class PlayArtist(
         val name: String,
     ) : SearchIntent
+
+    /** Список онлайн-результатов докрутили до конца. */
+    data object LoadMoreOnline : SearchIntent
 }
 
 sealed interface SearchEffect : UiEffect {
@@ -95,6 +102,8 @@ class SearchViewModel
     ) : MviViewModel<SearchState, SearchIntent, SearchEffect>(SearchState()) {
         private val query = MutableStateFlow("")
         private val source = MutableStateFlow(SearchSource.Everywhere)
+        private var onlinePage = 0
+        private var loadMoreJob: Job? = null
 
         init {
             combine(query.debounce(DEBOUNCE_MS), source) { q, s -> q to s }
@@ -112,13 +121,24 @@ class SearchViewModel
             combine(query.debounce(ONLINE_DEBOUNCE_MS), source) { q, s -> q to s }
                 .distinctUntilChanged()
                 .mapLatest { (q, s) ->
+                    loadMoreJob?.cancel()
+                    onlinePage = 0
                     if (q.isBlank() || s.online.isEmpty()) {
                         emptyList()
                     } else {
-                        setState { copy(onlineLoading = true) }
-                        onlineSearch.search(q, s.online).map { it.track }
+                        setState { copy(onlineLoading = true, online = persistentListOf()) }
+                        onlineSearch.search(q, s.online, page = 0).map { it.track }
                     }
-                }.onEach { found -> setState { copy(online = found.toImmutableList(), onlineLoading = false) } }
+                }.onEach { found ->
+                    setState {
+                        copy(
+                            online = found.distinctBy { it.id }.toImmutableList(),
+                            onlineLoading = false,
+                            onlineLoadingMore = false,
+                            onlineHasMore = found.isNotEmpty(),
+                        )
+                    }
+                }
                 .launchIn(viewModelScope)
         }
 
@@ -146,11 +166,39 @@ class SearchViewModel
                     player.playQueue(currentState.tracks, intent.index)
                 }
 
+                SearchIntent.LoadMoreOnline -> {
+                    loadMoreOnline()
+                }
+
                 is SearchIntent.PlayArtist -> {
                     val tracks = currentState.tracks.filter { it.artistName == intent.name }
                     if (tracks.isNotEmpty()) player.playQueue(tracks.shuffled())
                 }
             }
+        }
+
+        private fun loadMoreOnline() {
+            val s = currentState
+            if (!s.onlineHasMore || s.onlineLoading || loadMoreJob?.isActive == true) return
+            val q = s.query
+            val page = onlinePage + 1
+            setState { copy(onlineLoadingMore = true) }
+            loadMoreJob =
+                viewModelScope.launch {
+                    val found = onlineSearch.search(q, s.source.online, page).map { it.track }
+                    if (currentState.query != q) return@launch
+                    onlinePage = page
+                    setState {
+                        val known = online.mapTo(HashSet()) { it.id }
+                        // Источник без страниц повторяет первую: если нового нет, дальше не просим.
+                        val fresh = found.filter { known.add(it.id) }
+                        copy(
+                            online = (online + fresh).toImmutableList(),
+                            onlineLoadingMore = false,
+                            onlineHasMore = fresh.isNotEmpty(),
+                        )
+                    }
+                }
         }
 
         private companion object {
