@@ -356,7 +356,7 @@ private fun RowItem(
 ) {
     val track = row.track
     if (track != null) {
-        TrackRow(track = track, onClick = {})
+        TrackRow(track = track, onClick = { onIntent(ImportIntent.Play(index)) })
         return
     }
     Row(

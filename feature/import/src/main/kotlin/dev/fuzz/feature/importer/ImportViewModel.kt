@@ -6,6 +6,7 @@ import dev.fuzz.core.domain.importer.ImportItem
 import dev.fuzz.core.domain.importer.ImportOutcome
 import dev.fuzz.core.domain.importer.ImportPlaylistUseCase
 import dev.fuzz.core.domain.importer.SaveImportedPlaylistUseCase
+import dev.fuzz.core.domain.player.PlayerController
 import dev.fuzz.core.domain.wishlist.WishReason
 import dev.fuzz.core.domain.wishlist.WishRequest
 import dev.fuzz.core.model.PlaylistId
@@ -101,6 +102,11 @@ sealed interface ImportIntent : UiIntent {
         val row: Int,
     ) : ImportIntent
 
+    /** Послушать найденный трек: играет весь найденный список с этого места. */
+    data class Play(
+        val row: Int,
+    ) : ImportIntent
+
     data class Rename(
         val name: String,
     ) : ImportIntent
@@ -126,6 +132,7 @@ class ImportViewModel
     constructor(
         private val importPlaylist: ImportPlaylistUseCase,
         private val savePlaylist: SaveImportedPlaylistUseCase,
+        private val player: PlayerController,
     ) : MviViewModel<ImportState, ImportIntent, ImportEffect>(
             ImportState(supportedFormats = importPlaylist.supportedExtensions.joinToString(", ") { it.uppercase() }),
         ) {
@@ -137,9 +144,17 @@ class ImportViewModel
                 is ImportIntent.Reject -> updateRow(intent.row) { copy(chosen = null, rejected = true) }
                 is ImportIntent.Restore -> updateRow(intent.row) { copy(chosen = null, rejected = false) }
                 is ImportIntent.Rename -> updateReport { copy(name = intent.name) }
+                is ImportIntent.Play -> play(intent.row)
                 ImportIntent.Save -> save()
                 ImportIntent.Restart -> setState { copy(stage = ImportStage.PickFile, problem = null) }
             }
+        }
+
+        private fun play(row: Int) {
+            val rows = (currentState.stage as? ImportStage.Report)?.rows ?: return
+            val target = rows.getOrNull(row)?.track ?: return
+            val tracks = rows.mapNotNull { it.track }
+            player.playQueue(tracks, startIndex = tracks.indexOf(target).coerceAtLeast(0))
         }
 
         private fun read(intent: ImportIntent.FilePicked) {

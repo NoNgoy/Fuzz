@@ -17,6 +17,7 @@ import dev.fuzz.core.model.Playlist
 import dev.fuzz.core.model.PlaylistId
 import dev.fuzz.core.model.Track
 import dev.fuzz.core.model.TrackId
+import dev.fuzz.core.testing.FakePlayerController
 import dev.fuzz.core.testing.SampleTracks
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,6 +40,7 @@ class ImportViewModelTest {
     private val library = SampleTracks.all
     private val playlists = FakePlaylists()
     private val wishlist = FakeWishlist()
+    private val player = FakePlayerController()
 
     @Before
     fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -50,6 +52,7 @@ class ImportViewModelTest {
         ImportViewModel(
             ImportPlaylistUseCase(setOf(FakeImporter(refs)), FakeLibrary(library), FakeMatcher()),
             SaveImportedPlaylistUseCase(playlists, wishlist),
+            player,
         )
 
     private fun ImportViewModel.pick(name: String = "Дорога домой.m3u") =
@@ -86,6 +89,17 @@ class ImportViewModelTest {
 
         vm.onIntent(ImportIntent.Restore(1))
         assertEquals(1, report(vm).count(ReportTab.Doubtful))
+    }
+
+    @Test
+    fun `tapping a found row plays the found list from it`() {
+        val vm = viewModel(listOf(ref(library[0].title), ref("Нет такого"), ref(library[1].title)))
+        vm.pick()
+
+        vm.onIntent(ImportIntent.Play(2))
+
+        assertEquals(listOf(library[0], library[1]), player.state.value.queue)
+        assertEquals(library[1], player.state.value.currentTrack)
     }
 
     @Test
