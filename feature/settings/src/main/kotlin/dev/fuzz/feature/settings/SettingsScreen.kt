@@ -1,6 +1,8 @@
 package dev.fuzz.feature.settings
 
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +21,8 @@ import androidx.compose.material.icons.outlined.Equalizer
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Power
+import androidx.compose.material.icons.outlined.SaveAlt
+import androidx.compose.material.icons.outlined.SettingsBackupRestore
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.rounded.FileUpload
 import androidx.compose.material.icons.rounded.GraphicEq
@@ -49,6 +53,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fuzz.core.design.component.FuzzChip
 import dev.fuzz.core.design.theme.Spacing
+import dev.fuzz.core.domain.backup.RestoreSummary
 import dev.fuzz.core.domain.library.SyncOutcome
 import dev.fuzz.core.domain.settings.AccentPreference
 import dev.fuzz.core.domain.settings.ThemePreference
@@ -92,11 +97,50 @@ internal fun SettingsEntry(
                 SettingsEffect.HistoryCleared -> {
                     resources.getString(R.string.feature_settings_history_cleared)
                 }
+
+                is SettingsEffect.BackupSaved -> {
+                    resources.getString(
+                        R.string.feature_settings_backup_saved,
+                        effect.summary.likes,
+                        effect.summary.playlists,
+                        effect.summary.listens,
+                    )
+                }
+
+                is SettingsEffect.BackupRestored -> {
+                    restoredText(resources, effect.summary)
+                }
+
+                is SettingsEffect.BackupFailed -> {
+                    resources.getString(
+                        if (effect.notBackup) {
+                            R.string.feature_settings_backup_not_fuzz
+                        } else {
+                            R.string.feature_settings_backup_io_failed
+                        },
+                    )
+                }
             }
         snackbar.showSnackbar(text)
     }
+    val save =
+        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(BACKUP_MIME)) { uri ->
+            uri?.let { viewModel.onIntent(SettingsIntent.ExportBackup(it.toString())) }
+        }
+    val open =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let { viewModel.onIntent(SettingsIntent.RestoreBackup(it.toString())) }
+        }
     Box(Modifier.fillMaxSize()) {
-        SettingsScreen(state = state, onIntent = viewModel::onIntent, actions = actions)
+        SettingsScreen(
+            state = state,
+            onIntent = viewModel::onIntent,
+            actions =
+                actions.copy(
+                    onSaveBackup = { save.launch(backupFileName()) },
+                    onRestoreBackup = { open.launch(arrayOf(BACKUP_MIME, "application/octet-stream", "text/plain")) },
+                ),
+        )
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
     }
 }
@@ -193,6 +237,28 @@ internal fun SettingsScreen(
             R.string.feature_settings_menu_import,
             R.string.feature_settings_menu_import_hint,
             actions.onOpenImport,
+        )
+
+        Section(R.string.feature_settings_section_backup)
+        MenuRow(
+            icon = Icons.Outlined.SaveAlt,
+            title = stringResource(R.string.feature_settings_backup_save),
+            subtitle = stringResource(R.string.feature_settings_backup_save_hint),
+            onClick = actions.onSaveBackup,
+            enabled = !state.isBackingUp,
+            trailing =
+                if (state.isBackingUp) {
+                    { CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp) }
+                } else {
+                    null
+                },
+        )
+        MenuRow(
+            icon = Icons.Outlined.SettingsBackupRestore,
+            title = stringResource(R.string.feature_settings_backup_restore),
+            subtitle = stringResource(R.string.feature_settings_backup_restore_hint),
+            onClick = actions.onRestoreBackup,
+            enabled = !state.isBackingUp,
         )
 
         Section(R.string.feature_settings_section_privacy)
@@ -303,3 +369,34 @@ private fun appVersion(): String {
         runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull().orEmpty()
     }
 }
+
+private const val BACKUP_MIME = "application/json"
+
+private fun backupFileName(): String = "fuzz-" + java.time.LocalDate.now() + ".json"
+
+private fun restoredText(
+    resources: android.content.res.Resources,
+    summary: RestoreSummary,
+): String =
+    buildList {
+        add(
+            resources.getString(
+                R.string.feature_settings_backup_restored,
+                summary.likes,
+                summary.playlists,
+                summary.listens,
+            ),
+        )
+        if (summary.missingFiles > 0) {
+            add(
+                resources.getQuantityString(
+                    R.plurals.feature_settings_backup_missing,
+                    summary.missingFiles,
+                    summary.missingFiles,
+                ),
+            )
+        }
+        if (summary.connectionsNeedingPassword > 0) {
+            add(resources.getString(R.string.feature_settings_backup_passwords, summary.connectionsNeedingPassword))
+        }
+    }.joinToString(" ")

@@ -3,6 +3,7 @@ package dev.fuzz.core.database
 import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import dev.fuzz.core.database.dao.BackupDao
 import dev.fuzz.core.database.dao.DownloadDao
 import dev.fuzz.core.database.dao.ListenDao
 import dev.fuzz.core.database.dao.PlaylistDao
@@ -59,4 +60,6 @@ abstract class FuzzDatabase : RoomDatabase() {
     abstract fun savedRefDao(): SavedRefDao
 
     abstract fun downloadDao(): DownloadDao
+
+    abstract fun backupDao(): BackupDao
 }
