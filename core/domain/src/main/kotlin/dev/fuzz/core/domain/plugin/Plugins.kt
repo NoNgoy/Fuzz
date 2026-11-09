@@ -13,6 +13,13 @@ interface MusicSource : Connection {
 
     suspend fun search(query: String, limit: Int = 20): PluginResult<SearchResult>
 
+    /**
+     * Страница поиска для подгрузки при прокрутке. Источник без страниц отдаёт всё в [search],
+     * а дальше пустой ответ: это значит «больше нет».
+     */
+    suspend fun searchPage(query: String, limit: Int, offset: Int): PluginResult<SearchResult> =
+        if (offset == 0) search(query, limit) else PluginResult.Ok(SearchResult())
+
     suspend fun playbackUri(track: TrackRef): PluginResult<String>
 
     suspend fun download(track: TrackRef): PluginResult<InputStream> =

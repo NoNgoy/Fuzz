@@ -30,13 +30,16 @@ class JamendoSource(
     override val displayName = "Jamendo"
     override val capabilities = setOf(SourceCapability.STREAM, SourceCapability.DOWNLOAD)
 
-    override suspend fun search(query: String, limit: Int): PluginResult<SearchResult> =
+    override suspend fun search(query: String, limit: Int): PluginResult<SearchResult> = searchPage(query, limit, 0)
+
+    override suspend fun searchPage(query: String, limit: Int, offset: Int): PluginResult<SearchResult> =
         safeCall {
             SearchResult(
                 tracks =
                     fetch {
                         parameter("search", query)
                         parameter("limit", limit)
+                        parameter("offset", offset)
                     }.map { it.toRef() },
             )
         }

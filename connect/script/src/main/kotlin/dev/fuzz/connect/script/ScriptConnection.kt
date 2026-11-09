@@ -26,7 +26,8 @@ import java.io.Closeable
  *
  * ```js
  * const plugin = {
- *   async search(query, limit) { return [{ id, title, artist, album, durationMs }] },
+ *   // offset — сколько уже показано; скрипт без страниц может его не читать.
+ *   async search(query, limit, offset) { return [{ id, title, artist, album, durationMs }] },
  *   async streamUrl(id) { return "https://..." },
  *   async lyrics(track) { return { synced: "[00:01.00]..." } }, // или { plain }, или null
  * };
@@ -56,8 +57,10 @@ class ScriptConnection(
         override val displayName = header.name
         override val capabilities = setOf(SourceCapability.STREAM)
 
-        override suspend fun search(query: String, limit: Int): PluginResult<SearchResult> =
-            call<List<ScriptTrack>>("plugin.search(${json.encodeToString(query)}, $limit)").map { list ->
+        override suspend fun search(query: String, limit: Int): PluginResult<SearchResult> = searchPage(query, limit, 0)
+
+        override suspend fun searchPage(query: String, limit: Int, offset: Int): PluginResult<SearchResult> =
+            call<List<ScriptTrack>>("plugin.search(${json.encodeToString(query)}, $limit, $offset)").map { list ->
                 SearchResult(tracks = list.orEmpty().take(limit).mapNotNull { it.toRef() })
             }
 

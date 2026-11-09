@@ -36,10 +36,13 @@ class SubsonicSource(
 ) : MusicSource {
     override val capabilities = setOf(SourceCapability.STREAM, SourceCapability.OFFLINE_CACHE)
 
-    override suspend fun search(query: String, limit: Int): PluginResult<SearchResult> =
+    override suspend fun search(query: String, limit: Int): PluginResult<SearchResult> = searchPage(query, limit, 0)
+
+    override suspend fun searchPage(query: String, limit: Int, offset: Int): PluginResult<SearchResult> =
         call("search3") {
             parameter("query", query)
             parameter("songCount", limit)
+            parameter("songOffset", offset)
             parameter("artistCount", 0)
             parameter("albumCount", 0)
         }.map { SearchResult(tracks = it.searchResult3?.song.orEmpty().map { song -> song.toRef() }) }

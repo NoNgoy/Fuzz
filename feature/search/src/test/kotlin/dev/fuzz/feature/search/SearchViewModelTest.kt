@@ -21,6 +21,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -79,6 +80,26 @@ class SearchViewModelTest {
         }
 
     @Test
+    fun `прокрутка до конца подгружает следующие страницы, пока есть новое`() =
+        runTest(dispatcher) {
+            online.pages = 2
+            val vm = SearchViewModel(SearchLibraryUseCase(library), online, player)
+            vm.onIntent(SearchIntent.QueryChanged("toxicity"))
+            advanceUntilIdle()
+            assertEquals(1, vm.state.value.online.size)
+
+            vm.onIntent(SearchIntent.LoadMoreOnline)
+            advanceUntilIdle()
+            assertEquals(2, vm.state.value.online.size)
+            assertTrue(vm.state.value.onlineHasMore)
+
+            vm.onIntent(SearchIntent.LoadMoreOnline)
+            advanceUntilIdle()
+            assertEquals(2, vm.state.value.online.size)
+            assertFalse(vm.state.value.onlineHasMore)
+        }
+
+    @Test
     fun `без ссылки на звук экран сообщает, а плеер не трогается`() =
         runTest(dispatcher) {
             online.resolvable = false
@@ -96,14 +117,18 @@ class SearchViewModelTest {
         var resolvable = true
         var calls = 0
         var lastOrigins: Set<OnlineOrigin> = emptySet()
+        var pages = 1
 
         override suspend fun search(
             query: String,
             origins: Set<OnlineOrigin>,
+            page: Int,
         ): List<OnlineHit> {
             calls++
             lastOrigins = origins
-            return listOf(OnlineHit(serverTrack, OnlineOrigin.Server))
+            if (page >= pages) return emptyList()
+            val track = if (page == 0) serverTrack else serverTrack.copy(id = TrackId("s1-$page"))
+            return listOf(OnlineHit(track, OnlineOrigin.Server))
         }
 
         override suspend fun playable(tracks: List<Track>) =

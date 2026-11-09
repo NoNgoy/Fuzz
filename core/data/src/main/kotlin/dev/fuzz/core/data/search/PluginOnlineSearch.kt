@@ -33,6 +33,7 @@ internal class PluginOnlineSearch
         override suspend fun search(
             query: String,
             origins: Set<OnlineOrigin>,
+            page: Int,
         ): List<OnlineHit> {
             if (query.isBlank()) return emptyList()
             val targets =
@@ -42,9 +43,11 @@ internal class PluginOnlineSearch
                     }
                     catalogs.filter { it.origin in origins }.forEach { add(Target(it.source, it.origin, it.provider)) }
                 }
-            return coroutineScope {
-                targets.map { target -> async { target.search(query) } }.awaitAll().flatten()
-            }
+            val hits =
+                coroutineScope {
+                    targets.map { target -> async { target.search(query, page * PAGE_SIZE) } }.awaitAll().flatten()
+                }
+            return OnlineRanking.sort(query, hits) { it.track }
         }
 
         override suspend fun playable(tracks: List<Track>): List<Track> =
@@ -62,8 +65,11 @@ internal class PluginOnlineSearch
             /** null: брать ключ из первого внешнего ID (у своих серверов он свой у каждого вида). */
             val provider: String?,
         ) {
-            suspend fun search(query: String): List<OnlineHit> {
-                val result = withTimeoutOrNull(TIMEOUT_MS) { source.search(query, LIMIT) }
+            suspend fun search(
+                query: String,
+                offset: Int,
+            ): List<OnlineHit> {
+                val result = withTimeoutOrNull(TIMEOUT_MS) { source.searchPage(query, PAGE_SIZE, offset) }
                 val refs = (result as? PluginResult.Ok)?.value?.tracks.orEmpty()
                 return refs.mapNotNull { ref -> hit(ref) }
             }
@@ -94,7 +100,7 @@ internal class PluginOnlineSearch
         }
 
         private companion object {
-            const val LIMIT = 30
+            const val PAGE_SIZE = 30
             const val TIMEOUT_MS = 10_000L
             const val PREVIEW_LABEL = "Превью"
         }

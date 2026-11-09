@@ -36,12 +36,15 @@ class DeezerPreviewSource(
     override val displayName = "Deezer (превью)"
     override val capabilities = setOf(SourceCapability.PREVIEW_ONLY)
 
-    override suspend fun search(query: String, limit: Int): PluginResult<SearchResult> =
+    override suspend fun search(query: String, limit: Int): PluginResult<SearchResult> = searchPage(query, limit, 0)
+
+    override suspend fun searchPage(query: String, limit: Int, offset: Int): PluginResult<SearchResult> =
         safeCall {
             val tracks =
                 fetch("$baseUrl/search") {
                     parameter("q", query)
                     parameter("limit", limit)
+                    parameter("index", offset)
                 }
             val withPreview = tracks.filter { !it.preview.isNullOrBlank() }
             remember(withPreview)
