@@ -20,6 +20,9 @@ message UserPreferences {
   repeated ConnectionProto connections = 5;
   // Нет поля — звук по умолчанию: эквалайзер выключен.
   optional SoundProto sound = 6;
+  // Пустая строка — значение по умолчанию: тема как в системе, цвет Fuzz.
+  string theme = 7;
+  string accent = 8;
 }
 
 // Эквалайзер и переходы. Пустой preset — ручная настройка полос.

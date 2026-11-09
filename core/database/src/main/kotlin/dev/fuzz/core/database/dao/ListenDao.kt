@@ -16,4 +16,7 @@ interface ListenDao {
     /** Старше [beforeMs] профилю уже не нужно: вклад затухает за месяц. */
     @Query("DELETE FROM listen_events WHERE started_at < :beforeMs")
     suspend fun deleteOlderThan(beforeMs: Long)
+
+    @Query("DELETE FROM listen_events")
+    suspend fun clearAll()
 }

@@ -26,6 +26,12 @@ interface TrackDao {
         now: Long,
     )
 
+    @Query("UPDATE tracks SET hidden = 0, updated_at = :now WHERE hidden = 1")
+    suspend fun restoreAllHidden(now: Long)
+
+    @Query("SELECT COUNT(*) FROM tracks WHERE hidden = 1 AND deleted = 0")
+    fun observeHiddenCount(): Flow<Int>
+
     @Query("UPDATE tracks SET hidden = :hidden, updated_at = :now WHERE id = :id")
     suspend fun setHidden(
         id: String,

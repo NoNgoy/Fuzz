@@ -5,9 +5,12 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.fuzz.core.domain.onboarding.OnboardingRepository
 import dev.fuzz.core.domain.player.PlayerController
+import dev.fuzz.core.domain.settings.AppearanceRepository
+import dev.fuzz.core.domain.settings.AppearanceSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
@@ -19,6 +22,7 @@ sealed interface LaunchState {
 
     data class Ready(
         val onboardingCompleted: Boolean,
+        val appearance: AppearanceSettings = AppearanceSettings(),
     ) : LaunchState
 }
 
@@ -28,12 +32,13 @@ class MainViewModel
     constructor(
         onboarding: OnboardingRepository,
         player: PlayerController,
+        appearance: AppearanceRepository,
     ) : ViewModel() {
         /** Ошибки плеера для подсказки внизу экрана: каждая новая показывается один раз. */
         val playerErrors: Flow<String> = player.state.map { it.error }.distinctUntilChanged().filterNotNull()
 
         val launchState: StateFlow<LaunchState> =
-            onboarding.state
-                .map { LaunchState.Ready(it.completed) }
+            // Тема читается вместе с онбордингом, чтобы под сплэшем не мелькнула тема по умолчанию.
+            combine(onboarding.state, appearance.settings) { state, look -> LaunchState.Ready(state.completed, look) }
                 .stateIn(viewModelScope, SharingStarted.Eagerly, LaunchState.Loading)
     }

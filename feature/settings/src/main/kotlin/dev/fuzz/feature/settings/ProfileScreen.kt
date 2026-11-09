@@ -204,9 +204,23 @@ internal fun MenuRow(
     title: Int,
     subtitle: Int,
     onClick: () -> Unit,
+) = MenuRow(icon, stringResource(title), stringResource(subtitle), onClick)
+
+@Composable
+internal fun MenuRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = Spacing.s),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(enabled = enabled, onClick = onClick)
+                .padding(vertical = Spacing.s),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {
@@ -217,13 +231,14 @@ internal fun MenuRow(
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         }
         Column(Modifier.weight(1f)) {
-            Text(stringResource(title), style = MaterialTheme.typography.titleSmall)
+            Text(title, style = MaterialTheme.typography.titleSmall)
             Text(
-                stringResource(subtitle),
+                subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        trailing?.invoke()
     }
 }
 

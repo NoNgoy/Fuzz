@@ -11,7 +11,13 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import dev.fuzz.app.navigation.FuzzApp
+import dev.fuzz.core.design.theme.ColorSource
 import dev.fuzz.core.design.theme.FuzzTheme
+import dev.fuzz.core.design.theme.FuzzThemeConfig
+import dev.fuzz.core.design.theme.ThemeMode
+import dev.fuzz.core.domain.settings.AccentPreference
+import dev.fuzz.core.domain.settings.AppearanceSettings
+import dev.fuzz.core.domain.settings.ThemePreference
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -24,7 +30,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val launch by viewModel.launchState.collectAsStateWithLifecycle()
-            FuzzTheme {
+            FuzzTheme(config = (launch as? LaunchState.Ready)?.appearance.toThemeConfig()) {
                 val ready = launch as? LaunchState.Ready ?: return@FuzzTheme
                 // Стартовый экран выбирается один раз: дальнейшие изменения флага не пересобирают граф.
                 val showOnboarding = remember { !ready.onboardingCompleted }
@@ -32,4 +38,22 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
+
+private fun AppearanceSettings?.toThemeConfig(): FuzzThemeConfig {
+    if (this == null) return FuzzThemeConfig()
+    return FuzzThemeConfig(
+        mode =
+            when (theme) {
+                ThemePreference.System -> ThemeMode.System
+                ThemePreference.Light -> ThemeMode.Light
+                ThemePreference.Dark -> ThemeMode.Dark
+                ThemePreference.Black -> ThemeMode.Amoled
+            },
+        colorSource =
+            when (accent) {
+                AccentPreference.Brand -> ColorSource.Brand
+                AccentPreference.Wallpaper -> ColorSource.Wallpaper
+            },
+    )
 }

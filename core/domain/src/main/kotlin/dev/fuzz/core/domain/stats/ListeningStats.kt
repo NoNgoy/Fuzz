@@ -11,4 +11,7 @@ data class ListeningStats(
 
 interface ListeningStatsRepository {
     fun observeLastMonth(): Flow<ListeningStats>
+
+    /** Стирает историю прослушиваний: статистика обнуляется, волна забывает, что звучало. */
+    suspend fun clearHistory()
 }

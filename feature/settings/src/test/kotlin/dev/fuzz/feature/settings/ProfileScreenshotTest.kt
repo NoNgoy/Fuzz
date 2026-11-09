@@ -20,6 +20,7 @@ class ProfileScreenshotTest {
     @Test
     fun settings() =
         captureThemedScreens("settings") {
-            SettingsScreen(SettingsActions(), version = "0.1.6")
+            SettingsScreen(SettingsState(hiddenTracks = 3), onIntent = {
+            }, actions = SettingsActions(), version = "0.1.8")
         }
 }

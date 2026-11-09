@@ -204,6 +204,10 @@ class WaveRunnerTest {
             hidden: Boolean,
             now: Long,
         ) = Unit
+
+        override suspend fun restoreAllHidden(now: Long) = Unit
+
+        override fun observeHiddenCount(): Flow<Int> = flowOf(0)
     }
 
     private class FakeListenDao : ListenDao {
@@ -218,6 +222,8 @@ class WaveRunnerTest {
         override suspend fun deleteOlderThan(beforeMs: Long) {
             rows.removeAll { it.startedAt < beforeMs }
         }
+
+        override suspend fun clearAll() = rows.clear()
     }
 
     private class FakeReactionDao : ReactionDao {

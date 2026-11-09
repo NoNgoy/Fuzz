@@ -20,4 +20,40 @@
     <string name="feature_settings_folders_hint">Откуда брать треки на телефоне</string>
     <string name="feature_settings_back">Назад</string>
     <string name="feature_settings_version">Fuzz %1$s</string>
+    <string name="feature_settings_section_look">Оформление</string>
+    <string name="feature_settings_section_library">Медиатека</string>
+    <string name="feature_settings_section_playback">Воспроизведение</string>
+    <string name="feature_settings_section_sources">Источники</string>
+    <string name="feature_settings_section_privacy">История</string>
+    <string name="feature_settings_theme">Тема</string>
+    <string name="feature_settings_theme_system">Как в системе</string>
+    <string name="feature_settings_theme_light">Светлая</string>
+    <string name="feature_settings_theme_dark">Тёмная</string>
+    <string name="feature_settings_theme_black">Чёрная</string>
+    <string name="feature_settings_accent">Цвет</string>
+    <string name="feature_settings_accent_brand">Фирменный Fuzz</string>
+    <string name="feature_settings_accent_wallpaper">Из обоев</string>
+    <string name="feature_settings_rescan">Обновить медиатеку</string>
+    <string name="feature_settings_rescan_hint">Найти новые и удалённые файлы в папках</string>
+    <string name="feature_settings_rescan_done">Готово: новых треков %1$d, пропало %2$d</string>
+    <string name="feature_settings_rescan_no_permission">Нет доступа к музыке. Разрешите его в «Папках с музыкой»</string>
+    <string name="feature_settings_rescan_no_folders">Папки не выбраны. Выберите их в «Папках с музыкой»</string>
+    <string name="feature_settings_restore_hidden">Вернуть убранные треки</string>
+    <plurals name="feature_settings_hidden_count">
+        <item quantity="one">Убран %1$d трек</item>
+        <item quantity="few">Убрано %1$d трека</item>
+        <item quantity="many">Убрано %1$d треков</item>
+        <item quantity="other">Убрано %1$d трека</item>
+    </plurals>
+    <plurals name="feature_settings_restored">
+        <item quantity="one">Вернули %1$d трек</item>
+        <item quantity="few">Вернули %1$d трека</item>
+        <item quantity="many">Вернули %1$d треков</item>
+        <item quantity="other">Вернули %1$d трека</item>
+    </plurals>
+    <string name="feature_settings_clear_history">Очистить историю прослушиваний</string>
+    <string name="feature_settings_clear_history_hint">Статистика и волна начнут с нуля</string>
+    <string name="feature_settings_clear_history_confirm">Стереть всю историю прослушиваний? Статистика в профиле обнулится, а волна забудет, что вы слушали. Треки и плейлисты останутся.</string>
+    <string name="feature_settings_clear">Очистить</string>
+    <string name="feature_settings_history_cleared">История прослушиваний очищена</string>
 </resources>

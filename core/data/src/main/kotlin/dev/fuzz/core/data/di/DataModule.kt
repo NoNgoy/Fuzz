@@ -9,7 +9,6 @@ import dev.fuzz.core.data.connection.KeystoreSecretCipher
 import dev.fuzz.core.data.connection.SecretCipher
 import dev.fuzz.core.data.importer.EnginePlaylistMatcher
 import dev.fuzz.core.data.library.OfflineLibraryRepository
-import dev.fuzz.core.data.library.RoomCollectionEditor
 import dev.fuzz.core.data.lyrics.ProviderLyricsRepository
 import dev.fuzz.core.data.onboarding.DataStoreOnboardingRepository
 import dev.fuzz.core.data.player.DataStoreSoundSettingsRepository
@@ -17,7 +16,6 @@ import dev.fuzz.core.data.player.DefaultSleepTimer
 import dev.fuzz.core.data.playlist.OfflinePlaylistRepository
 import dev.fuzz.core.data.reaction.OfflineReactionRepository
 import dev.fuzz.core.data.search.PluginOnlineSearch
-import dev.fuzz.core.data.stats.RoomListeningStats
 import dev.fuzz.core.data.sync.RoomLocalLibraryStore
 import dev.fuzz.core.data.wave.DataStoreWaveSettingsRepository
 import dev.fuzz.core.data.wave.ExternalTrackRegistry
@@ -26,7 +24,6 @@ import dev.fuzz.core.data.wave.WaveRunner
 import dev.fuzz.core.domain.connection.ConnectedSources
 import dev.fuzz.core.domain.connection.ConnectionsRepository
 import dev.fuzz.core.domain.importer.PlaylistMatcher
-import dev.fuzz.core.domain.library.CollectionEditor
 import dev.fuzz.core.domain.library.LibraryRepository
 import dev.fuzz.core.domain.library.LocalLibraryStore
 import dev.fuzz.core.domain.lyrics.LyricsRepository
@@ -37,7 +34,6 @@ import dev.fuzz.core.domain.player.SoundSettingsRepository
 import dev.fuzz.core.domain.playlist.PlaylistRepository
 import dev.fuzz.core.domain.reaction.ReactionRepository
 import dev.fuzz.core.domain.search.OnlineSearch
-import dev.fuzz.core.domain.stats.ListeningStatsRepository
 import dev.fuzz.core.domain.wave.WavePlayer
 import dev.fuzz.core.domain.wave.WaveSettingsRepository
 import dev.fuzz.engine.recommend.port.WaveLibrary
@@ -49,12 +45,6 @@ internal interface DataModule {
     @Binds
     @Singleton
     fun bindLibraryRepository(impl: OfflineLibraryRepository): LibraryRepository
-
-    @Binds
-    fun bindListeningStats(impl: RoomListeningStats): ListeningStatsRepository
-
-    @Binds
-    fun bindCollectionEditor(impl: RoomCollectionEditor): CollectionEditor
 
     @Binds
     @Singleton
