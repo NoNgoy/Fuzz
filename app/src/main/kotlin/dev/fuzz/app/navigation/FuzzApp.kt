@@ -35,8 +35,10 @@ import dev.fuzz.feature.home.homeScreen
 import dev.fuzz.feature.importer.ImportRoute
 import dev.fuzz.feature.importer.importScreen
 import dev.fuzz.feature.library.TrackListRoute
+import dev.fuzz.feature.library.WishlistRoute
 import dev.fuzz.feature.library.libraryScreen
 import dev.fuzz.feature.library.trackListScreen
+import dev.fuzz.feature.library.wishlistScreen
 import dev.fuzz.feature.onboarding.OnboardingRoute
 import dev.fuzz.feature.onboarding.onboardingScreen
 import dev.fuzz.feature.player.MiniPlayer
@@ -136,14 +138,17 @@ fun FuzzApp(
                 onOpenDownloaded = { navController.navigate(TrackListRoute(downloaded = true)) },
                 onOpenFolders = { navController.navigate(OnboardingRoute) },
                 onOpenTrackList = { navController.navigate(it) },
+                onOpenWishlist = { navController.navigate(WishlistRoute) },
             )
             trackListScreen(onBack = navController::popBackStack)
+            wishlistScreen(onBack = navController::popBackStack)
             profileScreen(
                 onOpenImport = { navController.navigate(ImportRoute) },
                 onOpenConnections = { navController.navigate(ConnectionsRoute) },
                 onOpenSettings = { navController.navigate(SettingsRoute) },
                 onOpenSound = { navController.navigate(SoundRoute) },
                 onOpenWave = { navController.navigate(WaveRoute) },
+                onOpenWishlist = { navController.navigate(WishlistRoute) },
             )
             waveScreen(onBack = navController::popBackStack)
             importScreen(

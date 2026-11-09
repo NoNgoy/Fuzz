@@ -31,5 +31,6 @@
         <item quantity="many">Сохранить плейлист: %1$d треков</item>
         <item quantity="other">Сохранить плейлист: %1$d трека</item>
     </plurals>
+    <string name="feature_import_saved_wished">Плейлист «%1$s» сохранён. Не найденные треки (%2$d) ждут в «Хочу добавить»: когда они появятся, встанут на место сами</string>
     <string name="feature_import_saved">Плейлист «%1$s» сохранён</string>
 </resources>

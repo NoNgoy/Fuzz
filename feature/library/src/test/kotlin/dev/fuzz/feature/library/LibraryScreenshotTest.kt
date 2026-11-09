@@ -1,5 +1,7 @@
 package dev.fuzz.feature.library
 
+import dev.fuzz.core.domain.wishlist.Wish
+import dev.fuzz.core.domain.wishlist.WishReason
 import dev.fuzz.core.model.Playlist
 import dev.fuzz.core.model.PlaylistId
 import dev.fuzz.core.testing.SampleTracks
@@ -58,5 +60,30 @@ class LibraryScreenshotTest {
         captureThemedScreens("liked_empty") {
             TrackListScreen(state = TrackListState(kind = TrackListKind.Liked, isLoading = false), onIntent = {
             }, onBack = {})
+        }
+
+    @Test
+    fun wishlist() =
+        captureThemedScreens("wishlist") {
+            WishlistScreen(
+                state =
+                    WishlistState(
+                        isLoading = false,
+                        wishes =
+                            persistentListOf(
+                                Wish(
+                                    listOf(1),
+                                    "Группа крови",
+                                    "Кино",
+                                    null,
+                                    WishReason.Import,
+                                    listOf("Дорога домой"),
+                                ),
+                                Wish(listOf(2), "Tum Hi Ho", "Arijit Singh", null, WishReason.Preview, emptyList()),
+                            ),
+                    ),
+                onIntent = {},
+                onBack = {},
+            )
         }
 }

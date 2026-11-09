@@ -22,6 +22,7 @@ import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Album
+import androidx.compose.material.icons.rounded.Bookmarks
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.MoreVert
@@ -74,6 +75,7 @@ internal fun LibraryEntry(
     onOpenPlaylist: (PlaylistId) -> Unit,
     onOpenDownloaded: () -> Unit,
     onOpenFolders: () -> Unit,
+    onOpenWishlist: () -> Unit = {},
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -121,6 +123,7 @@ internal fun LibraryEntry(
             onOpenFolders = onOpenFolders,
             onOpenTrackList = onOpenTrackList,
             onMore = menu::open,
+            onOpenWishlist = onOpenWishlist,
         )
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
     }
@@ -152,6 +155,7 @@ internal fun LibraryScreen(
     onOpenFolders: () -> Unit = {},
     onOpenTrackList: (TrackListRoute) -> Unit = {},
     onMore: (Track) -> Unit = {},
+    onOpenWishlist: () -> Unit = {},
 ) {
     var filter by rememberSaveable { mutableStateOf(LibraryFilter.All) }
     var creating by rememberSaveable { mutableStateOf(false) }
@@ -204,6 +208,16 @@ internal fun LibraryScreen(
                     subtitle = tracksCount(state.tracks.size),
                     onClick = onOpenDownloaded,
                 )
+            }
+            if (state.wishCount > 0) {
+                item {
+                    QuickEntry(
+                        icon = Icons.Rounded.Bookmarks,
+                        title = stringResource(R.string.feature_library_wishlist),
+                        subtitle = tracksCount(state.wishCount),
+                        onClick = onOpenWishlist,
+                    )
+                }
             }
             item {
                 QuickEntry(

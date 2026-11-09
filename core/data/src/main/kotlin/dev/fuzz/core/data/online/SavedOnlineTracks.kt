@@ -6,8 +6,10 @@ import dev.fuzz.core.data.wave.ExternalTrackRegistry
 import dev.fuzz.core.database.dao.DownloadDao
 import dev.fuzz.core.database.dao.SavedRefDao
 import dev.fuzz.core.database.dao.TrackDao
+import dev.fuzz.core.database.dao.WishDao
 import dev.fuzz.core.database.entity.SavedRefEntity
 import dev.fuzz.core.database.entity.TrackEntity
+import dev.fuzz.core.database.entity.WishEntity
 import dev.fuzz.core.domain.connection.ConnectedSources
 import dev.fuzz.core.domain.player.SavedStreams
 import dev.fuzz.core.domain.plugin.ExternalId
@@ -34,6 +36,7 @@ internal class SavedOnlineTracks
         private val tracks: TrackDao,
         private val refs: SavedRefDao,
         private val downloads: DownloadDao,
+        private val wishes: WishDao,
         private val registry: ExternalTrackRegistry,
         private val connected: ConnectedSources,
         private val catalogs: List<@JvmSuppressWildcards CatalogSource>,
@@ -51,6 +54,8 @@ internal class SavedOnlineTracks
                     existing == null -> {
                         tracks.upsert(listOf(entry.toEntity(id, now)))
                         refs.upsert(entry.toRef(id))
+                        // От превью остаётся 30 секунд: полный трек человек захочет найти или купить.
+                        if (entry.origin == TrackOrigin.Preview) wishes.insert(listOf(entry.toWish(now)))
                     }
 
                     existing.sourceId == ONLINE_SOURCE && (existing.deleted || existing.hidden) -> {
@@ -108,6 +113,16 @@ internal class SavedOnlineTracks
             sourceId = ONLINE_SOURCE,
             updatedAt = now,
         )
+
+        private fun ExternalTrackRegistry.Entry.toWish(now: Long) =
+            WishEntity(
+                title = ref.title,
+                artist = ref.artist,
+                album = ref.album,
+                durationMs = ref.durationMs,
+                reason = "preview",
+                addedAt = now,
+            )
 
         private fun ExternalTrackRegistry.Entry.toRef(id: TrackId) =
             SavedRefEntity(

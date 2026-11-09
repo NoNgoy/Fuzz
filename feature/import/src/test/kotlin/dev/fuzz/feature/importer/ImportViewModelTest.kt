@@ -10,6 +10,9 @@ import dev.fuzz.core.domain.playlist.PlaylistRepository
 import dev.fuzz.core.domain.plugin.PlaylistImporter
 import dev.fuzz.core.domain.plugin.PluginResult
 import dev.fuzz.core.domain.plugin.TrackRef
+import dev.fuzz.core.domain.wishlist.Wish
+import dev.fuzz.core.domain.wishlist.WishRequest
+import dev.fuzz.core.domain.wishlist.WishlistRepository
 import dev.fuzz.core.model.Playlist
 import dev.fuzz.core.model.PlaylistId
 import dev.fuzz.core.model.Track
@@ -35,6 +38,7 @@ import java.io.InputStream
 class ImportViewModelTest {
     private val library = SampleTracks.all
     private val playlists = FakePlaylists()
+    private val wishlist = FakeWishlist()
 
     @Before
     fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -45,7 +49,7 @@ class ImportViewModelTest {
     private fun viewModel(refs: List<TrackRef>) =
         ImportViewModel(
             ImportPlaylistUseCase(setOf(FakeImporter(refs)), FakeLibrary(library), FakeMatcher()),
-            SaveImportedPlaylistUseCase(playlists),
+            SaveImportedPlaylistUseCase(playlists, wishlist),
         )
 
     private fun ImportViewModel.pick(name: String = "Дорога домой.m3u") =
@@ -113,10 +117,14 @@ class ImportViewModelTest {
 
             vm.effects.test {
                 vm.onIntent(ImportIntent.Save)
-                assertEquals(ImportEffect.Saved(PlaylistId("p1"), "Новое имя", 2), awaitItem())
+                assertEquals(ImportEffect.Saved(PlaylistId("p1"), "Новое имя", 2, wished = 1), awaitItem())
             }
             assertEquals("Новое имя", playlists.created.single())
             assertEquals(listOf(library[0].id, library[1].id), playlists.added)
+            val wish = wishlist.added.single()
+            assertEquals("Нет такого", wish.title)
+            assertEquals(PlaylistId("p1"), wish.playlistId)
+            assertEquals(2, wish.position)
             assertTrue(report(vm).saving)
         }
 
@@ -155,6 +163,29 @@ class ImportViewModelTest {
         override fun observeTracks(): Flow<List<Track>> = flowOf(tracks)
 
         override suspend fun getTracks(ids: List<TrackId>) = tracks.filter { it.id in ids }
+    }
+
+    private class FakeWishlist : WishlistRepository {
+        val added = mutableListOf<WishRequest>()
+
+        override fun observe(): Flow<List<Wish>> = flowOf(emptyList())
+
+        override fun observeCount(): Flow<Int> = flowOf(0)
+
+        override suspend fun add(requests: List<WishRequest>) {
+            added += requests
+        }
+
+        override suspend fun remove(wish: Wish) = Unit
+
+        override suspend fun findOnline(wish: Wish): List<Track> = emptyList()
+
+        override suspend fun take(
+            wish: Wish,
+            track: Track,
+        ) = Unit
+
+        override suspend fun resolve(): Int = 0
     }
 
     private class FakePlaylists : PlaylistRepository {

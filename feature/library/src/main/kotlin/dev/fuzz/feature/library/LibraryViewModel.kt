@@ -7,6 +7,7 @@ import dev.fuzz.core.domain.library.ObserveLibraryTracksUseCase
 import dev.fuzz.core.domain.player.PlayerController
 import dev.fuzz.core.domain.playlist.PlaylistRepository
 import dev.fuzz.core.domain.reaction.ReactionRepository
+import dev.fuzz.core.domain.wishlist.WishlistRepository
 import dev.fuzz.core.model.Playlist
 import dev.fuzz.core.model.PlaylistId
 import dev.fuzz.core.model.Track
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,6 +33,7 @@ data class LibraryState(
     val currentTrackId: TrackId? = null,
     val likedCount: Int = 0,
     val playlists: ImmutableList<Playlist> = persistentListOf(),
+    val wishCount: Int = 0,
 ) : UiState
 
 sealed interface LibraryIntent : UiIntent {
@@ -96,8 +99,10 @@ class LibraryViewModel
         private val collection: CollectionEditor,
         private val playlists: PlaylistRepository,
         private val player: PlayerController,
+        wishlist: WishlistRepository,
     ) : MviViewModel<LibraryState, LibraryIntent, LibraryEffect>(LibraryState()) {
         init {
+            wishlist.observeCount().onEach { count -> setState { copy(wishCount = count) } }.launchIn(viewModelScope)
             combine(
                 observeTracks(),
                 player.state.map { it.currentTrack?.id }.distinctUntilChanged(),

@@ -1,6 +1,7 @@
 package dev.fuzz.core.data.sync
 
 import androidx.room.withTransaction
+import dev.fuzz.core.data.wishlist.WishlistResolver
 import dev.fuzz.core.database.FuzzDatabase
 import dev.fuzz.core.database.dao.TrackDao
 import dev.fuzz.core.database.entity.TrackEntity
@@ -15,8 +16,12 @@ internal class RoomLocalLibraryStore
         private val db: FuzzDatabase,
         private val dao: TrackDao,
         private val clock: Clock,
+        private val wishlist: WishlistResolver,
     ) : LocalLibraryStore {
         override suspend fun replaceLocal(tracks: List<ScannedTrack>): SyncStats =
+            write(tracks).also { if (it.added > 0) wishlist.resolve() }
+
+        private suspend fun write(tracks: List<ScannedTrack>): SyncStats =
             db.withTransaction {
                 val now = clock.nowMs()
                 val existing = dao.getBySource(LOCAL_SOURCE).associateBy { it.id }

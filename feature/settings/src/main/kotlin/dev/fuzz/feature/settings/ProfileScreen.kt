@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.Equalizer
 import androidx.compose.material.icons.outlined.Power
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Bookmarks
 import androidx.compose.material.icons.rounded.FileUpload
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material3.Icon
@@ -48,6 +49,7 @@ internal fun ProfileEntry(
     onOpenSettings: () -> Unit,
     onOpenSound: () -> Unit,
     onOpenWave: () -> Unit,
+    onOpenWishlist: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val stats by viewModel.stats.collectAsStateWithLifecycle()
@@ -57,6 +59,7 @@ internal fun ProfileEntry(
         onOpenSettings = onOpenSettings,
         onOpenSound = onOpenSound,
         onOpenWave = onOpenWave,
+        onOpenWishlist = onOpenWishlist,
         stats = stats,
     )
 }
@@ -70,6 +73,7 @@ internal fun ProfileScreen(
     modifier: Modifier = Modifier,
     onOpenSound: () -> Unit = {},
     onOpenWave: () -> Unit = {},
+    onOpenWishlist: () -> Unit = {},
     stats: ListeningStats = ListeningStats(),
 ) {
     Column(
@@ -130,6 +134,12 @@ internal fun ProfileScreen(
                 R.string.feature_settings_menu_import,
                 R.string.feature_settings_menu_import_hint,
                 onOpenImport,
+            )
+            MenuRow(
+                Icons.Rounded.Bookmarks,
+                R.string.feature_settings_menu_wishlist,
+                R.string.feature_settings_menu_wishlist_hint,
+                onOpenWishlist,
             )
             MenuRow(
                 Icons.Outlined.Power,

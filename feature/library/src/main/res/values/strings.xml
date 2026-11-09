@@ -42,4 +42,17 @@
     <string name="feature_library_undo">Вернуть</string>
     <string name="feature_library_deleted_from_device">«%1$s» удалён с телефона</string>
     <string name="feature_library_delete_failed">Не получилось удалить файл</string>
+    <string name="feature_library_wishlist">Хочу добавить</string>
+    <string name="feature_library_wishlist_hint">Этих треков нет в коллекции. Когда трек появится на телефоне или найдётся в подключениях, он сам встанет на своё место в плейлистах.</string>
+    <string name="feature_library_wishlist_empty">Здесь пусто. Сюда попадают не найденные при импорте треки, файлы из резервной копии, которых нет на телефоне, и понравившиеся превью.</string>
+    <string name="feature_library_wish_import">Из импорта</string>
+    <string name="feature_library_wish_backup">Из резервной копии</string>
+    <string name="feature_library_wish_preview">Понравилось превью</string>
+    <string name="feature_library_wish_waits">Ждёт места в «%1$s»</string>
+    <string name="feature_library_wish_find">Найти у себя</string>
+    <string name="feature_library_wish_remove">Убрать из списка</string>
+    <string name="feature_library_wish_searching">Ищу…</string>
+    <string name="feature_library_wish_nothing">В подключениях этого трека нет. Можно купить его в Bandcamp или Qobuz, а файл положить в папку с музыкой</string>
+    <string name="feature_library_wish_options">Что нашлось в подключениях</string>
+    <string name="feature_library_wish_taken">«%1$s» теперь в коллекции</string>
 </resources>

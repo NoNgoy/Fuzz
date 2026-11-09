@@ -9,12 +9,14 @@ import dev.fuzz.core.data.search.OnlineRanking
 import dev.fuzz.core.data.sync.Clock
 import dev.fuzz.core.database.FuzzDatabase
 import dev.fuzz.core.database.dao.BackupDao
+import dev.fuzz.core.database.dao.WishDao
 import dev.fuzz.core.database.entity.ListenEntity
 import dev.fuzz.core.database.entity.PlaylistEntity
 import dev.fuzz.core.database.entity.PlaylistTrackEntity
 import dev.fuzz.core.database.entity.ReactionEntity
 import dev.fuzz.core.database.entity.SavedRefEntity
 import dev.fuzz.core.database.entity.TrackEntity
+import dev.fuzz.core.database.entity.WishEntity
 import dev.fuzz.core.datastore.UserPreferences
 import dev.fuzz.core.domain.backup.BackupFormatException
 import dev.fuzz.core.domain.backup.BackupRepository
@@ -39,6 +41,7 @@ internal class FileBackupRepository
         @ApplicationContext private val context: Context,
         private val db: FuzzDatabase,
         private val dao: BackupDao,
+        private val wishes: WishDao,
         private val preferences: DataStore<UserPreferences>,
         private val clock: Clock,
     ) : BackupRepository {
@@ -148,6 +151,7 @@ internal class FileBackupRepository
                         .takeIf { (id to l.startedAt) !in heard }
                 }
             dao.insertListens(listens)
+            wishes.insert(wishesFor(file, ids))
             return RestoreSummary(
                 likes = reactions.count { it.reaction == LIKE },
                 playlists = playlists,
@@ -156,6 +160,55 @@ internal class FileBackupRepository
                 connectionsNeedingPassword = 0,
             )
         }
+
+        /**
+         * Файлы прежнего телефона, которых здесь нет, уходят в «Хочу добавить» с местом в плейлистах:
+         * появится файл или найдётся трек в подключениях — встанет на место.
+         */
+        private fun wishesFor(
+            file: BackupFile,
+            ids: Map<String, String>,
+        ): List<WishEntity> {
+            val missing = file.tracks.filter { it.id !in ids }.associateBy { it.id }
+            if (missing.isEmpty()) return emptyList()
+            val now = clock.nowMs()
+            val inPlaylists = HashSet<String>()
+            val slots =
+                file.playlists.flatMap { p ->
+                    var placed = 0
+                    p.tracks.mapNotNull { trackId ->
+                        val track = missing[trackId]
+                        if (track == null) {
+                            placed++
+                            null
+                        } else {
+                            inPlaylists += trackId
+                            track.toWish(now, p.id, placed)
+                        }
+                    }
+                }
+            val liked = file.reactions.filter { it.reaction == LIKE }.mapTo(HashSet()) { it.trackId }
+            val loose =
+                missing.values.filter {
+                    it.id in liked && it.id !in inPlaylists
+                }.map { it.toWish(now, null, null) }
+            return slots + loose
+        }
+
+        private fun BackupTrack.toWish(
+            now: Long,
+            playlist: String?,
+            position: Int?,
+        ) = WishEntity(
+            title = title,
+            artist = artist,
+            album = album,
+            durationMs = durationMs.takeIf { it > 0 },
+            reason = "backup",
+            playlistId = playlist,
+            position = position,
+            addedAt = now,
+        )
 
         /** id трека в копии → id на этом телефоне и число файлов, которых здесь нет. */
         private suspend fun restoreTracks(file: BackupFile): Pair<Map<String, String>, Int> {

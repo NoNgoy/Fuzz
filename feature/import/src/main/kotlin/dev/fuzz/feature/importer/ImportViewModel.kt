@@ -6,8 +6,11 @@ import dev.fuzz.core.domain.importer.ImportItem
 import dev.fuzz.core.domain.importer.ImportOutcome
 import dev.fuzz.core.domain.importer.ImportPlaylistUseCase
 import dev.fuzz.core.domain.importer.SaveImportedPlaylistUseCase
+import dev.fuzz.core.domain.wishlist.WishReason
+import dev.fuzz.core.domain.wishlist.WishRequest
 import dev.fuzz.core.model.PlaylistId
 import dev.fuzz.core.model.Track
+import dev.fuzz.core.model.TrackId
 import dev.fuzz.core.ui.mvi.MviViewModel
 import dev.fuzz.core.ui.mvi.UiEffect
 import dev.fuzz.core.ui.mvi.UiIntent
@@ -112,6 +115,8 @@ sealed interface ImportEffect : UiEffect {
         val playlistId: PlaylistId,
         val name: String,
         val count: Int,
+        /** Сколько не найденных треков ушло в «Хочу добавить». */
+        val wished: Int = 0,
     ) : ImportEffect
 }
 
@@ -180,11 +185,34 @@ class ImportViewModel
         private fun save() {
             val report = currentState.stage as? ImportStage.Report ?: return
             val tracks = report.rows.mapNotNull { it.track }.distinctBy { it.id }
-            if (tracks.isEmpty() || report.name.isBlank() || report.saving) return
+            val missing = missingOf(report.rows)
+            val nothing = tracks.isEmpty() && missing.isEmpty()
+            if (nothing || report.name.isBlank() || report.saving) return
             updateReport { copy(saving = true) }
             viewModelScope.launch {
-                val id = savePlaylist(report.name, tracks)
-                sendEffect(ImportEffect.Saved(id, report.name, tracks.size))
+                val id = savePlaylist(report.name, tracks, missing)
+                sendEffect(ImportEffect.Saved(id, report.name, tracks.size, missing.size))
+            }
+        }
+
+        /** Строки без трека в коллекции с местом, которое им достанется в плейлисте. */
+        private fun missingOf(rows: List<ReportRow>): List<WishRequest> {
+            val placed = HashSet<TrackId>()
+            return rows.mapNotNull { row ->
+                val track = row.track
+                if (track != null) {
+                    placed += track.id
+                    return@mapNotNull null
+                }
+                val ref = row.item.ref
+                WishRequest(
+                    title = ref.title,
+                    artist = ref.artist,
+                    album = ref.album,
+                    durationMs = ref.durationMs,
+                    reason = WishReason.Import,
+                    position = placed.size,
+                )
             }
         }
 

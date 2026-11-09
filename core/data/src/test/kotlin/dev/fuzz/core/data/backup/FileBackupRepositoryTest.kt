@@ -68,7 +68,7 @@ class FileBackupRepositoryTest {
     private fun repo(
         db: FuzzDatabase,
         store: DataStore<UserPreferences>,
-    ) = FileBackupRepository(context, db, db.backupDao(), store, clock)
+    ) = FileBackupRepository(context, db, db.backupDao(), db.wishDao(), store, clock)
 
     private fun track(
         id: String,

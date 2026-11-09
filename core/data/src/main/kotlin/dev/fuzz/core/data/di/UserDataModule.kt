@@ -11,6 +11,7 @@ import dev.fuzz.core.data.online.FileDownloads
 import dev.fuzz.core.data.online.SavedOnlineTracks
 import dev.fuzz.core.data.settings.DataStoreAppearanceRepository
 import dev.fuzz.core.data.stats.RoomListeningStats
+import dev.fuzz.core.data.wishlist.RoomWishlist
 import dev.fuzz.core.domain.artist.ArtistPages
 import dev.fuzz.core.domain.backup.BackupRepository
 import dev.fuzz.core.domain.download.Downloads
@@ -18,6 +19,7 @@ import dev.fuzz.core.domain.library.CollectionEditor
 import dev.fuzz.core.domain.player.SavedStreams
 import dev.fuzz.core.domain.settings.AppearanceRepository
 import dev.fuzz.core.domain.stats.ListeningStatsRepository
+import dev.fuzz.core.domain.wishlist.WishlistRepository
 
 /** То, что человек правит в настройках и профиле: оформление, статистика, ручные правки коллекции. */
 @Module
@@ -43,4 +45,7 @@ internal interface UserDataModule {
 
     @Binds
     fun bindBackup(impl: FileBackupRepository): BackupRepository
+
+    @Binds
+    fun bindWishlist(impl: RoomWishlist): WishlistRepository
 }

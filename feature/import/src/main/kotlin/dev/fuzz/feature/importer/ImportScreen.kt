@@ -70,7 +70,12 @@ internal fun ImportEntry(
     CollectEffects(viewModel.effects) { effect ->
         when (effect) {
             is ImportEffect.Saved -> {
-                val text = resources.getString(R.string.feature_import_saved, effect.name)
+                val text =
+                    if (effect.wished > 0) {
+                        resources.getString(R.string.feature_import_saved_wished, effect.name, effect.wished)
+                    } else {
+                        resources.getString(R.string.feature_import_saved, effect.name)
+                    }
                 Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
                 onSaved(effect.playlistId.value)
             }
@@ -238,7 +243,7 @@ private fun Report(
         }
         Button(
             onClick = { onIntent(ImportIntent.Save) },
-            enabled = saveCount > 0 && !report.saving,
+            enabled = report.rows.isNotEmpty() && !report.saving,
             modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(Spacing.screen).height(48.dp),
         ) {
             Text(pluralStringResource(R.plurals.feature_import_save, saveCount, saveCount))
