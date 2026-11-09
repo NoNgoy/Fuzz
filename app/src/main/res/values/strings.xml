@@ -11,4 +11,5 @@
     <string name="crash_copied">Ошибка скопирована</string>
     <string name="crash_share">Отправить…</string>
     <string name="crash_restart">Открыть Fuzz снова</string>
+    <string name="player_error">Не получилось включить трек. %1$s</string>
 </resources>

@@ -2,6 +2,7 @@ package dev.fuzz.core.player.controller
 
 import android.content.ComponentName
 import android.content.Context
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -145,6 +146,7 @@ internal class MediaControllerPlayerController
                             Player.REPEAT_MODE_ALL -> RepeatMode.All
                             else -> RepeatMode.Off
                         },
+                    error = c.playerError?.let(::describe),
                 )
             }
         }
@@ -175,5 +177,14 @@ internal class MediaControllerPlayerController
 
         private companion object {
             const val TICK_MS = 500L
+
+            /** Код ошибки плеера и цепочка причин: по ним видно, сеть это, формат или ссылка. */
+            fun describe(error: PlaybackException): String =
+                generateSequence<Throwable>(error) { it.cause }
+                    .drop(1)
+                    .mapNotNull { it.message?.takeIf(String::isNotBlank) ?: it.javaClass.simpleName }
+                    .distinct()
+                    .toList()
+                    .let { causes -> (listOf(error.errorCodeName) + causes).joinToString(": ") }
         }
     }

@@ -11,6 +11,8 @@ import dev.fuzz.core.testing.FakePlayerController
 import dev.fuzz.core.testing.SampleTracks
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -76,7 +78,22 @@ class SearchViewModelTest {
             assertEquals(setOf(OnlineOrigin.Server), online.lastOrigins)
         }
 
+    @Test
+    fun `без ссылки на звук экран сообщает, а плеер не трогается`() =
+        runTest(dispatcher) {
+            online.resolvable = false
+            val vm = SearchViewModel(SearchLibraryUseCase(library), online, player)
+            vm.onIntent(SearchIntent.QueryChanged("toxicity"))
+            advanceUntilIdle()
+            val effect = async { vm.effects.first() }
+            vm.onIntent(SearchIntent.PlayOnline(0))
+            advanceUntilIdle()
+            assertEquals(SearchEffect.NotPlayable, effect.await())
+            assertTrue(player.state.value.queue.isEmpty())
+        }
+
     private inner class FakeOnline : OnlineSearch {
+        var resolvable = true
         var calls = 0
         var lastOrigins: Set<OnlineOrigin> = emptySet()
 
@@ -90,7 +107,7 @@ class SearchViewModelTest {
         }
 
         override suspend fun playable(tracks: List<Track>) =
-            tracks.map {
+            tracks.filter { resolvable }.map {
                 it.copy(playbackUri = "https://server/${it.id.value}")
             }
     }

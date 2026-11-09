@@ -79,7 +79,10 @@ sealed interface SearchIntent : UiIntent {
     ) : SearchIntent
 }
 
-sealed interface SearchEffect : UiEffect
+sealed interface SearchEffect : UiEffect {
+    /** Ни для одного выбранного трека источник не дал ссылку на звук. */
+    data object NotPlayable : SearchEffect
+}
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -135,7 +138,7 @@ class SearchViewModel
                     val tracks = currentState.online.drop(intent.index)
                     viewModelScope.launch {
                         val playable = onlineSearch.playable(tracks)
-                        if (playable.isNotEmpty()) player.playQueue(playable)
+                        if (playable.isNotEmpty()) player.playQueue(playable) else sendEffect(SearchEffect.NotPlayable)
                     }
                 }
 
