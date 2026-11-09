@@ -7,6 +7,7 @@ import dev.fuzz.core.data.reaction.OfflineReactionRepository
 import dev.fuzz.core.data.sync.Clock
 import dev.fuzz.core.data.wave.ExternalTrackRegistry
 import dev.fuzz.core.database.FuzzDatabase
+import dev.fuzz.core.database.entity.DownloadEntity
 import dev.fuzz.core.domain.connection.ConnectedSources
 import dev.fuzz.core.domain.player.SavedStreams
 import dev.fuzz.core.domain.plugin.ExternalId
@@ -47,7 +48,7 @@ class SavedOnlineTracksTest {
     private val id = TrackId("online-1")
 
     private fun saved(registry: ExternalTrackRegistry) =
-        SavedOnlineTracks(db.trackDao(), db.savedRefDao(), registry, connected, emptyList(), clock)
+        SavedOnlineTracks(db.trackDao(), db.savedRefDao(), db.downloadDao(), registry, connected, emptyList(), clock)
 
     @After
     fun tearDown() = db.close()
@@ -89,6 +90,20 @@ class SavedOnlineTracksTest {
             playlists.addTracks(playlist, listOf(id))
 
             assertEquals(listOf(id), playlists.observeTracks(playlist).first().map { it.id })
+        }
+
+    @Test
+    fun `downloaded file plays without network`() =
+        runTest {
+            val before = ExternalTrackRegistry().apply { remember(id, plugin, ref, TrackOrigin.OpenCatalog) }
+            saved(before).persist(listOf(id))
+            val file = java.io.File.createTempFile("fuzz", ".m4a")
+            db.downloadDao().upsert(DownloadEntity(id.value, file.path, 1, 1))
+
+            val uri = saved(ExternalTrackRegistry()).resolve(id.value)
+
+            assertEquals(android.net.Uri.fromFile(file).toString(), uri)
+            assertEquals(emptyList<String>(), plugin.asked)
         }
 
     @Test

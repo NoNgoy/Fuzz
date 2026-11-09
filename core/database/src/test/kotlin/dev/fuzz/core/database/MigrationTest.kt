@@ -113,6 +113,18 @@ class MigrationTest {
         }
     }
 
+    @Test
+    fun `6 to 7 adds downloads`() {
+        helper.createDatabase(DB, 6).close()
+
+        helper.runMigrationsAndValidate(DB, 7, true).use { db ->
+            db.query("SELECT COUNT(*) FROM downloads").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(0, cursor.getInt(0))
+            }
+        }
+    }
+
     private companion object {
         const val DB = "migration-test"
     }

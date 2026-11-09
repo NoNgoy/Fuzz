@@ -3,6 +3,8 @@ package dev.fuzz.app
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.fuzz.core.domain.download.DownloadEvent
+import dev.fuzz.core.domain.download.Downloads
 import dev.fuzz.core.domain.onboarding.OnboardingRepository
 import dev.fuzz.core.domain.player.PlayerController
 import dev.fuzz.core.domain.settings.AppearanceRepository
@@ -33,7 +35,11 @@ class MainViewModel
         onboarding: OnboardingRepository,
         player: PlayerController,
         appearance: AppearanceRepository,
+        downloads: Downloads,
     ) : ViewModel() {
+        /** Итог фоновой загрузки: экран, с которого её начали, к этому времени может быть закрыт. */
+        val downloadEvents: Flow<DownloadEvent> = downloads.events
+
         /** Ошибки плеера для подсказки внизу экрана: каждая новая показывается один раз. */
         val playerErrors: Flow<String> = player.state.map { it.error }.distinctUntilChanged().filterNotNull()
 

@@ -6,10 +6,12 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.fuzz.core.data.artist.DefaultArtistPages
 import dev.fuzz.core.data.library.RoomCollectionEditor
+import dev.fuzz.core.data.online.FileDownloads
 import dev.fuzz.core.data.online.SavedOnlineTracks
 import dev.fuzz.core.data.settings.DataStoreAppearanceRepository
 import dev.fuzz.core.data.stats.RoomListeningStats
 import dev.fuzz.core.domain.artist.ArtistPages
+import dev.fuzz.core.domain.download.Downloads
 import dev.fuzz.core.domain.library.CollectionEditor
 import dev.fuzz.core.domain.player.SavedStreams
 import dev.fuzz.core.domain.settings.AppearanceRepository
@@ -33,4 +35,7 @@ internal interface UserDataModule {
 
     @Binds
     fun bindSavedStreams(impl: SavedOnlineTracks): SavedStreams
+
+    @Binds
+    fun bindDownloads(impl: FileDownloads): Downloads
 }

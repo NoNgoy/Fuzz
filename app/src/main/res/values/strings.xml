@@ -11,5 +11,7 @@
     <string name="crash_copied">Ошибка скопирована</string>
     <string name="crash_share">Отправить…</string>
     <string name="crash_restart">Открыть Fuzz снова</string>
+    <string name="download_done">«%1$s» скачан и играет без интернета</string>
+    <string name="download_failed">Не получилось скачать «%1$s». Проверьте сеть и подключение</string>
     <string name="player_error">Не получилось включить трек. %1$s</string>
 </resources>

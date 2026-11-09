@@ -1,7 +1,9 @@
 package dev.fuzz.core.data.online
 
+import android.net.Uri
 import dev.fuzz.core.data.sync.Clock
 import dev.fuzz.core.data.wave.ExternalTrackRegistry
+import dev.fuzz.core.database.dao.DownloadDao
 import dev.fuzz.core.database.dao.SavedRefDao
 import dev.fuzz.core.database.dao.TrackDao
 import dev.fuzz.core.database.entity.SavedRefEntity
@@ -16,6 +18,7 @@ import dev.fuzz.core.model.TrackId
 import dev.fuzz.engine.recommend.model.TrackOrigin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,6 +33,7 @@ internal class SavedOnlineTracks
     constructor(
         private val tracks: TrackDao,
         private val refs: SavedRefDao,
+        private val downloads: DownloadDao,
         private val registry: ExternalTrackRegistry,
         private val connected: ConnectedSources,
         private val catalogs: List<@JvmSuppressWildcards CatalogSource>,
@@ -56,7 +60,14 @@ internal class SavedOnlineTracks
             }
         }
 
+        /** Скачанный файл, если он есть, иначе свежая ссылка на поток у источника. */
         override suspend fun resolve(trackId: String): String? {
+            val local = downloads.get(trackId)?.path?.let(::File)?.takeIf { it.exists() }
+            return local?.let { Uri.fromFile(it).toString() } ?: streamUrl(trackId)
+        }
+
+        /** Ссылка на поток у источника, мимо скачанного файла. */
+        suspend fun streamUrl(trackId: String): String? {
             val id = TrackId(trackId)
             val known = registry.entry(id) != null || restore(id)
             return if (known) registry.resolve(id)?.playbackUri else null

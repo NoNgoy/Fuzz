@@ -34,7 +34,11 @@ class MainActivity : ComponentActivity() {
                 val ready = launch as? LaunchState.Ready ?: return@FuzzTheme
                 // Стартовый экран выбирается один раз: дальнейшие изменения флага не пересобирают граф.
                 val showOnboarding = remember { !ready.onboardingCompleted }
-                FuzzApp(showOnboarding = showOnboarding, playerErrors = viewModel.playerErrors)
+                FuzzApp(
+                    showOnboarding = showOnboarding,
+                    playerErrors = viewModel.playerErrors,
+                    downloadEvents = viewModel.downloadEvents,
+                )
             }
         }
     }

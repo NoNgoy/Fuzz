@@ -44,6 +44,7 @@ class OfflinePlaylistRepositoryTest {
             SavedOnlineTracks(
                 db.trackDao(),
                 db.savedRefDao(),
+                db.downloadDao(),
                 ExternalTrackRegistry(),
                 NoConnections,
                 emptyList(),

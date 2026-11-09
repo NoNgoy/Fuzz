@@ -11,6 +11,14 @@
     <string name="core_ui_liked">Добавлено в «Мне нравится»</string>
     <string name="core_ui_added_to">Добавлено в «%1$s»</string>
     <string name="core_ui_already_in">Трек уже есть в «%1$s»</string>
+    <string name="core_ui_download">Скачать на телефон</string>
+    <string name="core_ui_download_hint">Будет играть без интернета</string>
+    <string name="core_ui_remove_download">Удалить загрузку</string>
+    <string name="core_ui_remove_download_hint">Трек останется в коллекции и будет играть из сети</string>
+    <string name="core_ui_download_started">Скачиваю «%1$s»</string>
+    <string name="core_ui_download_preview">Это превью на 30 секунд: полной версии в ваших подключениях нет</string>
+    <string name="core_ui_download_on_phone">Этот трек уже на телефоне</string>
+    <string name="core_ui_download_removed">Загрузка удалена</string>
     <string name="core_ui_new_playlist">Новый плейлист</string>
     <string name="core_ui_playlist_name">Название</string>
     <plurals name="core_ui_tracks">

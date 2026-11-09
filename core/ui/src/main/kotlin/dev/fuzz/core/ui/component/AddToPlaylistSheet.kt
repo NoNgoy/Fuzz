@@ -16,6 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.DownloadDone
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,9 +59,10 @@ fun AddToPlaylistSheet(
     onHide: (() -> Unit)? = null,
     onDeleteFromDevice: (() -> Unit)? = null,
     onLike: (() -> Unit)? = null,
+    download: SheetDownload? = null,
 ) {
     var naming by rememberSaveable { mutableStateOf(false) }
-    val hasTrackActions = onHide != null || onDeleteFromDevice != null || onLike != null
+    val hasTrackActions = onHide != null || onDeleteFromDevice != null || onLike != null || download != null
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Text(
             title ?: stringResource(R.string.core_ui_add_to_playlist),
@@ -77,6 +80,25 @@ fun AddToPlaylistSheet(
                         null,
                         onClick = onLike,
                     )
+                }
+            }
+            if (download != null) {
+                item {
+                    if (download.downloaded) {
+                        SheetRow(
+                            Icons.Rounded.DownloadDone,
+                            stringResource(R.string.core_ui_remove_download),
+                            stringResource(R.string.core_ui_remove_download_hint),
+                            onClick = download.onClick,
+                        )
+                    } else {
+                        SheetRow(
+                            Icons.Rounded.Download,
+                            stringResource(R.string.core_ui_download),
+                            stringResource(R.string.core_ui_download_hint),
+                            onClick = download.onClick,
+                        )
+                    }
                 }
             }
             if (onHide != null) {
@@ -133,6 +155,12 @@ fun AddToPlaylistSheet(
         )
     }
 }
+
+/** Строка «Скачать» или «Удалить загрузку» в шторке трека из сети. */
+data class SheetDownload(
+    val downloaded: Boolean,
+    val onClick: () -> Unit,
+)
 
 @Composable
 private fun SheetRow(

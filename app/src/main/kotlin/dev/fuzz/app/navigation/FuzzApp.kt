@@ -27,6 +27,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dev.fuzz.app.R
 import dev.fuzz.core.design.theme.FuzzTheme
+import dev.fuzz.core.domain.download.DownloadEvent
 import dev.fuzz.feature.connections.ConnectionsRoute
 import dev.fuzz.feature.connections.connectionsScreen
 import dev.fuzz.feature.home.HomeRoute
@@ -58,10 +59,18 @@ import kotlinx.coroutines.flow.emptyFlow
 fun FuzzApp(
     showOnboarding: Boolean,
     playerErrors: Flow<String> = emptyFlow(),
+    downloadEvents: Flow<DownloadEvent> = emptyFlow(),
     navController: NavHostController = rememberNavController(),
 ) {
     val snackbar = remember { SnackbarHostState() }
     val errorText = stringResource(R.string.player_error)
+    val downloadDone = stringResource(R.string.download_done)
+    val downloadFailed = stringResource(R.string.download_failed)
+    LaunchedEffect(downloadEvents) {
+        downloadEvents.collect { event ->
+            snackbar.showSnackbar((if (event.success) downloadDone else downloadFailed).format(event.title))
+        }
+    }
     LaunchedEffect(playerErrors) {
         playerErrors.collect { error ->
             snackbar.showSnackbar(errorText.format(error), withDismissAction = true, duration = SnackbarDuration.Long)
