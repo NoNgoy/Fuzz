@@ -7,7 +7,41 @@
     <string name="feature_settings_stat_new_tracks">новых треков</string>
     <string name="feature_settings_stat_new_artists">новых артистов</string>
     <string name="feature_settings_year_title">Итоги года</string>
-    <string name="feature_settings_year_body">Появятся в декабре</string>
+    <string name="feature_settings_year_body">Что звучало в этом году</string>
+    <string name="feature_settings_year_body_hours">%1$s ч музыки · больше всего %2$s</string>
+    <string name="feature_settings_year_screen">Итоги %1$d</string>
+    <string name="feature_settings_year_empty">Пока пусто: послушайте что-нибудь, и здесь появятся цифры.</string>
+    <string name="feature_settings_year_final">Ваш год в музыке.</string>
+    <string name="feature_settings_year_so_far">Год ещё идёт, цифры пока что. В декабре это будут настоящие итоги.</string>
+    <string name="feature_settings_year_hours">часов музыки</string>
+    <string name="feature_settings_year_hours_short">%1$s ч</string>
+    <string name="feature_settings_year_favourite">Любимый артист: %1$s</string>
+    <string name="feature_settings_year_plays_label">прослушиваний</string>
+    <string name="feature_settings_year_distinct">разных треков</string>
+    <string name="feature_settings_year_month">самый музыкальный месяц</string>
+    <string name="feature_settings_year_new_artists">новых артистов</string>
+    <string name="feature_settings_year_artists">Любимые артисты</string>
+    <string name="feature_settings_year_tracks">Любимые треки</string>
+    <plurals name="feature_settings_year_plays">
+        <item quantity="one">%d раз</item>
+        <item quantity="few">%d раза</item>
+        <item quantity="many">%d раз</item>
+        <item quantity="other">%d раза</item>
+    </plurals>
+    <string-array name="feature_settings_months">
+        <item>Январь</item>
+        <item>Февраль</item>
+        <item>Март</item>
+        <item>Апрель</item>
+        <item>Май</item>
+        <item>Июнь</item>
+        <item>Июль</item>
+        <item>Август</item>
+        <item>Сентябрь</item>
+        <item>Октябрь</item>
+        <item>Ноябрь</item>
+        <item>Декабрь</item>
+    </string-array>
     <string name="feature_settings_menu_import">Импорт</string>
     <string name="feature_settings_menu_import_hint">Файлы, плейлисты, история</string>
     <string name="feature_settings_menu_connections">Подключения</string>

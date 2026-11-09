@@ -34,9 +34,11 @@ fun NavGraphBuilder.profileScreen(
     onOpenSound: () -> Unit,
     onOpenWave: () -> Unit,
     onOpenWishlist: () -> Unit = {},
+    onOpenYear: () -> Unit = {},
 ) {
     composable<ProfileRoute> {
         ProfileEntry(
+            onOpenYear = onOpenYear,
             onOpenWishlist = onOpenWishlist,
             onOpenImport = onOpenImport,
             onOpenConnections = onOpenConnections,
@@ -45,4 +47,12 @@ fun NavGraphBuilder.profileScreen(
             onOpenWave = onOpenWave,
         )
     }
+}
+
+/** Итоги года: открываются с баннера в профиле. */
+@Serializable
+data object YearRecapRoute
+
+fun NavGraphBuilder.yearRecapScreen(onBack: () -> Unit) {
+    composable<YearRecapRoute> { YearRecapEntry(onBack) }
 }

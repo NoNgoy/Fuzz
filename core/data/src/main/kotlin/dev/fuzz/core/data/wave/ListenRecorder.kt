@@ -40,7 +40,7 @@ class ListenRecorder
             if (started) return
             started = true
             scope.launch {
-                dao.deleteOlderThan(clock.nowMs() - HISTORY_MS)
+                dao.deleteOlderThan(clock.nowMs() - RETENTION_MS)
                 player.state.collect { onState(it) }
             }
         }
@@ -80,7 +80,10 @@ class ListenRecorder
             const val COMPLETE_SHARE = 0.9
             const val BUFFER = 16
 
-            /** Сколько истории держать: вклад в профиль затухает за 30 дней, полгода с запасом. */
+            /** Сколько истории берёт волна: вклад в профиль затухает за 30 дней, полгода с запасом. */
             const val HISTORY_MS = 180L * 24 * 60 * 60 * 1000
+
+            /** Сколько истории хранить: год целиком для итогов и запас, чтобы досмотреть их в январе. */
+            const val RETENTION_MS = 400L * 24 * 60 * 60 * 1000
         }
     }

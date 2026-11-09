@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -41,6 +42,7 @@ import dev.fuzz.core.design.theme.FuzzTheme
 import dev.fuzz.core.design.theme.Spacing
 import dev.fuzz.core.design.theme.Unbounded
 import dev.fuzz.core.domain.stats.ListeningStats
+import dev.fuzz.core.domain.stats.YearRecap
 
 @Composable
 internal fun ProfileEntry(
@@ -50,9 +52,11 @@ internal fun ProfileEntry(
     onOpenSound: () -> Unit,
     onOpenWave: () -> Unit,
     onOpenWishlist: () -> Unit = {},
+    onOpenYear: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val stats by viewModel.stats.collectAsStateWithLifecycle()
+    val recap by viewModel.recap.collectAsStateWithLifecycle()
     ProfileScreen(
         onOpenImport = onOpenImport,
         onOpenConnections = onOpenConnections,
@@ -60,7 +64,9 @@ internal fun ProfileEntry(
         onOpenSound = onOpenSound,
         onOpenWave = onOpenWave,
         onOpenWishlist = onOpenWishlist,
+        onOpenYear = onOpenYear,
         stats = stats,
+        recap = recap,
     )
 }
 
@@ -74,7 +80,9 @@ internal fun ProfileScreen(
     onOpenSound: () -> Unit = {},
     onOpenWave: () -> Unit = {},
     onOpenWishlist: () -> Unit = {},
+    onOpenYear: () -> Unit = {},
     stats: ListeningStats = ListeningStats(),
+    recap: YearRecap? = null,
 ) {
     Column(
         modifier =
@@ -127,7 +135,7 @@ internal fun ProfileScreen(
                 Modifier.weight(1f),
             )
         }
-        YearBanner()
+        YearBanner(recap, onOpenYear)
         Column {
             MenuRow(
                 Icons.Rounded.FileUpload,
@@ -180,26 +188,44 @@ private fun Stat(
 }
 
 @Composable
-private fun YearBanner() {
+internal fun yearGradient(): Brush {
     val hue = (FuzzTheme.colors.accentHue + BANNER_HUE_SHIFT) % FULL_CIRCLE
+    return Brush.linearGradient(listOf(FuzzTheme.colors.lamp, Color.hsl(hue, 0.9f, 0.62f)))
+}
+
+@Composable
+private fun YearBanner(
+    recap: YearRecap?,
+    onClick: () -> Unit,
+) {
+    val favourite = recap?.topArtists?.firstOrNull()
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .background(
-                    Brush.linearGradient(listOf(FuzzTheme.colors.lamp, Color.hsl(hue, 0.9f, 0.62f))),
-                    RoundedCornerShape(20.dp),
-                ).padding(14.dp),
+                .clip(RoundedCornerShape(20.dp))
+                .background(yearGradient())
+                .clickable(onClick = onClick)
+                .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
             Text(
-                stringResource(R.string.feature_settings_year_title),
+                recap?.let { stringResource(R.string.feature_settings_year_screen, it.year) }
+                    ?: stringResource(R.string.feature_settings_year_title),
                 style = MaterialTheme.typography.titleMedium.copy(fontFamily = Unbounded),
                 color = FuzzTheme.colors.onLamp,
             )
             Text(
-                stringResource(R.string.feature_settings_year_body),
+                if (favourite == null) {
+                    stringResource(R.string.feature_settings_year_body)
+                } else {
+                    stringResource(
+                        R.string.feature_settings_year_body_hours,
+                        formatHours(recap.listenedMs),
+                        favourite.name,
+                    )
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = FuzzTheme.colors.onLamp,
             )
