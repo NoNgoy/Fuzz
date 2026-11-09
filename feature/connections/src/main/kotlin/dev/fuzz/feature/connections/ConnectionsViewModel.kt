@@ -6,6 +6,7 @@ import dev.fuzz.core.domain.connection.ConnectionCheck
 import dev.fuzz.core.domain.connection.ConnectionConfig
 import dev.fuzz.core.domain.connection.ConnectionKind
 import dev.fuzz.core.domain.connection.ConnectionsRepository
+import dev.fuzz.core.domain.connection.RequestLine
 import dev.fuzz.core.ui.mvi.MviViewModel
 import dev.fuzz.core.ui.mvi.UiEffect
 import dev.fuzz.core.ui.mvi.UiIntent
@@ -26,9 +27,16 @@ data class ConnectionEditor(
     val username: String = "",
     val secret: String = "",
     val manifest: String = "",
+    /** Код JS-плагина; описание плагина лежит в [manifest]. */
+    val script: String = "",
     val hasSavedSecret: Boolean = false,
     val checking: Boolean = false,
     val problem: ConnectionCheck? = null,
+    /** Проверка сохранённого подключения кнопкой «Проверить»: идёт и чем закончилась. */
+    val testing: Boolean = false,
+    val testResult: ConnectionCheck? = null,
+    /** Последние запросы сохранённого подключения, новые сверху. */
+    val journal: ImmutableList<RequestLine> = persistentListOf(),
 ) {
     val isNew: Boolean get() = id == null
     val canSave: Boolean
@@ -36,6 +44,7 @@ data class ConnectionEditor(
             !checking &&
                 when (kind) {
                     ConnectionKind.Manifest -> manifest.isNotBlank()
+                    ConnectionKind.Script -> manifest.isNotBlank() && script.isNotBlank()
                     else -> baseUrl.isNotBlank()
                 }
 }
@@ -61,6 +70,9 @@ sealed interface ConnectionsIntent : UiIntent {
     ) : ConnectionsIntent
 
     data object Save : ConnectionsIntent
+
+    /** «Проверить» у сохранённого подключения: пробный поиск и свежий журнал запросов. */
+    data object Test : ConnectionsIntent
 
     data object CloseEditor : ConnectionsIntent
 
@@ -114,6 +126,10 @@ class ConnectionsViewModel
                     save()
                 }
 
+                ConnectionsIntent.Test -> {
+                    test()
+                }
+
                 ConnectionsIntent.CloseEditor -> {
                     setState { copy(editor = null) }
                 }
@@ -156,7 +172,9 @@ class ConnectionsViewModel
                             baseUrl = config.baseUrl,
                             username = config.username,
                             manifest = config.manifest,
+                            script = config.script,
                             hasSavedSecret = config.hasSecret,
+                            journal = repository.journal(config.id).toImmutableList(),
                         ),
                 )
             }
@@ -176,6 +194,7 @@ class ConnectionsViewModel
                         baseUrl = editor.baseUrl.trim(),
                         username = editor.username.trim(),
                         manifest = editor.manifest.trim(),
+                        script = editor.script.trim(),
                         enabled = existing?.enabled ?: true,
                     )
                 // При правке пустое поле пароля значит «не менять».
@@ -193,6 +212,21 @@ class ConnectionsViewModel
             }
         }
 
+        private fun test() {
+            val id = currentState.editor?.id ?: return
+            updateEditor { copy(testing = true, testResult = null) }
+            viewModelScope.launch {
+                val result = repository.check(id)
+                updateEditor {
+                    if (this.id != id) {
+                        this
+                    } else {
+                        copy(testing = false, testResult = result, journal = repository.journal(id).toImmutableList())
+                    }
+                }
+            }
+        }
+
         private fun delete() {
             val target = currentState.confirmDelete ?: return
             setState { copy(confirmDelete = null) }
@@ -202,7 +236,13 @@ class ConnectionsViewModel
         private fun updateEditor(change: ConnectionEditor.() -> ConnectionEditor) =
             setState { editor?.let { copy(editor = it.change()) } ?: this }
 
+        /** Без названия берём хост адреса, а у манифеста и плагина — поле name из описания. */
         private fun defaultName(editor: ConnectionEditor): String =
             runCatching { java.net.URI(editor.baseUrl.trim()).host }.getOrNull()?.takeIf { it.isNotBlank() }
+                ?: NAME_FIELD.find(editor.manifest)?.groupValues?.get(1)?.takeIf { it.isNotBlank() }
                 ?: editor.kind.name
+
+        private companion object {
+            val NAME_FIELD = Regex("\"name\"\\s*:\\s*\"([^\"]+)\"")
+        }
     }

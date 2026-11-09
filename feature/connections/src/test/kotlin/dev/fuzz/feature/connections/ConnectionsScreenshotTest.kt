@@ -3,6 +3,7 @@ package dev.fuzz.feature.connections
 import dev.fuzz.core.domain.connection.ConnectionCheck
 import dev.fuzz.core.domain.connection.ConnectionConfig
 import dev.fuzz.core.domain.connection.ConnectionKind
+import dev.fuzz.core.domain.connection.RequestLine
 import dev.fuzz.core.testing.captureThemedScreens
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.Test
@@ -54,6 +55,53 @@ class ConnectionsScreenshotTest {
                             username = "sasha",
                             secret = "123",
                             problem = ConnectionCheck.Unauthorized,
+                        ),
+                ),
+                {},
+                {},
+            )
+        }
+
+    @Test
+    fun manifestTested() {
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("UTC"))
+        captureThemedScreens("connections_manifest_journal") {
+            ConnectionsScreen(
+                ConnectionsState(
+                    list,
+                    editor =
+                        ConnectionEditor(
+                            ConnectionKind.Manifest,
+                            id = "3",
+                            name = "Мой API",
+                            manifest = """{"version":1,"name":"Мой API","baseUrl":"https://api.example.ru"}""",
+                            hasSavedSecret = true,
+                            testResult = ConnectionCheck.Unauthorized,
+                            journal =
+                                persistentListOf(
+                                    RequestLine(1_700_000_120_000, "/v1/search?q=love&limit=1", 401, 182),
+                                    RequestLine(1_700_000_060_000, "/oauth/token", null, 15_000, "Таймаут"),
+                                    RequestLine(1_700_000_000_000, "/v1/search?q=a&limit=1", 200, 95),
+                                ),
+                        ),
+                ),
+                {},
+                {},
+            )
+        }
+    }
+
+    @Test
+    fun scriptEditor() =
+        captureThemedScreens("connections_script") {
+            ConnectionsScreen(
+                ConnectionsState(
+                    list,
+                    editor =
+                        ConnectionEditor(
+                            ConnectionKind.Script,
+                            manifest = """{"version":1,"id":"demo","name":"Демо","domains":["api.example.ru"]}""",
+                            script = "const plugin = {\n  async search(query, limit) { return [] },\n};",
                         ),
                 ),
                 {},

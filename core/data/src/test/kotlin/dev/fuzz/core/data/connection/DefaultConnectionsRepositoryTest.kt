@@ -7,6 +7,7 @@ import dev.fuzz.core.domain.connection.ConnectionConfig
 import dev.fuzz.core.domain.connection.ConnectionKind
 import dev.fuzz.core.domain.connection.ConnectionPlugins
 import dev.fuzz.core.domain.connection.MusicSourceFactory
+import dev.fuzz.core.domain.connection.RequestLine
 import dev.fuzz.core.domain.plugin.MusicSource
 import dev.fuzz.core.domain.plugin.PluginResult
 import dev.fuzz.core.domain.plugin.SearchResult
@@ -35,14 +36,22 @@ class DefaultConnectionsRepositoryTest {
     private val factory =
         object : MusicSourceFactory {
             val created = mutableListOf<String?>()
+            var closed = 0
 
+            /** Пароль «rotate» сервер принимает и тут же меняет на «good», как OAuth 2 с refresh token. */
             override fun create(
                 config: ConnectionConfig,
                 secret: String?,
+                onSecretRotated: (String) -> Unit,
             ): ConnectionPlugins {
                 require(config.baseUrl.startsWith("https://")) { "плохой адрес" }
                 created += secret
-                return ConnectionPlugins(FakeSource(config.id, secret == "good"))
+                if (secret == "rotate") onSecretRotated("good")
+                return ConnectionPlugins(
+                    source = FakeSource(config.id, secret == "good" || secret == "rotate"),
+                    journal = { listOf(RequestLine(1, "/search", 200, 5)) },
+                    close = { closed++ },
+                )
             }
         }
 
@@ -102,6 +111,40 @@ class DefaultConnectionsRepositoryTest {
             repository.remove("c1")
             assertTrue(repository.connections.first().isEmpty())
             assertNull(store.secret("c1"))
+        }
+
+    @Test
+    fun `новый секрет от сервера сохраняется`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val (repository, store) = repository()
+            assertEquals(ConnectionCheck.Ok, repository.save(config, "rotate"))
+            assertEquals("good", store.secret("c1"))
+        }
+
+    @Test
+    fun `проверка и журнал сохранённого подключения`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val (repository, _) = repository()
+            repository.save(config, "good")
+            assertEquals(ConnectionCheck.Ok, repository.check("c1"))
+            assertEquals("/search", repository.journal("c1").single().path)
+
+            repository.setEnabled("c1", false)
+            assertEquals(ConnectionCheck.Ok, repository.check("c1"))
+            assertTrue(repository.journal("c1").isEmpty())
+            assertEquals(ConnectionCheck.Invalid(null), repository.check("нет такого"))
+        }
+
+    @Test
+    fun `пересобранные и пробные плагины закрываются`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val (repository, _) = repository()
+            repository.save(config, "good")
+            // Пробный плагин закрыт сразу после проверки.
+            assertEquals(1, factory.closed)
+            repository.remove("c1")
+            // Плагин подключения закрыт при удалении.
+            assertEquals(2, factory.closed)
         }
 
     private class FakeSource(

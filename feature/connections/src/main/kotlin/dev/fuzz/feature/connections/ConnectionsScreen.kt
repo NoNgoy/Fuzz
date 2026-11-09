@@ -29,14 +29,17 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.Dns
 import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.Javascript
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.Movie
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -50,6 +53,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -59,10 +63,12 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fuzz.core.design.component.ScreenTitle
 import dev.fuzz.core.design.component.SectionHeader
+import dev.fuzz.core.design.theme.MonoLabel
 import dev.fuzz.core.design.theme.Spacing
 import dev.fuzz.core.domain.connection.ConnectionCheck
 import dev.fuzz.core.domain.connection.ConnectionConfig
 import dev.fuzz.core.domain.connection.ConnectionKind
+import dev.fuzz.core.domain.connection.RequestLine
 import dev.fuzz.core.ui.mvi.CollectEffects
 
 @Composable
@@ -200,7 +206,9 @@ private fun ConnectionCard(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    stringResource(config.kind.label) + " · " + config.baseUrl.substringAfter("://"),
+                    listOf(stringResource(config.kind.label), config.baseUrl.substringAfter("://"))
+                        .filter { it.isNotBlank() }
+                        .joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -273,38 +281,49 @@ private fun EditorForm(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Field(R.string.feature_connections_field_name, editor.name) { change { copy(name = it) } }
-        if (editor.kind == ConnectionKind.Manifest) {
-            OutlinedTextField(
-                value = editor.manifest,
-                onValueChange = { value -> change { copy(manifest = value) } },
-                label = { Text(stringResource(R.string.feature_connections_field_manifest)) },
-                textStyle = MaterialTheme.typography.bodySmall,
-                minLines = 6,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        } else {
-            Field(
-                R.string.feature_connections_field_url,
-                editor.baseUrl,
-                keyboard = KeyboardType.Uri,
-                placeholder = stringResource(editor.kind.urlExample),
-            ) { change { copy(baseUrl = it) } }
-            Field(
-                if (editor.kind == ConnectionKind.Ampache) {
-                    R.string.feature_connections_field_user_optional
-                } else {
-                    R.string.feature_connections_field_user
-                },
-                editor.username,
-            ) { change { copy(username = it) } }
+        when (editor.kind) {
+            ConnectionKind.Manifest -> {
+                CodeField(R.string.feature_connections_field_manifest, editor.manifest) {
+                    change { copy(manifest = it) }
+                }
+            }
+
+            ConnectionKind.Script -> {
+                CodeField(R.string.feature_connections_field_script_header, editor.manifest) {
+                    change { copy(manifest = it) }
+                }
+                CodeField(R.string.feature_connections_field_script_code, editor.script, minLines = 10) {
+                    change { copy(script = it) }
+                }
+            }
+
+            else -> {
+                Field(
+                    R.string.feature_connections_field_url,
+                    editor.baseUrl,
+                    keyboard = KeyboardType.Uri,
+                    placeholder = stringResource(editor.kind.urlExample),
+                ) { change { copy(baseUrl = it) } }
+                Field(
+                    if (editor.kind == ConnectionKind.Ampache) {
+                        R.string.feature_connections_field_user_optional
+                    } else {
+                        R.string.feature_connections_field_user
+                    },
+                    editor.username,
+                ) { change { copy(username = it) } }
+            }
         }
-        Field(
-            editor.kind.secretLabel,
-            editor.secret,
-            keyboard = KeyboardType.Password,
-            secret = true,
-            placeholder = stringResource(R.string.feature_connections_secret_saved).takeIf { editor.hasSavedSecret },
-        ) { change { copy(secret = it) } }
+        if (editor.kind != ConnectionKind.Script) {
+            Field(
+                editor.kind.secretLabel,
+                editor.secret,
+                keyboard = KeyboardType.Password,
+                secret = true,
+                placeholder =
+                    stringResource(R.string.feature_connections_secret_saved).takeIf { editor.hasSavedSecret },
+            ) { change { copy(secret = it) } }
+        }
         editor.problem?.let { problem ->
             Text(
                 problem.message(),
@@ -331,7 +350,99 @@ private fun EditorForm(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        if (!editor.isNew) TestSection(editor, onIntent)
     }
+}
+
+/** У сохранённого подключения: «Проверить» и журнал последних запросов, чтобы разобраться, что не так. */
+@Composable
+private fun TestSection(
+    editor: ConnectionEditor,
+    onIntent: (ConnectionsIntent) -> Unit,
+) {
+    HorizontalDivider(Modifier.padding(vertical = Spacing.s))
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
+        OutlinedButton(onClick = { onIntent(ConnectionsIntent.Test) }, enabled = !editor.testing) {
+            Text(stringResource(R.string.feature_connections_test))
+        }
+        when {
+            editor.testing -> {
+                CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+            }
+
+            editor.testResult == ConnectionCheck.Ok -> {
+                Text(stringResource(R.string.feature_connections_test_ok), color = MaterialTheme.colorScheme.primary)
+            }
+
+            editor.testResult != null -> {
+                Text(
+                    editor.testResult.message(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+    if (editor.journal.isNotEmpty()) {
+        Text(
+            stringResource(R.string.feature_connections_journal),
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(top = Spacing.s),
+        )
+        editor.journal.forEach { JournalRow(it) }
+    }
+}
+
+@Composable
+private fun JournalRow(line: RequestLine) {
+    val ok = line.status != null && line.status in HTTP_OK
+    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), verticalAlignment = Alignment.Top) {
+        Text(
+            line.status?.toString() ?: "—",
+            style = MonoLabel,
+            color = if (ok) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+            modifier = Modifier.width(32.dp),
+        )
+        Column(Modifier.weight(1f)) {
+            Text(line.path, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            line.error?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            }
+        }
+        Text(
+            stringResource(R.string.feature_connections_journal_time, formatClock(line.atMs), line.durationMs),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+private val HTTP_OK = 200..299
+
+private fun formatClock(atMs: Long): String =
+    java.time.Instant
+        .ofEpochMilli(atMs)
+        .atZone(java.time.ZoneId.systemDefault())
+        .toLocalTime()
+        .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"))
+
+@Composable
+private fun CodeField(
+    label: Int,
+    value: String,
+    minLines: Int = 6,
+    onChange: (String) -> Unit,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onChange,
+        label = { Text(stringResource(label)) },
+        textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+        minLines = minLines,
+        keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, keyboardType = KeyboardType.Ascii),
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
 
 @Composable
@@ -388,6 +499,7 @@ private val ConnectionKind.label: Int
             ConnectionKind.Ampache -> R.string.feature_connections_kind_ampache
             ConnectionKind.WebDav -> R.string.feature_connections_kind_webdav
             ConnectionKind.Manifest -> R.string.feature_connections_kind_manifest
+            ConnectionKind.Script -> R.string.feature_connections_kind_script
         }
 
 private val ConnectionKind.hint: Int
@@ -398,6 +510,7 @@ private val ConnectionKind.hint: Int
             ConnectionKind.Ampache -> R.string.feature_connections_hint_ampache
             ConnectionKind.WebDav -> R.string.feature_connections_hint_webdav
             ConnectionKind.Manifest -> R.string.feature_connections_hint_manifest
+            ConnectionKind.Script -> R.string.feature_connections_hint_script
         }
 
 private val ConnectionKind.help: Int
@@ -408,6 +521,7 @@ private val ConnectionKind.help: Int
             ConnectionKind.Ampache -> R.string.feature_connections_help_ampache
             ConnectionKind.WebDav -> R.string.feature_connections_help_webdav
             ConnectionKind.Manifest -> R.string.feature_connections_help_manifest
+            ConnectionKind.Script -> R.string.feature_connections_help_script
         }
 
 private val ConnectionKind.urlExample: Int
@@ -433,4 +547,5 @@ private val ConnectionKind.icon: ImageVector
             ConnectionKind.Ampache -> Icons.Rounded.Dns
             ConnectionKind.WebDav -> Icons.Rounded.Folder
             ConnectionKind.Manifest -> Icons.Rounded.Code
+            ConnectionKind.Script -> Icons.Rounded.Javascript
         }
