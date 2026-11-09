@@ -23,7 +23,6 @@
     <string name="feature_player_lyrics_not_found">Текста этой песни пока нигде нет</string>
     <string name="feature_player_lyrics_offline">Не удалось загрузить текст: нет сети или сервис недоступен</string>
     <string name="feature_player_lyrics_source">Текст: %1$s</string>
-    <string name="feature_player_soon_why">«Почему этот трек?» появится вместе с волной на этапе 2</string>
     <string name="feature_player_soon_sound">Эквалайзер и кроссфейд появятся на этапе 3</string>
     <string name="feature_player_sleep_title">Таймер сна</string>
     <string name="feature_player_sleep_hint">Музыка встанет на паузу, даже если закрыть плеер или заблокировать телефон</string>
@@ -33,4 +32,26 @@
     <string name="feature_player_sleep_left">Пауза через %1$s</string>
     <string name="feature_player_sleep_after_track">Пауза после этого трека</string>
     <string name="feature_player_sleep_track_short">Трек</string>
+    <string name="feature_player_why_title">Почему этот трек?</string>
+    <string name="feature_player_why_track">%1$s · %2$s</string>
+    <string name="feature_player_why_not_wave">Этот трек включён не волной, поэтому объяснять нечего. Включи «Мою волну», и здесь появится, почему она выбрала каждый трек.</string>
+    <string name="feature_player_why_anchor_liked_artist">Похоже на %1$s из твоих лайков</string>
+    <string name="feature_player_why_anchor_listened_artist">Похоже на %1$s: часто звучит у тебя</string>
+    <string name="feature_player_why_anchor_liked_track">Похоже на «%1$s» из твоих лайков</string>
+    <string name="feature_player_why_anchor_seed">Волна начата от «%1$s»</string>
+    <string name="feature_player_why_factor_tags">Совпадает по жанрам и тегам с твоим вкусом</string>
+    <string name="feature_player_why_factor_artist">Этого артиста ты часто слушаешь</string>
+    <string name="feature_player_why_factor_sound">Звучит как то, что тебе нравится</string>
+    <string name="feature_player_why_factor_mood">Подходит под занятие и настроение</string>
+    <string name="feature_player_why_factor_novelty">Волна добавила новизны</string>
+    <string name="feature_player_why_factor_popularity">Популярный трек</string>
+    <string name="feature_player_why_factor_link">Тесно связан с твоим вкусом</string>
+    <string name="feature_player_why_factor_chance">Немного случайности, чтобы волна не повторялась</string>
+    <string name="feature_player_why_source_favorites">Из любимого в твоей коллекции</string>
+    <string name="feature_player_why_source_unheard">Из твоей коллекции, но ещё не звучал</string>
+    <string name="feature_player_why_source_similar">Новый для тебя артист, похожий на твоих</string>
+    <string name="feature_player_why_source_open">Из открытого каталога или твоего сервера</string>
+    <string name="feature_player_why_source_preview">Превью: можно послушать 30 секунд</string>
+    <string name="feature_player_why_bpm">Темп %1$d BPM</string>
+    <string name="feature_player_why_tags">Общие теги</string>
 </resources>

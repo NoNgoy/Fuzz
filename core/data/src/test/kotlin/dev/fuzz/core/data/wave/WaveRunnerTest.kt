@@ -29,6 +29,8 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -91,6 +93,20 @@ class WaveRunnerTest {
             assertEquals(state.queue.size, state.queue.map { it.id }.toSet().size)
             assertEquals(0, state.currentIndex)
             assertTrue(wave.status.value.active)
+        }
+
+    @Test
+    fun `wave explains its tracks and only them`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val wave = runner().apply { attach(backgroundScope) }
+            val outside = TrackId("не из волны")
+            assertNull(wave.reason(outside))
+
+            wave.start()
+
+            val current = player.state.value.currentTrack!!.id
+            assertNotNull(wave.reason(current))
+            assertNull(wave.reason(outside))
         }
 
     @Test

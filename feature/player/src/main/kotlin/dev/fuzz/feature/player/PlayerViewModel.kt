@@ -31,7 +31,7 @@ data class PlayerUiState(
 ) : UiState
 
 /** Разделы плеера, которые появятся на следующих этапах. */
-enum class UpcomingFeature { Why, Sound }
+enum class UpcomingFeature { Sound, }
 
 sealed interface PlayerIntent : UiIntent {
     data object TogglePlay : PlayerIntent
@@ -61,6 +61,8 @@ sealed interface PlayerIntent : UiIntent {
 
     data object OpenLyrics : PlayerIntent
 
+    data object OpenWhy : PlayerIntent
+
     data object OpenSleep : SleepIntent
 
     data class OpenUpcoming(
@@ -84,6 +86,8 @@ sealed interface SleepIntent : PlayerIntent
 
 sealed interface PlayerEffect : UiEffect {
     data object ShowLyrics : PlayerEffect
+
+    data object ShowWhy : PlayerEffect
 
     data object ShowSleep : PlayerEffect
 
@@ -126,6 +130,7 @@ class PlayerViewModel
                 is PlayerIntent.PlayQueueItem -> player.skipToQueueItem(intent.index)
                 is ReactionIntent -> react(intent)
                 PlayerIntent.OpenLyrics -> sendEffect(PlayerEffect.ShowLyrics)
+                PlayerIntent.OpenWhy -> sendEffect(PlayerEffect.ShowWhy)
                 is SleepIntent -> sleep(intent)
                 is PlayerIntent.OpenUpcoming -> sendEffect(PlayerEffect.ShowUpcoming(intent.feature))
             }
