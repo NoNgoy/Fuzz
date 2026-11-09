@@ -26,6 +26,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -33,14 +34,34 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fuzz.core.design.theme.FuzzTheme
 import dev.fuzz.core.design.theme.Spacing
 import dev.fuzz.core.design.theme.Unbounded
+import dev.fuzz.core.domain.stats.ListeningStats
 
-/**
- * Профиль: статистика, итоги года и служебное. Цифры статистики появятся вместе с историей
- * прослушиваний (этап 2), пока показываются нули.
- */
+@Composable
+internal fun ProfileEntry(
+    onOpenImport: () -> Unit,
+    onOpenConnections: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenSound: () -> Unit,
+    onOpenWave: () -> Unit,
+    viewModel: ProfileViewModel = hiltViewModel(),
+) {
+    val stats by viewModel.stats.collectAsStateWithLifecycle()
+    ProfileScreen(
+        onOpenImport = onOpenImport,
+        onOpenConnections = onOpenConnections,
+        onOpenSettings = onOpenSettings,
+        onOpenSound = onOpenSound,
+        onOpenWave = onOpenWave,
+        stats = stats,
+    )
+}
+
+/** Профиль: статистика за месяц из истории прослушиваний, итоги года и служебное. */
 @Composable
 internal fun ProfileScreen(
     onOpenImport: () -> Unit,
@@ -49,6 +70,7 @@ internal fun ProfileScreen(
     modifier: Modifier = Modifier,
     onOpenSound: () -> Unit = {},
     onOpenWave: () -> Unit = {},
+    stats: ListeningStats = ListeningStats(),
 ) {
     Column(
         modifier =
@@ -85,9 +107,21 @@ internal fun ProfileScreen(
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-            Stat("0", stringResource(R.string.feature_settings_stat_hours), Modifier.weight(1f))
-            Stat("0", stringResource(R.string.feature_settings_stat_new_tracks), Modifier.weight(1f))
-            Stat("0", stringResource(R.string.feature_settings_stat_new_artists), Modifier.weight(1f))
+            Stat(
+                formatHours(stats.listenedMs),
+                stringResource(R.string.feature_settings_stat_hours),
+                Modifier.weight(1f),
+            )
+            Stat(
+                stats.newTracks.toString(),
+                stringResource(R.string.feature_settings_stat_new_tracks),
+                Modifier.weight(1f),
+            )
+            Stat(
+                stats.newArtists.toString(),
+                stringResource(R.string.feature_settings_stat_new_artists),
+                Modifier.weight(1f),
+            )
         }
         YearBanner()
         Column {

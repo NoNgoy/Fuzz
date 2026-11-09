@@ -12,7 +12,7 @@
     <string name="feature_library_folders">Папки</string>
     <string name="feature_library_folders_hint">Музыка, Загрузки, SD-карта</string>
     <string name="feature_library_all_tracks">Все треки</string>
-    <string name="feature_library_stage3">Альбомы и артисты появятся на следующем этапе</string>
+    <string name="feature_library_no_albums">У треков в коллекции не указан альбом</string>
     <string name="feature_library_playlists">Плейлисты</string>
     <string name="feature_library_new_playlist">Новый плейлист</string>
     <string name="feature_library_no_playlists">Плейлистов пока нет. Создай свой или добавь трек через меню «⋮».</string>

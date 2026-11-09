@@ -33,7 +33,7 @@ fun NavGraphBuilder.profileScreen(
     onOpenWave: () -> Unit,
 ) {
     composable<ProfileRoute> {
-        ProfileScreen(
+        ProfileEntry(
             onOpenImport = onOpenImport,
             onOpenConnections = onOpenConnections,
             onOpenSettings = onOpenSettings,

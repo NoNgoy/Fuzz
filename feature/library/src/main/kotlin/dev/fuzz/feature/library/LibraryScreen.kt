@@ -21,9 +21,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -67,6 +69,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 internal fun LibraryEntry(
+    onOpenTrackList: (TrackListRoute) -> Unit,
     onOpenLiked: () -> Unit,
     onOpenPlaylist: (PlaylistId) -> Unit,
     onOpenDownloaded: () -> Unit,
@@ -116,6 +119,7 @@ internal fun LibraryEntry(
             onOpenDownloaded = onOpenDownloaded,
             onOpenFolders = onOpenFolders,
             onDeleteFromDevice = deleteFromDevice,
+            onOpenTrackList = onOpenTrackList,
         )
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
     }
@@ -141,6 +145,7 @@ internal fun LibraryScreen(
     onOpenDownloaded: () -> Unit = {},
     onOpenFolders: () -> Unit = {},
     onDeleteFromDevice: (Track) -> Unit = {},
+    onOpenTrackList: (TrackListRoute) -> Unit = {},
 ) {
     var filter by rememberSaveable { mutableStateOf(LibraryFilter.All) }
     var menuTrack by rememberSaveable { mutableStateOf<String?>(null) }
@@ -209,8 +214,12 @@ internal fun LibraryScreen(
                 item { Loading() }
             }
 
-            filter == LibraryFilter.Albums || filter == LibraryFilter.Artists -> {
-                item { Hint(stringResource(R.string.feature_library_stage3)) }
+            filter == LibraryFilter.Albums -> {
+                albumSection(state.tracks, onOpenTrackList)
+            }
+
+            filter == LibraryFilter.Artists -> {
+                artistSection(state.tracks, onOpenTrackList)
             }
 
             filter == LibraryFilter.Playlists -> {
@@ -302,6 +311,63 @@ private fun LazyListScope.playlistSection(
             title = playlist.name,
             subtitle = tracksCount(playlist.trackCount),
             onClick = { onOpen(playlist.id) },
+        )
+    }
+}
+
+/** Альбом в коллекции: одноимённые альбомы разных артистов не склеиваются. */
+private data class AlbumGroup(
+    val title: String,
+    val artist: String,
+    val count: Int,
+)
+
+private fun albumsOf(tracks: List<Track>): List<AlbumGroup> =
+    tracks
+        .filter { !it.albumTitle.isNullOrBlank() }
+        .groupBy { it.albumTitle.orEmpty() to it.artistName }
+        .map { (key, list) -> AlbumGroup(key.first, key.second, list.size) }
+        .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title })
+
+private fun artistsOf(tracks: List<Track>): List<Pair<String, Int>> =
+    tracks
+        .groupingBy { it.artistName }
+        .eachCount()
+        .toList()
+        .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.first })
+
+private fun LazyListScope.albumSection(
+    tracks: ImmutableList<Track>,
+    onOpen: (TrackListRoute) -> Unit,
+) {
+    val albums = albumsOf(tracks)
+    if (albums.isEmpty()) {
+        item { Hint(stringResource(R.string.feature_library_no_albums)) }
+    }
+    items(albums, key = { "album:" + it.title + "\u0000" + it.artist }) { album ->
+        QuickEntry(
+            icon = Icons.Rounded.Album,
+            title = album.title,
+            subtitle = album.artist + " · " + tracksCount(album.count),
+            onClick = { onOpen(TrackListRoute(album = album.title, artist = album.artist)) },
+        )
+    }
+}
+
+private fun LazyListScope.artistSection(
+    tracks: ImmutableList<Track>,
+    onOpen: (TrackListRoute) -> Unit,
+) {
+    val artists = artistsOf(tracks)
+    if (artists.isEmpty()) {
+        item { Hint(stringResource(R.string.feature_library_empty_body)) }
+    }
+    items(artists, key = { "artist:" + it.first }) { (name, count) ->
+        QuickEntry(
+            icon = Icons.Rounded.Person,
+            title = name,
+            subtitle = tracksCount(count),
+            onClick = { onOpen(TrackListRoute(artist = name)) },
         )
     }
 }

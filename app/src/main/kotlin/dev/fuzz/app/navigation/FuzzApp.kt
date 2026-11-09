@@ -120,6 +120,7 @@ fun FuzzApp(
                 onOpenPlaylist = { navController.navigate(TrackListRoute(playlistId = it)) },
                 onOpenDownloaded = { navController.navigate(TrackListRoute(downloaded = true)) },
                 onOpenFolders = { navController.navigate(OnboardingRoute) },
+                onOpenTrackList = { navController.navigate(it) },
             )
             trackListScreen(onBack = navController::popBackStack)
             profileScreen(

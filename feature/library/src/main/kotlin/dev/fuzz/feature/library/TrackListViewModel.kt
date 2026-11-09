@@ -29,11 +29,20 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/** Что показывает экран списка: «Мне нравится», все треки на телефоне или плейлист. */
+/** Что показывает экран списка: «Мне нравится», все треки на телефоне, плейлист, альбом или артист. */
 sealed interface TrackListKind {
     data object Liked : TrackListKind
 
     data object Downloaded : TrackListKind
+
+    data class Album(
+        val title: String,
+        val artist: String?,
+    ) : TrackListKind
+
+    data class Artist(
+        val name: String,
+    ) : TrackListKind
 
     data class Playlist(
         val id: PlaylistId,
@@ -102,6 +111,29 @@ class TrackListViewModel
                         observeLibrary()
                     }
 
+                    is TrackListKind.Album -> {
+                        observeLibrary().map { all ->
+                            all
+                                .filter {
+                                    it.albumTitle == kind.title &&
+                                        (kind.artist == null || it.artistName == kind.artist)
+                                }
+                                .sortedWith(compareBy(nullsLast()) { it.trackNumber })
+                        }
+                    }
+
+                    is TrackListKind.Artist -> {
+                        observeLibrary().map { all ->
+                            all
+                                .filter { it.artistName == kind.name }
+                                .sortedWith(
+                                    compareBy<Track> {
+                                        it.albumTitle.orEmpty()
+                                    }.thenBy(nullsLast()) { it.trackNumber },
+                                )
+                        }
+                    }
+
                     is TrackListKind.Playlist -> {
                         playlists.observeTracks(kind.id)
                     }
@@ -139,9 +171,17 @@ class TrackListViewModel
                 is TrackListIntent.Remove -> {
                     viewModelScope.launch {
                         when (val kind = currentState.kind) {
-                            TrackListKind.Liked -> reactions.set(intent.track, Reaction.None)
-                            TrackListKind.Downloaded -> collection.hide(intent.track)
-                            is TrackListKind.Playlist -> playlists.removeTrack(kind.id, intent.track)
+                            TrackListKind.Liked -> {
+                                reactions.set(intent.track, Reaction.None)
+                            }
+
+                            TrackListKind.Downloaded, is TrackListKind.Album, is TrackListKind.Artist -> {
+                                collection.hide(intent.track)
+                            }
+
+                            is TrackListKind.Playlist -> {
+                                playlists.removeTrack(kind.id, intent.track)
+                            }
                         }
                     }
                 }
@@ -168,6 +208,8 @@ class TrackListViewModel
                 return when {
                     route.playlistId != null -> TrackListKind.Playlist(PlaylistId(route.playlistId))
                     route.downloaded -> TrackListKind.Downloaded
+                    route.album != null -> TrackListKind.Album(route.album, route.artist)
+                    route.artist != null -> TrackListKind.Artist(route.artist)
                     else -> TrackListKind.Liked
                 }
             }

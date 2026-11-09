@@ -17,6 +17,7 @@ import dev.fuzz.core.data.player.DefaultSleepTimer
 import dev.fuzz.core.data.playlist.OfflinePlaylistRepository
 import dev.fuzz.core.data.reaction.OfflineReactionRepository
 import dev.fuzz.core.data.search.PluginOnlineSearch
+import dev.fuzz.core.data.stats.RoomListeningStats
 import dev.fuzz.core.data.sync.RoomLocalLibraryStore
 import dev.fuzz.core.data.wave.DataStoreWaveSettingsRepository
 import dev.fuzz.core.data.wave.ExternalTrackRegistry
@@ -36,6 +37,7 @@ import dev.fuzz.core.domain.player.SoundSettingsRepository
 import dev.fuzz.core.domain.playlist.PlaylistRepository
 import dev.fuzz.core.domain.reaction.ReactionRepository
 import dev.fuzz.core.domain.search.OnlineSearch
+import dev.fuzz.core.domain.stats.ListeningStatsRepository
 import dev.fuzz.core.domain.wave.WavePlayer
 import dev.fuzz.core.domain.wave.WaveSettingsRepository
 import dev.fuzz.engine.recommend.port.WaveLibrary
@@ -47,6 +49,9 @@ internal interface DataModule {
     @Binds
     @Singleton
     fun bindLibraryRepository(impl: OfflineLibraryRepository): LibraryRepository
+
+    @Binds
+    fun bindListeningStats(impl: RoomListeningStats): ListeningStatsRepository
 
     @Binds
     fun bindCollectionEditor(impl: RoomCollectionEditor): CollectionEditor
