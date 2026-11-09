@@ -82,3 +82,24 @@ fun smallCollection(): List<WaveTrack> {
         (0 until 5).map { t -> track("a${a}t$t", "Artist $a", mapOf(genre to 1f), bpm, energy = bpm / 160f) }
     }
 }
+
+/** Свой сервер или JS-плагин: ищет только по артисту. */
+class FakeServer(
+    private val byArtist: Map<String, List<WaveTrack>>,
+) : ExternalCatalog {
+    override val origin = TrackOrigin.OpenCatalog
+    override val searchesByTags = false
+
+    override suspend fun byArtist(
+        artist: String,
+        limit: Int,
+    ) = byArtist[artist].orEmpty().take(limit)
+
+    override suspend fun byTags(
+        tags: List<String>,
+        limit: Int,
+        offset: Int,
+    ) = emptyList<WaveTrack>()
+
+    override suspend fun find(hint: TrackHint): WaveTrack? = null
+}

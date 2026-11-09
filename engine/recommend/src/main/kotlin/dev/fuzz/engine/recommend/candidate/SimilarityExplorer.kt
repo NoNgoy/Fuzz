@@ -61,6 +61,9 @@ class SimilarityExplorer(
         val trackAnchorsPerRound: Int = 5,
     )
 
+    /** Артисты, от которых идёт обход: лайкнутые и часто звучащие. */
+    val anchors: List<ArtistAnchor> get() = artistAnchors
+
     private val mutex = Mutex()
     private val anchorKeys = artistAnchors.map { WaveTrack.keyOf(it.name) }.toSet()
     private val found = LinkedHashMap<String, FoundArtist>()

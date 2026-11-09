@@ -2,6 +2,7 @@ package dev.fuzz.engine.recommend
 
 import dev.fuzz.core.model.wave.WaveSeed
 import dev.fuzz.core.model.wave.WaveSettings
+import dev.fuzz.engine.recommend.candidate.ArtistCatalogGenerator
 import dev.fuzz.engine.recommend.candidate.CandidateGenerator
 import dev.fuzz.engine.recommend.candidate.FavoritesGenerator
 import dev.fuzz.engine.recommend.candidate.OpenCatalogGenerator
@@ -39,9 +40,21 @@ class WaveEngine(
             add(SimilarGenerator())
             catalogs.forEach { catalog ->
                 when (catalog.origin) {
-                    TrackOrigin.Preview -> add(PreviewGenerator(catalog))
-                    TrackOrigin.OpenCatalog -> add(OpenCatalogGenerator(catalog, ::contextTags))
-                    TrackOrigin.Collection -> Unit
+                    TrackOrigin.Preview -> {
+                        add(PreviewGenerator(catalog))
+                    }
+
+                    TrackOrigin.OpenCatalog -> {
+                        add(
+                            if (catalog.searchesByTags) {
+                                OpenCatalogGenerator(catalog, ::contextTags)
+                            } else {
+                                ArtistCatalogGenerator(catalog)
+                            },
+                        )
+                    }
+
+                    TrackOrigin.Collection -> {}
                 }
             }
             addAll(extraGenerators)
