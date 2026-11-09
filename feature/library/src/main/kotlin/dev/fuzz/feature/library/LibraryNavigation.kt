@@ -7,11 +7,16 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object LibraryRoute
 
-/** Список треков: без [playlistId] это «Мне нравится», с [downloaded] — все треки на телефоне. */
+/**
+ * Список треков: без параметров это «Мне нравится», с [downloaded] — все треки на телефоне,
+ * с [album] — альбом (вместе с [artist], чтобы не смешать одноимённые), с одним [artist] — все треки артиста.
+ */
 @Serializable
 data class TrackListRoute(
     val playlistId: String? = null,
     val downloaded: Boolean = false,
+    val album: String? = null,
+    val artist: String? = null,
 )
 
 fun NavGraphBuilder.libraryScreen(
@@ -19,9 +24,11 @@ fun NavGraphBuilder.libraryScreen(
     onOpenPlaylist: (String) -> Unit,
     onOpenDownloaded: () -> Unit,
     onOpenFolders: () -> Unit,
+    onOpenTrackList: (TrackListRoute) -> Unit,
 ) {
     composable<LibraryRoute> {
         LibraryEntry(
+            onOpenTrackList = onOpenTrackList,
             onOpenLiked = onOpenLiked,
             onOpenPlaylist = { onOpenPlaylist(it.value) },
             onOpenDownloaded = onOpenDownloaded,

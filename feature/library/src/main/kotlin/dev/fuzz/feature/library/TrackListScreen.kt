@@ -80,12 +80,7 @@ internal fun TrackListScreen(
     onDeleteFromDevice: (Track) -> Unit = {},
 ) {
     val isPlaylist = state.kind is TrackListKind.Playlist
-    val title =
-        state.title ?: when (state.kind) {
-            TrackListKind.Liked -> stringResource(R.string.feature_library_liked)
-            TrackListKind.Downloaded -> stringResource(R.string.feature_library_downloaded)
-            is TrackListKind.Playlist -> ""
-        }
+    val title = state.title ?: defaultTitle(state.kind)
     var renaming by rememberSaveable { mutableStateOf(false) }
     var deleting by rememberSaveable { mutableStateOf(false) }
     LazyColumn(
@@ -113,13 +108,7 @@ internal fun TrackListScreen(
             state.tracks.isEmpty() -> {
                 item {
                     Text(
-                        stringResource(
-                            when (state.kind) {
-                                TrackListKind.Liked -> R.string.feature_library_liked_empty
-                                TrackListKind.Downloaded -> R.string.feature_library_empty_body
-                                is TrackListKind.Playlist -> R.string.feature_library_playlist_empty
-                            },
-                        ),
+                        stringResource(emptyText(state.kind)),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = Spacing.screen, vertical = Spacing.l),
@@ -168,6 +157,23 @@ internal fun TrackListScreen(
         )
     }
 }
+
+@Composable
+private fun defaultTitle(kind: TrackListKind): String =
+    when (kind) {
+        TrackListKind.Liked -> stringResource(R.string.feature_library_liked)
+        TrackListKind.Downloaded -> stringResource(R.string.feature_library_downloaded)
+        is TrackListKind.Album -> kind.title
+        is TrackListKind.Artist -> kind.name
+        is TrackListKind.Playlist -> ""
+    }
+
+private fun emptyText(kind: TrackListKind): Int =
+    when (kind) {
+        TrackListKind.Liked -> R.string.feature_library_liked_empty
+        is TrackListKind.Playlist -> R.string.feature_library_playlist_empty
+        else -> R.string.feature_library_empty_body
+    }
 
 @Composable
 private fun TopBar(
@@ -260,8 +266,13 @@ private fun RemoveMenu(
                         stringResource(
                             when (kind) {
                                 is TrackListKind.Playlist -> R.string.feature_library_remove_from_playlist
+
                                 TrackListKind.Liked -> R.string.feature_library_remove_like
-                                TrackListKind.Downloaded -> dev.fuzz.core.ui.R.string.core_ui_hide_from_collection
+
+                                TrackListKind.Downloaded,
+                                is TrackListKind.Album,
+                                is TrackListKind.Artist,
+                                -> dev.fuzz.core.ui.R.string.core_ui_hide_from_collection
                             },
                         ),
                     )
@@ -271,7 +282,7 @@ private fun RemoveMenu(
                     onIntent(TrackListIntent.Remove(track.id))
                 },
             )
-            if (kind == TrackListKind.Downloaded && track.isDeviceFile()) {
+            if (kind !is TrackListKind.Playlist && kind != TrackListKind.Liked && track.isDeviceFile()) {
                 DropdownMenuItem(
                     text = { Text(stringResource(dev.fuzz.core.ui.R.string.core_ui_delete_from_device)) },
                     onClick = {
