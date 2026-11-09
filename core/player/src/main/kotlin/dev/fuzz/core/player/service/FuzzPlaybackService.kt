@@ -30,6 +30,9 @@ import dev.fuzz.core.player.session.LibrarySessionCallback
 import dev.fuzz.core.player.session.ReactionButtons
 import dev.fuzz.core.player.sound.PlayerSoundEffects
 import dev.fuzz.core.player.sound.SoundController
+import dev.fuzz.core.player.widget.PlayerWidget
+import dev.fuzz.core.player.widget.WidgetState
+import dev.fuzz.core.player.widget.WidgetUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -83,6 +86,7 @@ class FuzzPlaybackService : MediaLibraryService() {
     private var player: FuzzPlayer? = null
     private var positionSaver: Job? = null
     private var sound: SoundController? = null
+    private var widget: WidgetUpdater? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -116,6 +120,7 @@ class FuzzPlaybackService : MediaLibraryService() {
                 .build()
                 .also { this.session = it }
         followReaction(session, buttons)
+        widget = WidgetUpdater(this, session, scope)
         setMediaNotificationProvider(
             DefaultMediaNotificationProvider.Builder(this).build().apply {
                 setSmallIcon(R.drawable.ic_fuzz_notification)
@@ -149,6 +154,9 @@ class FuzzPlaybackService : MediaLibraryService() {
 
     override fun onDestroy() {
         sound?.release()
+        widget?.release()
+        // Сервиса больше нет: виджет снова предлагает продолжить.
+        PlayerWidget.render(this, WidgetState())
         player?.let { p -> scope.launch { withContext(NonCancellable) { saveSnapshot(p) } } }
         session?.run {
             player.release()
