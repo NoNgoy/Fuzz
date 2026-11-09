@@ -1,5 +1,6 @@
 package dev.fuzz.core.data.reaction
 
+import dev.fuzz.core.data.online.SavedOnlineTracks
 import dev.fuzz.core.database.dao.ReactionDao
 import dev.fuzz.core.database.entity.ReactionEntity
 import dev.fuzz.core.domain.reaction.ReactionRepository
@@ -14,6 +15,7 @@ internal class OfflineReactionRepository
     @Inject
     constructor(
         private val dao: ReactionDao,
+        private val saved: SavedOnlineTracks,
     ) : ReactionRepository {
         override fun observe(trackId: TrackId): Flow<Reaction> =
             dao.observe(trackId.value).map { it.toReaction() }.distinctUntilChanged()
@@ -30,6 +32,8 @@ internal class OfflineReactionRepository
             trackId: TrackId,
             reaction: Reaction,
         ) {
+            // Лайк трека из сети сохраняет его в коллекцию, иначе он пропал бы из «Мне нравится».
+            if (reaction == Reaction.Like) saved.persist(listOf(trackId))
             dao.upsert(ReactionEntity(trackId.value, reaction.toDb(), System.currentTimeMillis()))
         }
     }

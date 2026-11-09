@@ -108,7 +108,8 @@ class TrackListViewModel
                     }
 
                     TrackListKind.Downloaded -> {
-                        observeLibrary()
+                        // Сохранённые треки из сети тоже в коллекции, но на телефоне лежат только файлы.
+                        observeLibrary().map { all -> all.filter { it.isDeviceFile() } }
                     }
 
                     is TrackListKind.Album -> {

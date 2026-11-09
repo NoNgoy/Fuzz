@@ -11,6 +11,7 @@ import dev.fuzz.core.database.FuzzDatabase
 import dev.fuzz.core.database.dao.ListenDao
 import dev.fuzz.core.database.dao.PlaylistDao
 import dev.fuzz.core.database.dao.ReactionDao
+import dev.fuzz.core.database.dao.SavedRefDao
 import dev.fuzz.core.database.dao.SimilarityCacheDao
 import dev.fuzz.core.database.dao.StatsDao
 import dev.fuzz.core.database.dao.TrackDao
@@ -42,4 +43,7 @@ object DatabaseModule {
 
     @Provides
     fun provideStatsDao(db: FuzzDatabase): StatsDao = db.statsDao()
+
+    @Provides
+    fun provideSavedRefDao(db: FuzzDatabase): SavedRefDao = db.savedRefDao()
 }

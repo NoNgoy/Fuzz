@@ -1,6 +1,7 @@
 plugins {
     id("fuzz.android.library")
     id("fuzz.android.compose")
+    id("fuzz.hilt")
 }
 
 dependencies {
@@ -10,5 +11,7 @@ dependencies {
     api(libs.androidx.lifecycle.runtime.compose)
     api(libs.kotlinx.collections.immutable)
     api(libs.coil.compose)
+    implementation(projects.core.domain)
+    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     testImplementation(libs.robolectric)
 }

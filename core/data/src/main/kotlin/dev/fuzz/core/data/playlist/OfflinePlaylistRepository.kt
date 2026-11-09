@@ -2,6 +2,7 @@ package dev.fuzz.core.data.playlist
 
 import androidx.room.withTransaction
 import dev.fuzz.core.data.library.toModel
+import dev.fuzz.core.data.online.SavedOnlineTracks
 import dev.fuzz.core.data.sync.Clock
 import dev.fuzz.core.database.FuzzDatabase
 import dev.fuzz.core.database.dao.PlaylistDao
@@ -23,6 +24,7 @@ internal class OfflinePlaylistRepository
         private val db: FuzzDatabase,
         private val dao: PlaylistDao,
         private val clock: Clock,
+        private val saved: SavedOnlineTracks,
     ) : PlaylistRepository {
         override fun observePlaylists(): Flow<List<Playlist>> =
             dao.observeAll().map { list ->
@@ -51,8 +53,10 @@ internal class OfflinePlaylistRepository
         override suspend fun addTracks(
             id: PlaylistId,
             tracks: List<TrackId>,
-        ): Int =
-            db.withTransaction {
+        ): Int {
+            // Треки из сети сначала попадают в коллекцию: плейлист показывает только треки из tracks.
+            saved.persist(tracks)
+            return db.withTransaction {
                 val now = clock.nowMs()
                 val entries = dao.entries(id.value)
                 val present = entries.mapTo(HashSet()) { it.trackId }
@@ -65,6 +69,7 @@ internal class OfflinePlaylistRepository
                 }
                 fresh.size
             }
+        }
 
         override suspend fun removeTrack(
             id: PlaylistId,

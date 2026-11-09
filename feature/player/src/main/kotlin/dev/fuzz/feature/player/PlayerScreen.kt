@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.automirrored.rounded.Subject
 import androidx.compose.material.icons.outlined.ThumbDown
@@ -77,7 +78,9 @@ import dev.fuzz.core.model.PlaybackState
 import dev.fuzz.core.model.Reaction
 import dev.fuzz.core.model.RepeatMode
 import dev.fuzz.core.ui.component.Artwork
+import dev.fuzz.core.ui.component.TrackMenuHost
 import dev.fuzz.core.ui.component.formatDuration
+import dev.fuzz.core.ui.component.rememberTrackMenu
 import dev.fuzz.core.ui.mvi.CollectEffects
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -93,6 +96,7 @@ internal fun PlayerScreen(
     var showSleep by remember { mutableStateOf(false) }
     var showWhy by remember { mutableStateOf(false) }
     var showSound by remember { mutableStateOf(false) }
+    val menu = rememberTrackMenu()
     CollectEffects(viewModel.effects) { effect ->
         when (effect) {
             PlayerEffect.ShowSound -> showSound = true
@@ -106,7 +110,9 @@ internal fun PlayerScreen(
         onCollapse = onCollapse,
         onIntent = viewModel::onIntent,
         onOpenQueue = { showQueue = true },
+        onOpenPlaylists = { state.playback.currentTrack?.let(menu::open) },
     )
+    TrackMenuHost(menu, showLike = false)
     if (showLyrics) LyricsSheet(onDismiss = { showLyrics = false })
     if (showWhy) WhySheet(onDismiss = { showWhy = false })
     if (showSound) SoundSheet(onDismiss = { showSound = false })
@@ -127,6 +133,7 @@ internal fun PlayerContent(
     onIntent: (PlayerIntent) -> Unit,
     onOpenQueue: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenPlaylists: () -> Unit = {},
 ) {
     val playback = state.playback
     val track = playback.currentTrack
@@ -206,7 +213,12 @@ internal fun PlayerContent(
             SeekBar(playback = playback, onSeek = { onIntent(PlayerIntent.Seek(it)) })
             Controls(playback = playback, onIntent = onIntent)
             Spacer(Modifier.height(6.dp))
-            Actions(sleep = state.sleep, onIntent = onIntent, onOpenQueue = onOpenQueue)
+            Actions(
+                sleep = state.sleep,
+                onIntent = onIntent,
+                onOpenQueue = onOpenQueue,
+                onOpenPlaylists = onOpenPlaylists,
+            )
         }
     }
 }
@@ -375,12 +387,14 @@ private fun Actions(
     sleep: SleepTimerState,
     onIntent: (PlayerIntent) -> Unit,
     onOpenQueue: () -> Unit,
+    onOpenPlaylists: () -> Unit,
 ) {
     Row(Modifier.fillMaxWidth()) {
         Action(Icons.AutoMirrored.Rounded.Subject, R.string.feature_player_action_lyrics) {
             onIntent(PlayerIntent.OpenLyrics)
         }
         Action(Icons.AutoMirrored.Rounded.QueueMusic, R.string.feature_player_action_queue, onOpenQueue)
+        Action(Icons.AutoMirrored.Rounded.PlaylistAdd, R.string.feature_player_action_playlist, onOpenPlaylists)
         Action(Icons.Rounded.AutoAwesome, R.string.feature_player_action_why) {
             onIntent(PlayerIntent.OpenWhy)
         }
@@ -411,7 +425,7 @@ private fun RowScope.Action(
     onClick: () -> Unit,
 ) {
     val tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-    // Без боковых отступов TextButton: пять подписей должны уместиться в строку на 393 dp.
+    // Без боковых отступов TextButton: шесть подписей должны уместиться в строку на 393 dp.
     TextButton(onClick = onClick, modifier = Modifier.weight(1f), contentPadding = PaddingValues(vertical = 6.dp)) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(icon, contentDescription = null, tint = tint)

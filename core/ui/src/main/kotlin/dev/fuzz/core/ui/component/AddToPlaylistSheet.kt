@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -55,9 +56,10 @@ fun AddToPlaylistSheet(
     title: String? = null,
     onHide: (() -> Unit)? = null,
     onDeleteFromDevice: (() -> Unit)? = null,
+    onLike: (() -> Unit)? = null,
 ) {
     var naming by rememberSaveable { mutableStateOf(false) }
-    val hasTrackActions = onHide != null || onDeleteFromDevice != null
+    val hasTrackActions = onHide != null || onDeleteFromDevice != null || onLike != null
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Text(
             title ?: stringResource(R.string.core_ui_add_to_playlist),
@@ -67,6 +69,16 @@ fun AddToPlaylistSheet(
             modifier = Modifier.padding(horizontal = Spacing.screen, vertical = Spacing.s),
         )
         LazyColumn(Modifier.navigationBarsPadding().padding(bottom = Spacing.l)) {
+            if (onLike != null) {
+                item {
+                    SheetRow(
+                        Icons.Rounded.FavoriteBorder,
+                        stringResource(R.string.core_ui_like),
+                        null,
+                        onClick = onLike,
+                    )
+                }
+            }
             if (onHide != null) {
                 item {
                     SheetRow(

@@ -88,6 +88,31 @@ class MigrationTest {
         }
     }
 
+    @Test
+    fun `5 to 6 adds saved online tracks`() {
+        helper.createDatabase(DB, 5).use { db ->
+            db.execSQL(
+                """
+                INSERT INTO tracks (id, title, artist_name, album_title, duration_ms, playback_uri, artwork_uri,
+                    track_number, year, format, added_at, source_id, updated_at, deleted, hidden)
+                VALUES ('t1', 'Кукушка', 'Кино', NULL, 1, 'fuzz://saved/t1', NULL, NULL, NULL, 'JioSaavn', 0,
+                    'online', 0, 0, 0)
+                """.trimIndent(),
+            )
+        }
+
+        helper.runMigrationsAndValidate(DB, 6, true).use { db ->
+            db.execSQL(
+                "INSERT INTO saved_refs (track_id, source_key, origin, external_ids) " +
+                    "VALUES ('t1', 'js', 'server', 'x')",
+            )
+            db.query("SELECT source_key FROM saved_refs").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals("js", cursor.getString(0))
+            }
+        }
+    }
+
     private companion object {
         const val DB = "migration-test"
     }

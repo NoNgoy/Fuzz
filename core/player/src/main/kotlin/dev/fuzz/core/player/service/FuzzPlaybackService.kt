@@ -11,6 +11,7 @@ import androidx.media3.session.MediaSession
 import dagger.hilt.android.AndroidEntryPoint
 import dev.fuzz.core.domain.library.LibraryRepository
 import dev.fuzz.core.domain.player.PlaybackHeaders
+import dev.fuzz.core.domain.player.SavedStreams
 import dev.fuzz.core.domain.player.SoundSettingsRepository
 import dev.fuzz.core.domain.playlist.PlaylistRepository
 import dev.fuzz.core.domain.reaction.ReactionRepository
@@ -68,6 +69,8 @@ class FuzzPlaybackService : MediaLibraryService() {
 
     @Inject lateinit var playbackHeaders: PlaybackHeaders
 
+    @Inject lateinit var savedStreams: SavedStreams
+
     @Inject lateinit var soundSettings: SoundSettingsRepository
 
     @Inject internal lateinit var soundEffects: PlayerSoundEffects
@@ -83,7 +86,7 @@ class FuzzPlaybackService : MediaLibraryService() {
 
     override fun onCreate() {
         super.onCreate()
-        val player = PlayerFactory.create(this, playbackHeaders).also { player = it }
+        val player = PlayerFactory.create(this, playbackHeaders, savedStreams).also { player = it }
         player.addListener(SnapshotListener())
         sound = SoundController(player.engine, soundEffects, soundSettings.settings, scope)
         val buttons = ReactionButtons(this)

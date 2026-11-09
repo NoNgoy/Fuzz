@@ -190,6 +190,8 @@ class WaveRunnerTest {
 
         override suspend fun getByIds(ids: List<String>) = all.filter { it.id in ids }
 
+        override suspend fun getAnyByIds(ids: List<String>) = all.filter { it.id in ids }
+
         override suspend fun getBySource(sourceId: String) = all.filter { it.sourceId == sourceId }
 
         override suspend fun upsert(tracks: List<TrackEntity>) = Unit

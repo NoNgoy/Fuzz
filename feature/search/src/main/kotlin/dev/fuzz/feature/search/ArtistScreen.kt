@@ -55,8 +55,11 @@ import dev.fuzz.core.design.theme.FuzzTheme
 import dev.fuzz.core.design.theme.Spacing
 import dev.fuzz.core.domain.artist.AlbumProfile
 import dev.fuzz.core.domain.artist.ArtistProfile
+import dev.fuzz.core.model.Track
 import dev.fuzz.core.ui.component.Artwork
+import dev.fuzz.core.ui.component.TrackMenuHost
 import dev.fuzz.core.ui.component.TrackRow
+import dev.fuzz.core.ui.component.rememberTrackMenu
 import dev.fuzz.core.ui.mvi.CollectEffects
 import kotlinx.collections.immutable.ImmutableList
 
@@ -71,6 +74,7 @@ internal fun ArtistEntry(
     val snackbar = remember { SnackbarHostState() }
     val notPlayable = stringResource(R.string.feature_search_not_playable)
     CollectEffects(viewModel.effects) { snackbar.showSnackbar(notPlayable) }
+    val menu = rememberTrackMenu()
     Box(Modifier.fillMaxSize()) {
         ArtistScreen(
             state = state,
@@ -78,9 +82,11 @@ internal fun ArtistEntry(
             onBack = onBack,
             onOpenArtist = { onOpenArtist(it.route()) },
             onOpenAlbum = { onOpenAlbum(it.route()) },
+            onMore = menu::open,
         )
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
     }
+    TrackMenuHost(menu)
 }
 
 @Composable
@@ -91,6 +97,7 @@ internal fun ArtistScreen(
     modifier: Modifier = Modifier,
     onOpenArtist: (ArtistProfile) -> Unit = {},
     onOpenAlbum: (AlbumProfile) -> Unit = {},
+    onMore: ((Track) -> Unit)? = null,
 ) {
     val listState = rememberLazyListState()
     LoadMoreWhenNearEnd(listState, state.tracks.size, state.tracksHasMore) { onIntent(ArtistIntent.LoadMoreTracks) }
@@ -106,7 +113,7 @@ internal fun ArtistScreen(
         if (state.popular.isNotEmpty()) {
             item { SectionHeader(stringResource(R.string.feature_search_popular)) }
             itemsIndexed(state.popular, key = { _, t -> "popular:" + t.id.value }) { index, track ->
-                TrackRow(track = track, onClick = { onIntent(ArtistIntent.PlayPopular(index)) })
+                TrackRow(track, { onIntent(ArtistIntent.PlayPopular(index)) }, onMore = onMore?.let { { it(track) } })
             }
         }
         if (state.albums.isNotEmpty()) {
@@ -116,24 +123,27 @@ internal fun ArtistScreen(
         if (state.inCollection.isNotEmpty()) {
             item { SectionHeader(stringResource(R.string.feature_search_in_collection)) }
             itemsIndexed(state.inCollection, key = { _, t -> "mine:" + t.id.value }) { index, track ->
-                TrackRow(track = track, onClick = { onIntent(ArtistIntent.PlayCollection(index)) })
+                TrackRow(track, {
+                    onIntent(ArtistIntent.PlayCollection(index))
+                }, onMore = onMore?.let { { it(track) } })
             }
         }
         if (state.related.isNotEmpty()) {
             item { SectionHeader(stringResource(R.string.feature_search_related)) }
             item { ArtistCarousel(state.related.map { ArtistCardData(it, null) }, onOpenArtist) }
         }
-        allTracks(state, onIntent)
+        allTracks(state, onIntent, onMore)
     }
 }
 
 private fun LazyListScope.allTracks(
     state: ArtistState,
     onIntent: (ArtistIntent) -> Unit,
+    onMore: ((Track) -> Unit)?,
 ) {
     item { SectionHeader(stringResource(R.string.feature_search_all_tracks)) }
     itemsIndexed(state.tracks, key = { _, t -> "all:" + t.id.value }) { index, track ->
-        TrackRow(track = track, onClick = { onIntent(ArtistIntent.PlayTrack(index)) })
+        TrackRow(track, { onIntent(ArtistIntent.PlayTrack(index)) }, onMore = onMore?.let { { it(track) } })
     }
     when {
         state.tracksLoading -> {

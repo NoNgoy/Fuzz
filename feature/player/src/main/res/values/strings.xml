@@ -15,6 +15,7 @@
     <string name="feature_player_source_collection">Коллекция</string>
     <string name="feature_player_action_lyrics">Текст</string>
     <string name="feature_player_action_queue">Очередь</string>
+    <string name="feature_player_action_playlist">Плейлист</string>
     <string name="feature_player_action_why">Почему?</string>
     <string name="feature_player_action_sound">Звук</string>
     <string name="feature_player_action_sleep">Сон</string>

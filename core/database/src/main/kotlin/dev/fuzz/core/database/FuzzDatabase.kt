@@ -6,6 +6,7 @@ import androidx.room.RoomDatabase
 import dev.fuzz.core.database.dao.ListenDao
 import dev.fuzz.core.database.dao.PlaylistDao
 import dev.fuzz.core.database.dao.ReactionDao
+import dev.fuzz.core.database.dao.SavedRefDao
 import dev.fuzz.core.database.dao.SimilarityCacheDao
 import dev.fuzz.core.database.dao.StatsDao
 import dev.fuzz.core.database.dao.TrackDao
@@ -13,6 +14,7 @@ import dev.fuzz.core.database.entity.ListenEntity
 import dev.fuzz.core.database.entity.PlaylistEntity
 import dev.fuzz.core.database.entity.PlaylistTrackEntity
 import dev.fuzz.core.database.entity.ReactionEntity
+import dev.fuzz.core.database.entity.SavedRefEntity
 import dev.fuzz.core.database.entity.SimilarityCacheEntity
 import dev.fuzz.core.database.entity.TrackEntity
 
@@ -28,12 +30,14 @@ import dev.fuzz.core.database.entity.TrackEntity
         PlaylistTrackEntity::class,
         ListenEntity::class,
         SimilarityCacheEntity::class,
+        SavedRefEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3),
         AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5),
+        AutoMigration(from = 5, to = 6),
     ],
 )
 abstract class FuzzDatabase : RoomDatabase() {
@@ -48,4 +52,6 @@ abstract class FuzzDatabase : RoomDatabase() {
     abstract fun similarityCacheDao(): SimilarityCacheDao
 
     abstract fun statsDao(): StatsDao
+
+    abstract fun savedRefDao(): SavedRefDao
 }

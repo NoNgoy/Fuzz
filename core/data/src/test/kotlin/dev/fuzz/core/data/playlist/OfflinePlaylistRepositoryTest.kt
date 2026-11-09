@@ -2,10 +2,17 @@ package dev.fuzz.core.data.playlist
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import dev.fuzz.core.data.online.SavedOnlineTracks
 import dev.fuzz.core.data.sync.Clock
+import dev.fuzz.core.data.wave.ExternalTrackRegistry
 import dev.fuzz.core.database.FuzzDatabase
 import dev.fuzz.core.database.entity.TrackEntity
+import dev.fuzz.core.domain.connection.ConnectedSources
+import dev.fuzz.core.domain.plugin.LyricsProvider
+import dev.fuzz.core.domain.plugin.MetadataProvider
+import dev.fuzz.core.domain.plugin.MusicSource
 import dev.fuzz.core.model.TrackId
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -29,7 +36,26 @@ class OfflinePlaylistRepositoryTest {
 
             override fun nowMs() = now++
         }
-    private val repo = OfflinePlaylistRepository(db, db.playlistDao(), clock)
+    private val repo =
+        OfflinePlaylistRepository(
+            db,
+            db.playlistDao(),
+            clock,
+            SavedOnlineTracks(
+                db.trackDao(),
+                db.savedRefDao(),
+                ExternalTrackRegistry(),
+                NoConnections,
+                emptyList(),
+                clock,
+            ),
+        )
+
+    private object NoConnections : ConnectedSources {
+        override val sources = MutableStateFlow(emptyList<MusicSource>())
+        override val lyrics = MutableStateFlow(emptyList<LyricsProvider>())
+        override val metadata = MutableStateFlow(emptyList<MetadataProvider>())
+    }
 
     private fun track(n: Int) =
         TrackEntity(
