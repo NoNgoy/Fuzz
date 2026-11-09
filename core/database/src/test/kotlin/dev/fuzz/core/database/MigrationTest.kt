@@ -138,6 +138,22 @@ class MigrationTest {
         }
     }
 
+    @Test
+    fun `8 to 9 adds lyrics cache`() {
+        helper.createDatabase(DB, 8).close()
+
+        helper.runMigrationsAndValidate(DB, 9, true).use { db ->
+            db.execSQL(
+                "INSERT INTO lyrics (`key`, source, synced, lines, fetched_at) " +
+                    "VALUES ('кино|кукушка', 'LRCLIB', 1, '', 1)",
+            )
+            db.query("SELECT source FROM lyrics").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals("LRCLIB", cursor.getString(0))
+            }
+        }
+    }
+
     private companion object {
         const val DB = "migration-test"
     }

@@ -11,6 +11,7 @@ import dev.fuzz.core.database.FuzzDatabase
 import dev.fuzz.core.database.dao.BackupDao
 import dev.fuzz.core.database.dao.DownloadDao
 import dev.fuzz.core.database.dao.ListenDao
+import dev.fuzz.core.database.dao.LyricsDao
 import dev.fuzz.core.database.dao.PlaylistDao
 import dev.fuzz.core.database.dao.ReactionDao
 import dev.fuzz.core.database.dao.RecapDao
@@ -67,4 +68,7 @@ object CollectionDaoModule {
 
     @Provides
     fun provideRecapDao(db: FuzzDatabase): RecapDao = db.recapDao()
+
+    @Provides
+    fun provideLyricsDao(db: FuzzDatabase): LyricsDao = db.lyricsDao()
 }

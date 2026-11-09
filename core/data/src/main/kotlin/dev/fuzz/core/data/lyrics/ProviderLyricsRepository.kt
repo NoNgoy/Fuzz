@@ -15,8 +15,8 @@ import javax.inject.Singleton
 
 /**
  * Тексты песен: сначала свои API из «Подключений», потом встроенные (LRCLIB). Синхронный текст
- * предпочтительнее обычного. Ответы держатся в памяти, чтобы повторное открытие было мгновенным;
- * «нет текста» запоминается, только если ответили все источники.
+ * предпочтительнее обычного. Найденный текст сохраняется на диск и дальше открывается без сети;
+ * в памяти держатся последние ответы, «нет текста» — только если ответили все источники.
  */
 @Singleton
 internal class ProviderLyricsRepository
@@ -24,6 +24,7 @@ internal class ProviderLyricsRepository
     constructor(
         private val builtIn: List<@JvmSuppressWildcards LyricsProvider>,
         private val connected: ConnectedSources,
+        private val store: LyricsStore,
     ) : LyricsRepository {
         private val mutex = Mutex()
         private val cache =
@@ -35,7 +36,7 @@ internal class ProviderLyricsRepository
         override suspend fun lyrics(track: Track): LyricsResult {
             val key = "${track.artistName.lowercase()}|${track.title.lowercase()}"
             mutex.withLock { cache[key] }?.let { return it }
-            val result = fetch(track)
+            val result = store.get(key) ?: fetch(track).also { if (it is LyricsResult.Found) store.put(key, it) }
             if (result != LyricsResult.Unavailable) mutex.withLock { cache[key] = result }
             return result
         }

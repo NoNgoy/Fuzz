@@ -26,7 +26,7 @@ class ProviderLyricsRepositoryTest {
         runTest {
             val own = FakeProvider("Мой API", PluginResult.Ok(plain))
             val lrclib = FakeProvider("LRCLIB", PluginResult.Ok(synced))
-            val repository = ProviderLyricsRepository(listOf(lrclib), Connected(listOf(own)))
+            val repository = ProviderLyricsRepository(listOf(lrclib), Connected(listOf(own)), MemoryStore())
             assertEquals(LyricsResult.Found(synced, "LRCLIB"), repository.lyrics(track))
             assertEquals(1, own.calls)
 
@@ -38,7 +38,7 @@ class ProviderLyricsRepositoryTest {
     fun `без сети не запоминается, нет текста запоминается`() =
         runTest {
             val offline = FakeProvider("LRCLIB", PluginResult.Failure(PluginResult.Kind.NETWORK))
-            val repository = ProviderLyricsRepository(listOf(offline), Connected(emptyList()))
+            val repository = ProviderLyricsRepository(listOf(offline), Connected(emptyList()), MemoryStore())
             assertEquals(LyricsResult.Unavailable, repository.lyrics(track))
             repository.lyrics(track)
             assertEquals(2, offline.calls)
@@ -48,6 +48,34 @@ class ProviderLyricsRepositoryTest {
             repository.lyrics(track)
             assertEquals(3, offline.calls)
         }
+
+    @Test
+    fun `найденный текст открывается без сети`() =
+        runTest {
+            val store = MemoryStore()
+            val lrclib = FakeProvider("LRCLIB", PluginResult.Ok(synced))
+            ProviderLyricsRepository(listOf(lrclib), Connected(emptyList()), store).lyrics(track)
+
+            // Новый запуск приложения: память пуста, сети нет.
+            lrclib.answer = PluginResult.Failure(PluginResult.Kind.NETWORK)
+            val restarted = ProviderLyricsRepository(listOf(lrclib), Connected(emptyList()), store)
+
+            assertEquals(LyricsResult.Found(synced, "LRCLIB"), restarted.lyrics(track))
+            assertEquals(1, lrclib.calls)
+        }
+
+    private class MemoryStore : LyricsStore {
+        private val map = mutableMapOf<String, LyricsResult.Found>()
+
+        override suspend fun get(key: String) = map[key]
+
+        override suspend fun put(
+            key: String,
+            found: LyricsResult.Found,
+        ) {
+            map[key] = found
+        }
+    }
 
     private class FakeProvider(
         override val displayName: String,
