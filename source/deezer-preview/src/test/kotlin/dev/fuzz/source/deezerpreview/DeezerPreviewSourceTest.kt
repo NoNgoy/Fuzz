@@ -1,6 +1,8 @@
 package dev.fuzz.source.deezerpreview
 
+import dev.fuzz.core.domain.plugin.ExternalId
 import dev.fuzz.core.domain.plugin.PluginResult
+import dev.fuzz.core.domain.plugin.Providers
 import dev.fuzz.core.domain.plugin.SourceCapability
 import dev.fuzz.core.domain.plugin.TrackRef
 import io.ktor.client.HttpClient
@@ -60,6 +62,61 @@ class DeezerPreviewSourceTest {
             val result = source(text = """{"error":{"type":"Exception","code":4}}""").playbackUri(TrackRef("A", "X"))
             assertEquals(PluginResult.Kind.NOT_FOUND, (result as PluginResult.Failure).kind)
         }
+
+    @Test
+    fun playbackUriUsesLinkFromSearchWithoutNetwork() =
+        runBlocking {
+            val requests = mutableListOf<String>()
+            val source = routed(requests) { body }
+            val ref = (source.search("x", 5) as PluginResult.Ok).value.tracks.single()
+            requests.clear()
+            assertEquals("https://p/1.mp3", (source.playbackUri(ref) as PluginResult.Ok).value)
+            assertTrue(requests.isEmpty())
+        }
+
+    @Test
+    fun stalePreviewIsFetchedByTrackId() =
+        runBlocking {
+            var clock = 0L
+            val requests = mutableListOf<String>()
+            val source =
+                routed(requests, now = { clock }) { path ->
+                    if (path == "/track/1") """{"id":1,"title":"A","preview":"https://p/fresh.mp3"}""" else body
+                }
+            val ref = (source.search("x", 5) as PluginResult.Ok).value.tracks.single()
+            clock += 60 * 60 * 1000L
+            assertEquals("https://p/fresh.mp3", (source.playbackUri(ref) as PluginResult.Ok).value)
+            assertEquals("/track/1", requests.last())
+        }
+
+    @Test
+    fun trackIdWithoutPreviewFallsBackToSearch() =
+        runBlocking {
+            val ref = TrackRef("A", "X", externalIds = listOf(ExternalId(Providers.DEEZER, "7")))
+            val source =
+                routed(mutableListOf()) { path ->
+                    if (path == "/track/7") """{"error":{"type":"DataException","code":800}}""" else body
+                }
+            assertEquals("https://p/1.mp3", (source.playbackUri(ref) as PluginResult.Ok).value)
+        }
+
+    private fun routed(
+        requests: MutableList<String>,
+        now: () -> Long = { 0L },
+        respondTo: (String) -> String,
+    ): DeezerPreviewSource {
+        val engine =
+            MockEngine { request ->
+                requests += request.url.encodedPath
+                respond(
+                    respondTo(request.url.encodedPath),
+                    HttpStatusCode.OK,
+                    headersOf(HttpHeaders.ContentType, "application/json"),
+                )
+            }
+        val client = HttpClient(engine) { install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) } }
+        return DeezerPreviewSource(client, now = now)
+    }
 
     @Test
     fun httpErrorIsFailure() =
