@@ -29,12 +29,15 @@ data class WaveConfig(
     companion object {
         private val json = Json { ignoreUnknownKeys = true }
 
+        // Абсолютный путь: относительный ломается, если R8 переносит класс в другой пакет.
+        private const val RESOURCE = "/dev/fuzz/engine/recommend/config/wave-config.json"
+
         fun parse(text: String): WaveConfig = json.decodeFromString(serializer(), text)
 
         /** Конфиг из ресурсов модуля. */
         val Default: WaveConfig by lazy {
             val stream =
-                requireNotNull(WaveConfig::class.java.getResourceAsStream("wave-config.json")) {
+                requireNotNull(WaveConfig::class.java.getResourceAsStream(RESOURCE)) {
                     "wave-config.json не найден в ресурсах engine:recommend"
                 }
             parse(stream.bufferedReader().use { it.readText() })

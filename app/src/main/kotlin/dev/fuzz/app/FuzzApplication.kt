@@ -1,7 +1,9 @@
 package dev.fuzz.app
 
 import android.app.Application
+import android.content.Context
 import dagger.hilt.android.HiltAndroidApp
+import dev.fuzz.app.crash.CrashReporter
 import dev.fuzz.core.data.sync.LibrarySync
 import dev.fuzz.core.data.wave.ListenRecorder
 import dev.fuzz.core.data.wave.WaveRunner
@@ -21,8 +23,15 @@ class FuzzApplication : Application() {
     /** Живёт столько же, сколько процесс: фоновая синхронизация коллекции, история прослушиваний и волна. */
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(base)
+        // Раньше Hilt: так ловятся и падения при сборке зависимостей.
+        CrashReporter.install(base)
+    }
+
     override fun onCreate() {
         super.onCreate()
+        if (CrashReporter.isCrashProcess()) return
         librarySync.start(appScope)
         listenRecorder.start(appScope)
         waveRunner.attach(appScope)
