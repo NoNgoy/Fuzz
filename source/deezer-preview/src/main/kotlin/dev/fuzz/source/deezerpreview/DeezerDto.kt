@@ -8,7 +8,8 @@ internal data class DeezerSearchResponse(val data: List<DeezerTrackDto> = emptyL
 
 @Serializable
 internal data class DeezerTrackDto(
-    val id: Long,
+    /** У ответа /track/{id} с ошибкой id нет. */
+    val id: Long = 0,
     val title: String = "",
     /** Длительность в секундах. */
     val duration: Long? = null,
