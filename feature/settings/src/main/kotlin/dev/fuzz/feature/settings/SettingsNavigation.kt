@@ -7,24 +7,38 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object SettingsRoute
 
+/** Куда ведут пункты настроек; все экраны живут в своих модулях, здесь только переходы. */
+class SettingsActions(
+    val onBack: () -> Unit = {},
+    val onOpenFolders: () -> Unit = {},
+    val onOpenSound: () -> Unit = {},
+    val onOpenWave: () -> Unit = {},
+    val onOpenConnections: () -> Unit = {},
+    val onOpenImport: () -> Unit = {},
+)
+
 /** Вкладка «Профиль»: статистика, итоги года, импорт, настройки. */
 @Serializable
 data object ProfileRoute
 
-fun NavGraphBuilder.settingsScreen() {
-    composable<SettingsRoute> { SettingsScreen() }
+fun NavGraphBuilder.settingsScreen(actions: SettingsActions) {
+    composable<SettingsRoute> { SettingsScreen(actions) }
 }
 
 fun NavGraphBuilder.profileScreen(
     onOpenImport: () -> Unit,
     onOpenConnections: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenSound: () -> Unit,
+    onOpenWave: () -> Unit,
 ) {
     composable<ProfileRoute> {
         ProfileScreen(
             onOpenImport = onOpenImport,
             onOpenConnections = onOpenConnections,
             onOpenSettings = onOpenSettings,
+            onOpenSound = onOpenSound,
+            onOpenWave = onOpenWave,
         )
     }
 }

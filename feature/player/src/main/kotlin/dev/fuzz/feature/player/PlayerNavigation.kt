@@ -9,6 +9,14 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object PlayerRoute
 
+/** Настройки звука отдельным экраном: из профиля и настроек, без открытого плеера. */
+@Serializable
+data object SoundRoute
+
+fun NavGraphBuilder.soundScreen(onBack: () -> Unit) {
+    composable<SoundRoute> { SoundScreen(onBack = onBack) }
+}
+
 fun NavGraphBuilder.playerScreen(onCollapse: () -> Unit) {
     composable<PlayerRoute>(
         enterTransition = { slideInVertically { it } },

@@ -28,9 +28,11 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/** Что показывает экран списка: «Мне нравится» или плейлист. */
+/** Что показывает экран списка: «Мне нравится», все треки на телефоне или плейлист. */
 sealed interface TrackListKind {
     data object Liked : TrackListKind
+
+    data object Downloaded : TrackListKind
 
     data class Playlist(
         val id: PlaylistId,
@@ -89,6 +91,10 @@ class TrackListViewModel
                         }
                     }
 
+                    TrackListKind.Downloaded -> {
+                        observeLibrary()
+                    }
+
                     is TrackListKind.Playlist -> {
                         playlists.observeTracks(kind.id)
                     }
@@ -127,6 +133,7 @@ class TrackListViewModel
                     viewModelScope.launch {
                         when (val kind = currentState.kind) {
                             TrackListKind.Liked -> reactions.set(intent.track, Reaction.None)
+                            TrackListKind.Downloaded -> Unit
                             is TrackListKind.Playlist -> playlists.removeTrack(kind.id, intent.track)
                         }
                     }
@@ -147,7 +154,11 @@ class TrackListViewModel
         private companion object {
             fun kindOf(savedState: SavedStateHandle): TrackListKind {
                 val route = savedState.toRoute<TrackListRoute>()
-                return route.playlistId?.let { TrackListKind.Playlist(PlaylistId(it)) } ?: TrackListKind.Liked
+                return when {
+                    route.playlistId != null -> TrackListKind.Playlist(PlaylistId(route.playlistId))
+                    route.downloaded -> TrackListKind.Downloaded
+                    else -> TrackListKind.Liked
+                }
             }
         }
     }
