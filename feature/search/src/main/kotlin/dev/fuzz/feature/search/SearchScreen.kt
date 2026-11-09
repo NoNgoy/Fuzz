@@ -73,27 +73,39 @@ internal fun SearchScreen(
     onIntent: (SearchIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(
-        modifier = modifier.statusBarsPadding(),
-        contentPadding = PaddingValues(vertical = Spacing.s),
-        verticalArrangement = Arrangement.spacedBy(Spacing.s),
-    ) {
-        if (state.showBrowse) {
-            item {
+    // Поле ввода живёт вне списка: внутри LazyColumn оно пересоздавалось, когда после первой буквы
+    // пропадал заголовок, и клавиатура закрывалась. Заодно поле не уезжает при прокрутке результатов.
+    Column(modifier.statusBarsPadding()) {
+        Column(
+            modifier = Modifier.padding(top = Spacing.s),
+            verticalArrangement = Arrangement.spacedBy(Spacing.s),
+        ) {
+            if (state.showBrowse) {
                 ScreenTitle(
                     stringResource(R.string.feature_search_title),
                     Modifier.padding(horizontal = Spacing.screen),
                 )
             }
-        }
-        item {
             SearchField(
                 query = state.query,
                 onQueryChange = { onIntent(SearchIntent.QueryChanged(it)) },
                 modifier = Modifier.padding(horizontal = Spacing.screen),
             )
+            SourceChips(state.source) { onIntent(SearchIntent.SourceSelected(it)) }
         }
-        item { SourceChips(state.source) { onIntent(SearchIntent.SourceSelected(it)) } }
+        SearchBody(state, onIntent)
+    }
+}
+
+@Composable
+private fun SearchBody(
+    state: SearchState,
+    onIntent: (SearchIntent) -> Unit,
+) {
+    LazyColumn(
+        contentPadding = PaddingValues(vertical = Spacing.s),
+        verticalArrangement = Arrangement.spacedBy(Spacing.s),
+    ) {
         if (state.showBrowse) {
             item { SectionHeader(stringResource(R.string.feature_search_moods)) }
             item { TileGrid(MOODS) { onIntent(SearchIntent.QueryChanged(it)) } }
