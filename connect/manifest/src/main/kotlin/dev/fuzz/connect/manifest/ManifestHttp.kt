@@ -211,6 +211,7 @@ internal class ManifestHttp(
     private companion object {
         const val MAX_BODY_CHARS = 2_000_000
         const val MS_IN_SECOND = 1_000L
-        val PLACEHOLDER = Regex("""\{([A-Za-z]+)}""")
+        // Обе скобки экранированы: движок ICU на Android падает на голой «}», хотя JVM в тестах её прощает.
+        val PLACEHOLDER = Regex("""\{([A-Za-z]+)\}""")
     }
 }
