@@ -43,6 +43,7 @@ import dev.fuzz.feature.player.PlayerRoute
 import dev.fuzz.feature.player.SoundRoute
 import dev.fuzz.feature.player.playerScreen
 import dev.fuzz.feature.player.soundScreen
+import dev.fuzz.feature.search.artistScreens
 import dev.fuzz.feature.search.searchScreen
 import dev.fuzz.feature.settings.SettingsActions
 import dev.fuzz.feature.settings.SettingsRoute
@@ -114,7 +115,12 @@ fun FuzzApp(
                 onOpenWaveSettings = { navController.navigate(WaveRoute) },
                 onAddMusic = { navController.navigate(OnboardingRoute) },
             )
-            searchScreen()
+            searchScreen(onOpenArtist = { navController.navigate(it) })
+            artistScreens(
+                onBack = navController::popBackStack,
+                onOpenArtist = { navController.navigate(it) },
+                onOpenAlbum = { navController.navigate(it) },
+            )
             libraryScreen(
                 onOpenLiked = { navController.navigate(TrackListRoute()) },
                 onOpenPlaylist = { navController.navigate(TrackListRoute(playlistId = it)) },

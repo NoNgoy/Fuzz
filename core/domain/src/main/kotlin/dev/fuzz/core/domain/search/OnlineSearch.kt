@@ -33,4 +33,10 @@ interface OnlineSearch {
 
     /** Те же треки со ссылками на поток; недоступные (нет сети, нет превью) выпадают. */
     suspend fun playable(tracks: List<Track>): List<Track>
+
+    /**
+     * Для каждого трека ищет полную версию в своих подключениях и открытых каталогах.
+     * Если не нашлось, трек остаётся как был (например, превью).
+     */
+    suspend fun fullVersions(tracks: List<Track>): List<Track> = tracks
 }

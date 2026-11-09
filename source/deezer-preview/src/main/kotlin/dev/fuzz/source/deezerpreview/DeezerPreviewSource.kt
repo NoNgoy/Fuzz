@@ -111,20 +111,21 @@ class DeezerPreviewSource(
 
     private fun String.clean() = replace("\"", "")
 
-    private fun DeezerTrackDto.toRef() =
-        TrackRef(
-            title = title,
-            artist = artist?.name.orEmpty(),
-            album = album?.title,
-            durationMs = duration?.times(MS_IN_SECOND),
-            externalIds = listOf(ExternalId(Providers.DEEZER, id.toString())),
-        )
-
     private companion object {
-        const val MS_IN_SECOND = 1_000L
-
         /** Подпись ссылки Deezer живёт дольше; берём с запасом. */
         const val PREVIEW_TTL_MS = 10 * 60 * 1_000L
         const val MAX_PREVIEWS = 2_000
     }
 }
+
+private const val MS_IN_SECOND = 1_000L
+
+internal fun DeezerTrackDto.toRef(cover: String? = null) =
+    TrackRef(
+        title = title,
+        artist = artist?.name.orEmpty(),
+        album = album?.title,
+        durationMs = duration?.times(MS_IN_SECOND),
+        externalIds = listOf(ExternalId(Providers.DEEZER, id.toString())),
+        artworkUrl = album?.coverMedium ?: cover,
+    )

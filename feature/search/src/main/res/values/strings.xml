@@ -23,9 +23,24 @@
     <string name="feature_search_artists">Артисты</string>
     <string name="feature_search_tracks">Треки</string>
     <string name="feature_search_artist_tracks">У тебя треков: %1$d</string>
-    <string name="feature_search_play_artist">Включить артиста</string>
     <string name="feature_search_nothing">По запросу «%1$s» ничего не нашлось</string>
     <string name="feature_search_online">В сети</string>
     <string name="feature_search_online_loading">Ищу на серверах и в каталогах…</string>
     <string name="feature_search_not_playable">Не нашлось ссылки на звук для этого трека</string>
+    <string name="feature_search_popular">Популярное</string>
+    <string name="feature_search_albums">Альбомы</string>
+    <string name="feature_search_in_collection">В коллекции</string>
+    <string name="feature_search_related">Похожие артисты</string>
+    <string name="feature_search_all_tracks">Все треки</string>
+    <string name="feature_search_no_tracks">В подключениях треков этого артиста не нашлось</string>
+    <string name="feature_search_listen">Слушать</string>
+    <string name="feature_search_shuffle">Перемешать</string>
+    <string name="feature_search_preparing">Ищу полные версии в подключениях…</string>
+    <string name="feature_search_back">Назад</string>
+    <plurals name="feature_search_fans">
+        <item quantity="one">%1$d слушатель на Deezer</item>
+        <item quantity="few">%1$d слушателя на Deezer</item>
+        <item quantity="many">%1$d слушателей на Deezer</item>
+        <item quantity="other">%1$d слушателя на Deezer</item>
+    </plurals>
 </resources>

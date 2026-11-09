@@ -50,6 +50,40 @@ internal class PluginOnlineSearch
             return OnlineRanking.sort(query, hits) { it.track }
         }
 
+        override suspend fun fullVersions(tracks: List<Track>): List<Track> =
+            coroutineScope {
+                tracks.map { track ->
+                    async { if (track.isPreview()) fullVersion(track) ?: track else track }
+                }.awaitAll()
+            }
+
+        /** Трек из каталога метаданных (например, популярное у Deezer) превращается в трек поиска. */
+        fun register(
+            ref: TrackRef,
+            catalogProvider: String,
+        ): Track? {
+            val catalog = catalogs.firstOrNull { it.provider == catalogProvider } ?: return null
+            return Target(catalog.source, catalog.origin, catalog.provider).hit(ref)?.track
+        }
+
+        private suspend fun fullVersion(track: Track): Track? {
+            val artist = OnlineRanking.normalize(track.artistName)
+            val title = OnlineRanking.normalize(track.title)
+            if (artist.isEmpty() || title.isEmpty()) return null
+            val hits =
+                withTimeoutOrNull(TIMEOUT_MS) {
+                    search("${track.artistName} ${track.title}", FULL_ORIGINS, page = 0)
+                }.orEmpty()
+            return hits
+                .map { it.track }
+                .firstOrNull { hit ->
+                    OnlineRanking.normalize(hit.artistName) == artist &&
+                        OnlineRanking.normalize(hit.title).let { it == title || it.startsWith("$title ") }
+                }
+        }
+
+        private fun Track.isPreview() = format == PREVIEW_LABEL
+
         override suspend fun playable(tracks: List<Track>): List<Track> =
             coroutineScope {
                 tracks
@@ -74,7 +108,7 @@ internal class PluginOnlineSearch
                 return refs.mapNotNull { ref -> hit(ref) }
             }
 
-            private fun hit(ref: TrackRef): OnlineHit? {
+            fun hit(ref: TrackRef): OnlineHit? {
                 val externalId =
                     (
                         provider?.let { key -> ref.externalIds.firstOrNull { it.provider == key } }
@@ -93,6 +127,7 @@ internal class PluginOnlineSearch
                         albumTitle = ref.album,
                         durationMs = ref.durationMs ?: 0L,
                         playbackUri = "",
+                        artworkUri = ref.artworkUrl,
                         format = if (origin == OnlineOrigin.Preview) PREVIEW_LABEL else source.displayName,
                     )
                 return OnlineHit(track, origin)
@@ -103,5 +138,6 @@ internal class PluginOnlineSearch
             const val PAGE_SIZE = 30
             const val TIMEOUT_MS = 10_000L
             const val PREVIEW_LABEL = "Превью"
+            val FULL_ORIGINS = setOf(OnlineOrigin.Server, OnlineOrigin.OpenCatalog)
         }
     }

@@ -11,6 +11,7 @@ import dev.fuzz.core.data.wave.ProviderSimilarityGraph
 import dev.fuzz.core.data.wave.RoomSimilarityStore
 import dev.fuzz.core.data.wave.SourceExternalCatalog
 import dev.fuzz.core.database.dao.SimilarityCacheDao
+import dev.fuzz.core.domain.artist.ArtistDirectory
 import dev.fuzz.core.domain.connection.ConnectedSources
 import dev.fuzz.core.domain.plugin.LyricsProvider
 import dev.fuzz.core.domain.plugin.MetadataProvider
@@ -23,6 +24,7 @@ import dev.fuzz.engine.recommend.port.SimilarityGraph
 import dev.fuzz.meta.lastfm.LastFmProvider
 import dev.fuzz.meta.listenbrainz.ListenBrainzProvider
 import dev.fuzz.meta.lyrics.LrclibProvider
+import dev.fuzz.source.deezerpreview.DeezerArtistDirectory
 import dev.fuzz.source.deezerpreview.DeezerPreviewSource
 import dev.fuzz.source.jamendo.JamendoSource
 import io.ktor.client.HttpClient
@@ -99,6 +101,11 @@ internal object PluginsModule {
     @Singleton
     fun provideLyricsProviders(client: HttpClient): List<@JvmSuppressWildcards LyricsProvider> =
         listOf(LrclibProvider(client, USER_AGENT))
+
+    /** Фото, популярное и дискография артистов для их страниц. */
+    @Provides
+    @Singleton
+    fun provideArtistDirectory(client: HttpClient): ArtistDirectory = DeezerArtistDirectory(client)
 
     /** Встроенные каталоги для экрана поиска; Jamendo только с ключом. */
     @Provides

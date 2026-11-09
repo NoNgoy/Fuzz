@@ -1,5 +1,10 @@
 package dev.fuzz.feature.search
 
+import dev.fuzz.core.domain.artist.AlbumProfile
+import dev.fuzz.core.domain.artist.ArtistPage
+import dev.fuzz.core.domain.artist.ArtistPages
+import dev.fuzz.core.domain.artist.ArtistProfile
+import dev.fuzz.core.domain.artist.TracksPage
 import dev.fuzz.core.domain.library.LibraryRepository
 import dev.fuzz.core.domain.search.OnlineHit
 import dev.fuzz.core.domain.search.OnlineOrigin
@@ -33,6 +38,19 @@ class SearchViewModelTest {
     private val serverTrack =
         Track(TrackId("s1"), "Toxicity", "System of a Down", null, 0, playbackUri = "", format = "Дом")
     private val online = FakeOnline()
+    private val artists =
+        object : ArtistPages {
+            override suspend fun searchArtists(query: String) = listOf(ArtistProfile("System of a Down", id = "1"))
+
+            override suspend fun page(artist: ArtistProfile) = ArtistPage(artist)
+
+            override suspend fun album(album: AlbumProfile) = emptyList<Track>()
+
+            override suspend fun tracks(
+                artist: String,
+                page: Int,
+            ) = TracksPage(emptyList(), hasMore = false)
+        }
 
     private val library =
         object : LibraryRepository {
@@ -50,11 +68,12 @@ class SearchViewModelTest {
     @Test
     fun `онлайн-находки показываются отдельно и играют со ссылкой`() =
         runTest(dispatcher) {
-            val vm = SearchViewModel(SearchLibraryUseCase(library), online, player)
+            val vm = SearchViewModel(SearchLibraryUseCase(library), online, player, artists)
             vm.onIntent(SearchIntent.QueryChanged("toxicity"))
             advanceUntilIdle()
 
             assertEquals(listOf(serverTrack), vm.state.value.online)
+            assertEquals("System of a Down", vm.state.value.onlineArtists.single().name)
             assertEquals(OnlineOrigin.entries.toSet(), online.lastOrigins)
 
             vm.onIntent(SearchIntent.PlayOnline(0))
@@ -65,7 +84,7 @@ class SearchViewModelTest {
     @Test
     fun `фильтр «Коллекция» не ходит в сеть, «Мои серверы» не ищет в коллекции`() =
         runTest(dispatcher) {
-            val vm = SearchViewModel(SearchLibraryUseCase(library), online, player)
+            val vm = SearchViewModel(SearchLibraryUseCase(library), online, player, artists)
             vm.onIntent(SearchIntent.SourceSelected(SearchSource.Collection))
             vm.onIntent(SearchIntent.QueryChanged("deftones"))
             advanceUntilIdle()
@@ -83,7 +102,7 @@ class SearchViewModelTest {
     fun `прокрутка до конца подгружает следующие страницы, пока есть новое`() =
         runTest(dispatcher) {
             online.pages = 2
-            val vm = SearchViewModel(SearchLibraryUseCase(library), online, player)
+            val vm = SearchViewModel(SearchLibraryUseCase(library), online, player, artists)
             vm.onIntent(SearchIntent.QueryChanged("toxicity"))
             advanceUntilIdle()
             assertEquals(1, vm.state.value.online.size)
@@ -103,7 +122,7 @@ class SearchViewModelTest {
     fun `без ссылки на звук экран сообщает, а плеер не трогается`() =
         runTest(dispatcher) {
             online.resolvable = false
-            val vm = SearchViewModel(SearchLibraryUseCase(library), online, player)
+            val vm = SearchViewModel(SearchLibraryUseCase(library), online, player, artists)
             vm.onIntent(SearchIntent.QueryChanged("toxicity"))
             advanceUntilIdle()
             val effect = async { vm.effects.first() }
