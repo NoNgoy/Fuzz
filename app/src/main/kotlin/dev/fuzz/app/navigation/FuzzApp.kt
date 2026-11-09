@@ -50,8 +50,10 @@ import dev.fuzz.feature.search.artistScreens
 import dev.fuzz.feature.search.searchScreen
 import dev.fuzz.feature.settings.SettingsActions
 import dev.fuzz.feature.settings.SettingsRoute
+import dev.fuzz.feature.settings.YearRecapRoute
 import dev.fuzz.feature.settings.profileScreen
 import dev.fuzz.feature.settings.settingsScreen
+import dev.fuzz.feature.settings.yearRecapScreen
 import dev.fuzz.feature.wave.WaveRoute
 import dev.fuzz.feature.wave.waveScreen
 import kotlinx.coroutines.flow.Flow
@@ -149,7 +151,9 @@ fun FuzzApp(
                 onOpenSound = { navController.navigate(SoundRoute) },
                 onOpenWave = { navController.navigate(WaveRoute) },
                 onOpenWishlist = { navController.navigate(WishlistRoute) },
+                onOpenYear = { navController.navigate(YearRecapRoute) },
             )
+            yearRecapScreen(onBack = navController::popBackStack)
             waveScreen(onBack = navController::popBackStack)
             importScreen(
                 onBack = navController::popBackStack,

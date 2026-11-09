@@ -8,6 +8,7 @@ import dev.fuzz.core.database.dao.DownloadDao
 import dev.fuzz.core.database.dao.ListenDao
 import dev.fuzz.core.database.dao.PlaylistDao
 import dev.fuzz.core.database.dao.ReactionDao
+import dev.fuzz.core.database.dao.RecapDao
 import dev.fuzz.core.database.dao.SavedRefDao
 import dev.fuzz.core.database.dao.SimilarityCacheDao
 import dev.fuzz.core.database.dao.StatsDao
@@ -68,4 +69,6 @@ abstract class FuzzDatabase : RoomDatabase() {
     abstract fun backupDao(): BackupDao
 
     abstract fun wishDao(): WishDao
+
+    abstract fun recapDao(): RecapDao
 }
