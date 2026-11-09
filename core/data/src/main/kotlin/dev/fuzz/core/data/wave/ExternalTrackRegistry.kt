@@ -19,7 +19,12 @@ import javax.inject.Singleton
 @Singleton
 class ExternalTrackRegistry
     @Inject
-    constructor() : PlaybackHeaders {
+    constructor(
+        private val bitrate: StreamBitrate,
+    ) : PlaybackHeaders {
+        /** Для тестов: без ограничения качества. */
+        constructor() : this(StreamBitrate { null })
+
         /** Откуда трек: источник, его описание у источника и вид каталога. */
         class Entry(
             val source: MusicSource,
@@ -51,7 +56,7 @@ class ExternalTrackRegistry
         /** Трек для плеера или null, если источник не дал ссылку (нет сети, нет превью). */
         suspend fun resolve(id: TrackId): Track? {
             val entry = entries[id] ?: return null
-            val uri = (entry.source.playbackUri(entry.ref) as? PluginResult.Ok)?.value ?: return null
+            val uri = (entry.source.playbackUri(entry.ref, bitrate.maxKbps()) as? PluginResult.Ok)?.value ?: return null
             (entry.source as? AuthorizedPlayback)?.let { source ->
                 if (headers.size >= MAX_ENTRIES) headers.clear()
                 headers[uri] = source.playbackHeaders(entry.ref)

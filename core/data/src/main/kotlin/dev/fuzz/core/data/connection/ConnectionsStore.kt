@@ -79,6 +79,21 @@ internal class ConnectionsStore
             put(current, secret)
         }
 
+        suspend fun move(
+            id: String,
+            offset: Int,
+        ) {
+            dataStore.updateData { prefs ->
+                val list = prefs.connectionsList.toMutableList()
+                val from = list.indexOfFirst { it.id == id }
+                if (from < 0) return@updateData prefs
+                val to = (from + offset).coerceIn(0, list.lastIndex)
+                if (to == from) return@updateData prefs
+                list.add(to, list.removeAt(from))
+                prefs.toBuilder().clearConnections().addAllConnections(list).build()
+            }
+        }
+
         suspend fun remove(id: String) {
             dataStore.updateData { prefs ->
                 prefs

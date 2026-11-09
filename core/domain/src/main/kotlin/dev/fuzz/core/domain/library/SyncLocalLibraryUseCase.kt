@@ -1,6 +1,7 @@
 package dev.fuzz.core.domain.library
 
 import dev.fuzz.core.domain.onboarding.OnboardingRepository
+import dev.fuzz.core.domain.settings.AppSettingsRepository
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
@@ -21,11 +22,12 @@ class SyncLocalLibraryUseCase
         private val scanner: LocalMusicScanner,
         private val onboarding: OnboardingRepository,
         private val store: LocalLibraryStore,
+        private val settings: AppSettingsRepository,
     ) {
         suspend operator fun invoke(): SyncOutcome {
             val folders = onboarding.state.first().folders
             if (folders.isEmpty()) return SyncOutcome.NoFolders
-            return when (val result = scanner.scan(folders)) {
+            return when (val result = scanner.scan(folders, settings.settings.first().scan)) {
                 ScanResult.NoPermission -> SyncOutcome.NoPermission
                 is ScanResult.Success -> SyncOutcome.Synced(store.replaceLocal(result.tracks))
             }

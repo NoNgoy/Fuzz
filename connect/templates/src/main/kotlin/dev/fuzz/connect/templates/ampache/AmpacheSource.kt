@@ -65,7 +65,10 @@ class AmpacheSource(
         }.map { r -> SearchResult(tracks = r.song.map { it.toRef() }) }
 
     /** Ссылка `action=stream` с токеном сессии: живёт, пока жива сессия, поэтому её не сохраняют. */
-    override suspend fun playbackUri(track: TrackRef): PluginResult<String> {
+    override suspend fun playbackUri(track: TrackRef): PluginResult<String> = playbackUri(track, null)
+
+    /** С [maxKbps] Ampache перекодирует в MP3 (`format`, `bitrate`). */
+    override suspend fun playbackUri(track: TrackRef, maxKbps: Int?): PluginResult<String> {
         val songId =
             track.externalIds.firstOrNull { it.provider == Providers.AMPACHE }?.id
                 ?: return PluginResult.Failure(PluginResult.Kind.NOT_FOUND, "no Ampache id")
@@ -73,6 +76,10 @@ class AmpacheSource(
             api("stream", token) {
                 parameters.append("type", "song")
                 parameters.append("id", songId)
+                if (maxKbps != null) {
+                    parameters.append("format", "mp3")
+                    parameters.append("bitrate", maxKbps.toString())
+                }
             }
         }
     }

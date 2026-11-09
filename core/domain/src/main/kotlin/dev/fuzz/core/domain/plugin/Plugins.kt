@@ -22,6 +22,12 @@ interface MusicSource : Connection {
 
     suspend fun playbackUri(track: TrackRef): PluginResult<String>
 
+    /**
+     * Ссылка на поток не толще [maxKbps]: сервер перекодирует на лету. null — как есть.
+     * Источник, который не умеет перекодировать, отдаёт обычную ссылку.
+     */
+    suspend fun playbackUri(track: TrackRef, maxKbps: Int?): PluginResult<String> = playbackUri(track)
+
     suspend fun download(track: TrackRef): PluginResult<InputStream> =
         PluginResult.Failure(PluginResult.Kind.UNAVAILABLE_IN_REGION, "download not supported")
 }

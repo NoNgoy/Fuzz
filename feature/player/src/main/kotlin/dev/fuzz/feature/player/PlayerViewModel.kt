@@ -7,6 +7,7 @@ import dev.fuzz.core.domain.player.SleepTimer
 import dev.fuzz.core.domain.player.SleepTimerState
 import dev.fuzz.core.domain.reaction.ReactionRepository
 import dev.fuzz.core.domain.reaction.ToggleReactionUseCase
+import dev.fuzz.core.domain.settings.AppSettingsRepository
 import dev.fuzz.core.model.PlaybackState
 import dev.fuzz.core.model.Reaction
 import dev.fuzz.core.model.RepeatMode
@@ -28,6 +29,8 @@ data class PlayerUiState(
     val playback: PlaybackState = PlaybackState(),
     val reaction: Reaction = Reaction.None,
     val sleep: SleepTimerState = SleepTimerState.Off,
+    /** Свайп по обложке и двойное нажатие; выключаются в настройках. */
+    val artworkGestures: Boolean = true,
 ) : UiState
 
 sealed interface PlayerIntent : UiIntent {
@@ -99,10 +102,14 @@ class PlayerViewModel
         private val reactions: ReactionRepository,
         private val toggleReaction: ToggleReactionUseCase,
         private val sleepTimer: SleepTimer,
+        appSettings: AppSettingsRepository,
     ) : MviViewModel<PlayerUiState, PlayerIntent, PlayerEffect>(PlayerUiState()) {
         init {
             player.state.onEach { setState { copy(playback = it) } }.launchIn(viewModelScope)
             sleepTimer.state.onEach { setState { copy(sleep = it) } }.launchIn(viewModelScope)
+            appSettings.settings
+                .onEach { setState { copy(artworkGestures = it.artworkGestures) } }
+                .launchIn(viewModelScope)
             player.state
                 .map { it.currentTrack?.id }
                 .distinctUntilChanged()

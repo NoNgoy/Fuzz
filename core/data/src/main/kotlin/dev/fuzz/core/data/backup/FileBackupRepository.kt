@@ -258,6 +258,7 @@ internal class FileBackupRepository
                 val builder = current.toBuilder()
                 if (saved.hasWave()) builder.wave = saved.wave
                 if (saved.hasSound()) builder.sound = saved.sound
+                if (saved.hasApp()) builder.app = saved.app
                 if (saved.theme.isNotEmpty()) builder.theme = saved.theme
                 if (saved.accent.isNotEmpty()) builder.accent = saved.accent
                 val known = current.connectionsList.mapTo(HashSet()) { it.id }

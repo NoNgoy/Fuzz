@@ -15,6 +15,7 @@ import dev.fuzz.core.domain.library.LocalMusicScanner
 import dev.fuzz.core.domain.library.ScanResult
 import dev.fuzz.core.domain.library.ScannedTrack
 import dev.fuzz.core.domain.onboarding.MusicFolder
+import dev.fuzz.core.domain.settings.ScanRules
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -31,17 +32,21 @@ internal class MediaStoreScanner
     ) : LocalMusicScanner {
         private val resolver: ContentResolver = context.contentResolver
 
-        override suspend fun scan(folders: List<MusicFolder>): ScanResult {
+        override suspend fun scan(
+            folders: List<MusicFolder>,
+            rules: ScanRules,
+        ): ScanResult {
             if (!hasAudioPermission()) return ScanResult.NoPermission
             val filter = FolderFilter.of(folders) ?: return ScanResult.Success(emptyList())
+            val exclusions = ScanExclusions.of(rules)
             return withContext(Dispatchers.IO) {
-                val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0 AND ${filter.selection}"
+                val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0 AND ${filter.selection}${exclusions.selection}"
                 val cursor =
                     resolver.query(
                         MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL),
                         PROJECTION,
                         selection,
-                        filter.args.toTypedArray(),
+                        (filter.args + exclusions.args).toTypedArray(),
                         null,
                     )
                 // null бывает, когда MediaProvider недоступен: это не «музыки нет», коллекцию не трогаем.

@@ -161,6 +161,14 @@ class ConnectionsViewModelTest {
 
         override suspend fun remove(id: String) = items.update { list -> list.filterNot { it.id == id } }
 
+        override suspend fun move(
+            id: String,
+            offset: Int,
+        ) = items.update { list ->
+            val from = list.indexOfFirst { it.id == id }
+            list.toMutableList().apply { add((from + offset).coerceIn(0, lastIndex), removeAt(from)) }
+        }
+
         var checked = 0
 
         override suspend fun check(id: String): ConnectionCheck {

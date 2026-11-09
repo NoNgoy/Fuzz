@@ -12,9 +12,12 @@ import dev.fuzz.core.data.lyrics.LyricsStore
 import dev.fuzz.core.data.lyrics.RoomLyricsStore
 import dev.fuzz.core.data.online.FileDownloads
 import dev.fuzz.core.data.online.SavedOnlineTracks
+import dev.fuzz.core.data.settings.DataStoreAppSettingsRepository
 import dev.fuzz.core.data.settings.DataStoreAppearanceRepository
 import dev.fuzz.core.data.stats.RoomListeningStats
 import dev.fuzz.core.data.stats.RoomYearRecap
+import dev.fuzz.core.data.wave.NetworkStreamBitrate
+import dev.fuzz.core.data.wave.StreamBitrate
 import dev.fuzz.core.data.wishlist.RoomWishlist
 import dev.fuzz.core.domain.artist.ArtistPages
 import dev.fuzz.core.domain.backup.BackupRepository
@@ -22,6 +25,7 @@ import dev.fuzz.core.domain.download.Downloads
 import dev.fuzz.core.domain.library.CollectionEditor
 import dev.fuzz.core.domain.library.SmartPlaylists
 import dev.fuzz.core.domain.player.SavedStreams
+import dev.fuzz.core.domain.settings.AppSettingsRepository
 import dev.fuzz.core.domain.settings.AppearanceRepository
 import dev.fuzz.core.domain.stats.ListeningStatsRepository
 import dev.fuzz.core.domain.stats.YearRecapRepository
@@ -63,4 +67,10 @@ internal interface UserDataModule {
 
     @Binds
     fun bindSmartPlaylists(impl: RoomSmartPlaylists): SmartPlaylists
+
+    @Binds
+    fun bindAppSettings(impl: DataStoreAppSettingsRepository): AppSettingsRepository
+
+    @Binds
+    fun bindStreamBitrate(impl: NetworkStreamBitrate): StreamBitrate
 }

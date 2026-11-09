@@ -108,4 +108,23 @@
     <string name="feature_settings_backup_io_failed">Не получилось прочитать или записать файл</string>
     <string name="feature_settings_menu_wishlist">Хочу добавить</string>
     <string name="feature_settings_menu_wishlist_hint">Треки, которых пока нет в коллекции</string>
+    <string name="feature_settings_skip_voice">Не брать записи</string>
+    <string name="feature_settings_skip_voice_hint">Диктофон, звонки и голосовые из мессенджеров не попадут в коллекцию</string>
+    <string name="feature_settings_min_duration">Не брать файлы короче</string>
+    <string name="feature_settings_min_duration_any">Брать все</string>
+    <string name="feature_settings_seconds">%1$d с</string>
+    <string name="feature_settings_pause_on_disconnect">Пауза без наушников</string>
+    <string name="feature_settings_pause_on_disconnect_hint">Отключили наушники или Bluetooth — музыка встаёт на паузу, а не играет из динамика</string>
+    <string name="feature_settings_gestures">Жесты на обложке</string>
+    <string name="feature_settings_gestures_hint">Свайп листает треки, двойное нажатие ставит лайк</string>
+    <string name="feature_settings_quality_wifi">Качество по Wi-Fi</string>
+    <string name="feature_settings_quality_mobile">Качество в мобильной сети</string>
+    <string name="feature_settings_quality_original">Оригинал</string>
+    <string name="feature_settings_kbps">%1$d кбит/с</string>
+    <string name="feature_settings_quality_hint">Для потока и скачивания. Subsonic, Navidrome, Jellyfin и Ampache пережимают на лету, остальные источники отдают как есть.</string>
+    <string name="feature_settings_cache">Кэш треков из сети</string>
+    <string name="feature_settings_cache_off">Без кэша</string>
+    <string name="feature_settings_megabytes">%1$d МБ</string>
+    <string name="feature_settings_gigabytes">%1$d ГБ</string>
+    <string name="feature_settings_cache_hint">Что уже звучало с серверов, второй раз играет без интернета. Давно не звучавшее удаляется первым.</string>
 </resources>
