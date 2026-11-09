@@ -1,6 +1,7 @@
 import dev.fuzz.buildlogic.lib
 import dev.fuzz.buildlogic.libs
 import dev.fuzz.buildlogic.pluginId
+import dev.fuzz.buildlogic.serializeKspTasks
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
@@ -9,6 +10,7 @@ class HiltConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
         pluginManager.apply(libs.pluginId("ksp"))
         pluginManager.apply(libs.pluginId("hilt"))
+        serializeKspTasks()
         dependencies {
             add("implementation", libs.lib("hilt-android"))
             add("ksp", libs.lib("hilt-compiler"))
