@@ -91,10 +91,12 @@ internal fun PlayerScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     var showQueue by remember { mutableStateOf(false) }
+    var showLyrics by remember { mutableStateOf(false) }
     val upcoming = upcomingMessages()
     CollectEffects(viewModel.effects) { effect ->
         when (effect) {
             is PlayerEffect.ShowUpcoming -> snackbar.showSnackbar(upcoming.getValue(effect.feature))
+            PlayerEffect.ShowLyrics -> showLyrics = true
         }
     }
     Box {
@@ -106,6 +108,7 @@ internal fun PlayerScreen(
         )
         SnackbarHost(snackbar, modifier = Modifier.align(Alignment.BottomCenter).safeDrawingPadding())
     }
+    if (showLyrics) LyricsSheet(onDismiss = { showLyrics = false })
     if (showQueue) {
         QueueSheet(
             playback = state.playback,
@@ -118,7 +121,6 @@ internal fun PlayerScreen(
 @Composable
 private fun upcomingMessages(): Map<UpcomingFeature, String> =
     mapOf(
-        UpcomingFeature.Lyrics to stringResource(R.string.feature_player_soon_lyrics),
         UpcomingFeature.Why to stringResource(R.string.feature_player_soon_why),
         UpcomingFeature.Sound to stringResource(R.string.feature_player_soon_sound),
         UpcomingFeature.Sleep to stringResource(R.string.feature_player_soon_sleep),
@@ -381,7 +383,7 @@ private fun Actions(
 ) {
     Row(Modifier.fillMaxWidth()) {
         Action(Icons.AutoMirrored.Rounded.Subject, R.string.feature_player_action_lyrics) {
-            onIntent(PlayerIntent.OpenUpcoming(UpcomingFeature.Lyrics))
+            onIntent(PlayerIntent.OpenLyrics)
         }
         Action(Icons.AutoMirrored.Rounded.QueueMusic, R.string.feature_player_action_queue, onOpenQueue)
         Action(Icons.Rounded.AutoAwesome, R.string.feature_player_action_why) {

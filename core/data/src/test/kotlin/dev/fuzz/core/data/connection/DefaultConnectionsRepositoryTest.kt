@@ -5,6 +5,7 @@ import dev.fuzz.core.datastore.UserPreferencesSerializer
 import dev.fuzz.core.domain.connection.ConnectionCheck
 import dev.fuzz.core.domain.connection.ConnectionConfig
 import dev.fuzz.core.domain.connection.ConnectionKind
+import dev.fuzz.core.domain.connection.ConnectionPlugins
 import dev.fuzz.core.domain.connection.MusicSourceFactory
 import dev.fuzz.core.domain.plugin.MusicSource
 import dev.fuzz.core.domain.plugin.PluginResult
@@ -38,10 +39,10 @@ class DefaultConnectionsRepositoryTest {
             override fun create(
                 config: ConnectionConfig,
                 secret: String?,
-            ): MusicSource {
+            ): ConnectionPlugins {
                 require(config.baseUrl.startsWith("https://")) { "плохой адрес" }
                 created += secret
-                return FakeSource(config.id, secret == "good")
+                return ConnectionPlugins(FakeSource(config.id, secret == "good"))
             }
         }
 

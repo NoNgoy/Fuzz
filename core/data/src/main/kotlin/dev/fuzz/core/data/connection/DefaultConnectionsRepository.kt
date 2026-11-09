@@ -3,8 +3,11 @@ package dev.fuzz.core.data.connection
 import dev.fuzz.core.domain.connection.ConnectedSources
 import dev.fuzz.core.domain.connection.ConnectionCheck
 import dev.fuzz.core.domain.connection.ConnectionConfig
+import dev.fuzz.core.domain.connection.ConnectionPlugins
 import dev.fuzz.core.domain.connection.ConnectionsRepository
 import dev.fuzz.core.domain.connection.MusicSourceFactory
+import dev.fuzz.core.domain.plugin.LyricsProvider
+import dev.fuzz.core.domain.plugin.MetadataProvider
 import dev.fuzz.core.domain.plugin.MusicSource
 import dev.fuzz.core.domain.plugin.PluginResult
 import kotlinx.coroutines.CoroutineScope
@@ -37,10 +40,19 @@ internal class DefaultConnectionsRepository(
 
     override val connections: Flow<List<ConnectionConfig>> = store.connections
 
-    override val sources: StateFlow<List<MusicSource>> =
+    private val plugins: StateFlow<List<ConnectionPlugins>> =
         store.connections
             .map { list -> list.filter { it.enabled }.mapNotNull { build(it) } }
             .stateIn(scope, SharingStarted.Eagerly, emptyList())
+
+    override val sources: StateFlow<List<MusicSource>> =
+        plugins.map { list -> list.map { it.source } }.stateIn(scope, SharingStarted.Eagerly, emptyList())
+
+    override val lyrics: StateFlow<List<LyricsProvider>> =
+        plugins.map { list -> list.mapNotNull { it.lyrics } }.stateIn(scope, SharingStarted.Eagerly, emptyList())
+
+    override val metadata: StateFlow<List<MetadataProvider>> =
+        plugins.map { list -> list.mapNotNull { it.metadata } }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     override suspend fun save(
         config: ConnectionConfig,
@@ -49,7 +61,7 @@ internal class DefaultConnectionsRepository(
         val effectiveSecret = secret ?: store.secret(config.id)
         val source =
             try {
-                factory.create(config, effectiveSecret)
+                factory.create(config, effectiveSecret).source
             } catch (e: IllegalArgumentException) {
                 return ConnectionCheck.Invalid(e.message)
             }
@@ -65,7 +77,7 @@ internal class DefaultConnectionsRepository(
 
     override suspend fun remove(id: String) = store.remove(id)
 
-    private suspend fun build(config: ConnectionConfig): MusicSource? =
+    private suspend fun build(config: ConnectionConfig): ConnectionPlugins? =
         runCatching { factory.create(config, store.secret(config.id)) }.getOrNull()
 
     /** Пробный поиск: сервер ответил и пустил — подключение рабочее, даже если ничего не нашлось. */
