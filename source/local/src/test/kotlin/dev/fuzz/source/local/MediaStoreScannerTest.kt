@@ -10,8 +10,10 @@ import android.provider.MediaStore
 import androidx.test.core.app.ApplicationProvider
 import dev.fuzz.core.domain.library.ScanResult
 import dev.fuzz.core.domain.onboarding.MusicFolder
+import dev.fuzz.core.domain.settings.ScanRules
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -25,6 +27,7 @@ class MediaStoreScannerTest {
     private val app = ApplicationProvider.getApplicationContext<Application>()
     private val provider = FakeMediaProvider()
     private val music = listOf(MusicFolder("Music/", "Музыка"))
+    private val noExclusions = ScanRules(skipVoiceNotes = false, minDurationSec = 0)
 
     init {
         ShadowContentResolver.registerProviderInternal(MediaStore.AUTHORITY, provider)
@@ -70,7 +73,7 @@ class MediaStoreScannerTest {
                     "external_primary",
                 )
 
-            val tracks = (MediaStoreScanner(app).scan(music) as ScanResult.Success).tracks
+            val tracks = (MediaStoreScanner(app).scan(music, noExclusions) as ScanResult.Success).tracks
 
             val kukushka = tracks[0]
             assertEquals("local:external_primary:42", kukushka.id)
@@ -90,10 +93,24 @@ class MediaStoreScannerTest {
             assertEquals(listOf("Music/%"), provider.lastArgs)
         }
 
+    @Test
+    fun `short files and voice notes are excluded in the query`() =
+        runTest {
+            shadowOf(app).grantPermissions(android.Manifest.permission.READ_MEDIA_AUDIO)
+
+            MediaStoreScanner(app).scan(music, ScanRules(skipVoiceNotes = true, minDurationSec = 30))
+
+            assertEquals("Music/%", provider.lastArgs[0])
+            assertEquals("30000", provider.lastArgs[1])
+            assertTrue("%MIUI/sound_recorder/%" in provider.lastArgs)
+            assertTrue(provider.lastSelection.orEmpty().contains("is_recording = 0"))
+        }
+
     private class FakeMediaProvider : ContentProvider() {
         val rows = mutableListOf<Array<Any?>>()
         var queries = 0
         var lastArgs: List<String> = emptyList()
+        var lastSelection: String? = null
 
         override fun query(
             uri: Uri,
@@ -104,6 +121,7 @@ class MediaStoreScannerTest {
         ): Cursor {
             queries++
             lastArgs = selectionArgs.orEmpty().toList()
+            lastSelection = selection
             return MatrixCursor(projection).apply { rows.forEach { addRow(it) } }
         }
 

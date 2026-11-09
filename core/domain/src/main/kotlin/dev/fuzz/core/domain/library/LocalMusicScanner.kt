@@ -1,6 +1,7 @@
 package dev.fuzz.core.domain.library
 
 import dev.fuzz.core.domain.onboarding.MusicFolder
+import dev.fuzz.core.domain.settings.ScanRules
 import kotlinx.coroutines.flow.Flow
 
 /** Трек, найденный на устройстве. Ключ [id] стабилен между сканированиями. */
@@ -29,7 +30,10 @@ sealed interface ScanResult {
 
 /** Источник локальной музыки (source:local). */
 interface LocalMusicScanner {
-    suspend fun scan(folders: List<MusicFolder>): ScanResult
+    suspend fun scan(
+        folders: List<MusicFolder>,
+        rules: ScanRules = ScanRules(),
+    ): ScanResult
 
     /** Сигнал, что файлы на устройстве изменились и стоит пересканировать. */
     fun changes(): Flow<Unit>

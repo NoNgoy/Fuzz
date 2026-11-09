@@ -10,8 +10,11 @@ import dev.fuzz.core.domain.library.CollectionEditor
 import dev.fuzz.core.domain.library.SyncLocalLibraryUseCase
 import dev.fuzz.core.domain.library.SyncOutcome
 import dev.fuzz.core.domain.settings.AccentPreference
+import dev.fuzz.core.domain.settings.AppSettings
+import dev.fuzz.core.domain.settings.AppSettingsRepository
 import dev.fuzz.core.domain.settings.AppearanceRepository
 import dev.fuzz.core.domain.settings.AppearanceSettings
+import dev.fuzz.core.domain.settings.ScanRules
 import dev.fuzz.core.domain.settings.ThemePreference
 import dev.fuzz.core.domain.stats.ListeningStatsRepository
 import dev.fuzz.core.ui.mvi.MviViewModel
@@ -20,6 +23,7 @@ import dev.fuzz.core.ui.mvi.UiIntent
 import dev.fuzz.core.ui.mvi.UiState
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.io.IOException
 import javax.inject.Inject
@@ -29,6 +33,7 @@ data class SettingsState(
     val hiddenTracks: Int = 0,
     val isRescanning: Boolean = false,
     val isBackingUp: Boolean = false,
+    val app: AppSettings = AppSettings(),
 ) : UiState
 
 sealed interface SettingsIntent : UiIntent {
@@ -41,6 +46,16 @@ sealed interface SettingsIntent : UiIntent {
     ) : SettingsIntent
 
     data object Rescan : SettingsIntent
+
+    /** Наушники, кэш, качество, жесты. */
+    data class UpdateApp(
+        val transform: (AppSettings) -> AppSettings,
+    ) : SettingsIntent
+
+    /** Новые исключения сканера сразу применяются пересканированием. */
+    data class SetScanRules(
+        val rules: ScanRules,
+    ) : SettingsIntent
 
     data object RestoreHidden : SettingsIntent
 
@@ -90,11 +105,13 @@ class SettingsViewModel
         private val history: ListeningStatsRepository,
         private val sync: SyncLocalLibraryUseCase,
         private val backup: BackupRepository,
+        private val appSettings: AppSettingsRepository,
     ) : MviViewModel<SettingsState, SettingsIntent, SettingsEffect>(SettingsState()) {
         init {
             combine(appearance.settings, collection.observeHiddenCount()) { look, hidden ->
                 setState { copy(appearance = look, hiddenTracks = hidden) }
             }.launchIn(viewModelScope)
+            appSettings.settings.onEach { setState { copy(app = it) } }.launchIn(viewModelScope)
         }
 
         override fun onIntent(intent: SettingsIntent) {
@@ -105,6 +122,17 @@ class SettingsViewModel
 
                 is SettingsIntent.SetAccent -> {
                     viewModelScope.launch { appearance.setAccent(intent.accent) }
+                }
+
+                is SettingsIntent.UpdateApp -> {
+                    viewModelScope.launch { appSettings.update(intent.transform) }
+                }
+
+                is SettingsIntent.SetScanRules -> {
+                    viewModelScope.launch {
+                        appSettings.update { it.copy(scan = intent.rules) }
+                        onIntent(SettingsIntent.Rescan)
+                    }
                 }
 
                 SettingsIntent.Rescan -> {

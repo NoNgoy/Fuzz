@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -30,6 +31,8 @@ import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.Dns
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.Javascript
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.Movie
 import androidx.compose.material3.AlertDialog
@@ -173,7 +176,24 @@ private fun ConnectionList(
         }
         if (state.connections.isNotEmpty()) {
             item { SectionHeader(stringResource(R.string.feature_connections_mine)) }
-            items(state.connections, key = { it.id }) { ConnectionCard(it, onIntent) }
+            if (state.connections.size > 1) {
+                item {
+                    Text(
+                        stringResource(R.string.feature_connections_order_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = Spacing.screen),
+                    )
+                }
+            }
+            itemsIndexed(state.connections, key = { _, config -> config.id }) { index, config ->
+                ConnectionCard(
+                    config,
+                    onIntent,
+                    canMoveUp = index > 0,
+                    canMoveDown = index < state.connections.lastIndex,
+                )
+            }
         }
         item { SectionHeader(stringResource(R.string.feature_connections_add)) }
         items(ConnectionKind.entries.toList(), key = { it.name }) { kind ->
@@ -186,6 +206,8 @@ private fun ConnectionList(
 private fun ConnectionCard(
     config: ConnectionConfig,
     onIntent: (ConnectionsIntent) -> Unit,
+    canMoveUp: Boolean = false,
+    canMoveDown: Boolean = false,
 ) {
     Surface(
         shape = RoundedCornerShape(16.dp),
@@ -219,6 +241,16 @@ private fun ConnectionCard(
                     contentPadding = PaddingValues(0.dp),
                 ) {
                     Text(stringResource(R.string.feature_connections_delete), color = MaterialTheme.colorScheme.error)
+                }
+            }
+            if (canMoveUp || canMoveDown) {
+                Column {
+                    IconButton(onClick = { onIntent(ConnectionsIntent.Move(config.id, -1)) }, enabled = canMoveUp) {
+                        Icon(Icons.Rounded.KeyboardArrowUp, stringResource(R.string.feature_connections_move_up))
+                    }
+                    IconButton(onClick = { onIntent(ConnectionsIntent.Move(config.id, 1)) }, enabled = canMoveDown) {
+                        Icon(Icons.Rounded.KeyboardArrowDown, stringResource(R.string.feature_connections_move_down))
+                    }
                 }
             }
             Switch(

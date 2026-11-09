@@ -150,6 +150,7 @@ internal fun PlayerContent(
                 onNext = { onIntent(PlayerIntent.Next) },
                 onPrevious = { onIntent(PlayerIntent.Previous) },
                 onLike = { onIntent(PlayerIntent.Like) },
+                gestures = state.artworkGestures,
             )
             Spacer(Modifier.height(14.dp))
             Row(
@@ -252,6 +253,7 @@ private fun Cover(
     onNext: () -> Unit,
     onPrevious: () -> Unit,
     onLike: () -> Unit,
+    gestures: Boolean = true,
 ) {
     val threshold = with(LocalDensity.current) { SWIPE_THRESHOLD.toPx() }
     var drag by remember { mutableStateOf(0f) }
@@ -265,7 +267,8 @@ private fun Cover(
                 .aspectRatio(1f)
                 .graphicsLayer { translationX = drag * DRAG_FOLLOW }
                 .semantics { description?.let { contentDescription = it } }
-                .pointerInput(Unit) {
+                .pointerInput(gestures) {
+                    if (!gestures) return@pointerInput
                     detectHorizontalDragGestures(
                         onDragEnd = {
                             when {
@@ -276,7 +279,8 @@ private fun Cover(
                         },
                         onDragCancel = { drag = 0f },
                     ) { _, amount -> drag += amount }
-                }.pointerInput(Unit) {
+                }.pointerInput(gestures) {
+                    if (!gestures) return@pointerInput
                     detectTapGestures(onDoubleTap = {
                         onLike()
                         heart = true

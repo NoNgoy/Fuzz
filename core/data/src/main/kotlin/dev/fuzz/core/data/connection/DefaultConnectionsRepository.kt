@@ -87,6 +87,11 @@ internal class DefaultConnectionsRepository(
 
     override suspend fun remove(id: String) = store.remove(id)
 
+    override suspend fun move(
+        id: String,
+        offset: Int,
+    ) = store.move(id, offset)
+
     override suspend fun check(id: String): ConnectionCheck {
         plugins.value[id]?.let { return check(it.source) }
         // Выключенное подключение не собрано: проверяем временной копией.

@@ -81,6 +81,12 @@ sealed interface ConnectionsIntent : UiIntent {
         val enabled: Boolean,
     ) : ConnectionsIntent
 
+    /** Выше (−1) или ниже (+1) в порядке источников. */
+    data class Move(
+        val id: String,
+        val offset: Int,
+    ) : ConnectionsIntent
+
     data class AskDelete(
         val id: String,
     ) : ConnectionsIntent
@@ -136,6 +142,10 @@ class ConnectionsViewModel
 
                 is ConnectionsIntent.Toggle -> {
                     viewModelScope.launch { repository.setEnabled(intent.id, intent.enabled) }
+                }
+
+                is ConnectionsIntent.Move -> {
+                    viewModelScope.launch { repository.move(intent.id, intent.offset) }
                 }
 
                 is ConnectionsIntent.AskDelete -> {

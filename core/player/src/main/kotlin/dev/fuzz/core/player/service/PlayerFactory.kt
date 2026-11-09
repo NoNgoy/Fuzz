@@ -9,11 +9,14 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.ResolvingDataSource
+import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import dev.fuzz.core.domain.player.PlaybackHeaders
 import dev.fuzz.core.domain.player.SavedStreams
 import dev.fuzz.core.player.FuzzPlayer
+import dev.fuzz.core.player.cache.RoutingDataSource
+import dev.fuzz.core.player.cache.StreamCache
 import kotlinx.coroutines.runBlocking
 import java.io.IOException
 
@@ -23,15 +26,16 @@ internal object PlayerFactory {
         context: Context,
         headers: PlaybackHeaders,
         saved: SavedStreams,
+        cache: StreamCache,
     ): FuzzPlayer {
         val attributes = musicAttributes()
         val exo =
             ExoPlayer
                 .Builder(context)
-                .setMediaSourceFactory(DefaultMediaSourceFactory(dataSources(context, headers, saved)))
+                .setMediaSourceFactory(DefaultMediaSourceFactory(dataSources(context, headers, saved, cache)))
                 // Аудиофокус: пауза при звонке, приглушение при навигаторе.
                 .setAudioAttributes(attributes, true)
-                // Пауза при отключении наушников (настраиваемое поведение появится в настройках).
+                // Пауза при отключении наушников; в настройках можно выключить (см. FuzzPlaybackService).
                 .setHandleAudioBecomingNoisy(true)
                 .setWakeMode(C.WAKE_MODE_NETWORK)
                 .setSeekBackIncrementMs(SEEK_INCREMENT_MS)
@@ -49,10 +53,11 @@ internal object PlayerFactory {
         context: Context,
         headers: PlaybackHeaders,
         saved: SavedStreams,
+        cache: StreamCache,
     ): ExoPlayer =
         ExoPlayer
             .Builder(context)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSources(context, headers, saved)))
+            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSources(context, headers, saved, cache)))
             .setAudioAttributes(musicAttributes(), false)
             .build()
 
@@ -66,9 +71,29 @@ internal object PlayerFactory {
     /**
      * Локальные файлы и http; к сетевым ссылкам добавляются заголовки авторизации источника.
      * Сохранённый трек из сети (`fuzz://saved/<id>`) получает свежую ссылку у источника на потоке загрузки.
+     * Потоки из сети идут через [StreamCache], если кэш включён; ключ — исходная ссылка, поэтому
+     * сохранённый трек находится в кэше, даже когда источник выдал новую ссылку с другим токеном.
      */
     @OptIn(UnstableApi::class)
     private fun dataSources(
+        context: Context,
+        headers: PlaybackHeaders,
+        saved: SavedStreams,
+        cache: StreamCache,
+    ): DataSource.Factory {
+        val resolving = resolving(context, headers, saved)
+        val cached by lazy {
+            CacheDataSource
+                .Factory()
+                .setCache(cache.cache)
+                .setUpstreamDataSourceFactory(resolving)
+                .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+        }
+        return RoutingDataSource.Factory(resolving) { if (cache.enabled) cached else null }
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun resolving(
         context: Context,
         headers: PlaybackHeaders,
         saved: SavedStreams,

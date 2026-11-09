@@ -197,6 +197,7 @@ internal fun SettingsScreen(
                     null
                 },
         )
+        ScanSettings(state.app.scan) { onIntent(SettingsIntent.SetScanRules(it)) }
         if (state.hiddenTracks > 0) {
             MenuRow(
                 icon = Icons.Outlined.Visibility,
@@ -224,6 +225,7 @@ internal fun SettingsScreen(
             R.string.feature_settings_menu_wave_hint,
             actions.onOpenWave,
         )
+        PlaybackSettings(state.app) { onIntent(SettingsIntent.UpdateApp(it)) }
 
         Section(R.string.feature_settings_section_sources)
         MenuRow(
@@ -353,7 +355,7 @@ private fun Section(title: Int) {
 }
 
 @Composable
-private fun Label(title: Int) {
+internal fun Label(title: Int) {
     Text(
         stringResource(title),
         style = MaterialTheme.typography.bodyMedium,

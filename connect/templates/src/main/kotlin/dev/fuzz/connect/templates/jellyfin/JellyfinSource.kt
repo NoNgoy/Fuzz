@@ -65,13 +65,21 @@ class JellyfinSource(
         }.map { r -> SearchResult(tracks = r.items.map { it.toRef() }) }
 
     /** Ссылка на исходный файл с токеном в `api_key`: ExoPlayer не умеет свои заголовки на редиректах. */
-    override suspend fun playbackUri(track: TrackRef): PluginResult<String> {
+    override suspend fun playbackUri(track: TrackRef): PluginResult<String> = playbackUri(track, null)
+
+    /** С [maxKbps] Jellyfin перекодирует в MP3 (`audioCodec`, `audioBitRate`), без него отдаёт файл как есть. */
+    override suspend fun playbackUri(track: TrackRef, maxKbps: Int?): PluginResult<String> {
         val itemId =
             track.externalIds.firstOrNull { it.provider == Providers.JELLYFIN }?.id
                 ?: return PluginResult.Failure(PluginResult.Kind.NOT_FOUND, "no Jellyfin id")
         return session().map { s ->
-            URLBuilder(url("Audio", itemId, "stream")).apply {
-                parameters.append("static", "true")
+            URLBuilder(url("Audio", itemId, if (maxKbps == null) "stream" else "stream.mp3")).apply {
+                if (maxKbps == null) {
+                    parameters.append("static", "true")
+                } else {
+                    parameters.append("audioCodec", "mp3")
+                    parameters.append("audioBitRate", (maxKbps * BITS_PER_KBIT).toString())
+                }
                 parameters.append("api_key", s.token)
             }.buildString()
         }
@@ -138,5 +146,6 @@ class JellyfinSource(
         const val CLIENT_NAME = "Fuzz"
         const val CLIENT_VERSION = "1.0"
         const val TICKS_PER_MS = 10_000L
+        const val BITS_PER_KBIT = 1_000
     }
 }

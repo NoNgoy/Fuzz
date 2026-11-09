@@ -48,11 +48,22 @@ class SubsonicSource(
         }.map { SearchResult(tracks = it.searchResult3?.song.orEmpty().map { song -> song.toRef() }) }
 
     /** Ссылка на поток со свежей солью. Токен действует, пока пароль не сменили; ссылку не сохранять. */
-    override suspend fun playbackUri(track: TrackRef): PluginResult<String> {
+    override suspend fun playbackUri(track: TrackRef): PluginResult<String> = playbackUri(track, null)
+
+    /** С [maxKbps] сервер перекодирует в MP3 нужного битрейта (`maxBitRate`, `format`). */
+    override suspend fun playbackUri(track: TrackRef, maxKbps: Int?): PluginResult<String> {
         val songId =
             track.externalIds.firstOrNull { it.provider == Providers.SUBSONIC }?.id
                 ?: return PluginResult.Failure(PluginResult.Kind.NOT_FOUND, "no Subsonic id")
-        return PluginResult.Ok(url("stream") { parameters.append("id", songId) })
+        return PluginResult.Ok(
+            url("stream") {
+                parameters.append("id", songId)
+                if (maxKbps != null) {
+                    parameters.append("maxBitRate", maxKbps.toString())
+                    parameters.append("format", "mp3")
+                }
+            },
+        )
     }
 
     private suspend fun call(

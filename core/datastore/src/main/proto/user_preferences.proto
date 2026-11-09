@@ -23,6 +23,19 @@ message UserPreferences {
   // Пустая строка — значение по умолчанию: тема как в системе, цвет Fuzz.
   string theme = 7;
   string accent = 8;
+  // Нет поля — всё по умолчанию (см. AppSettings).
+  optional AppSettingsProto app = 9;
+}
+
+// Сканер, наушники, кэш, качество и жесты. Пустые и отсутствующие поля — значения по умолчанию.
+message AppSettingsProto {
+  optional bool skip_voice_notes = 1;
+  optional int32 min_duration_sec = 2;
+  optional bool pause_on_disconnect = 3;
+  optional int32 cache_limit_mb = 4;
+  string wifi_quality = 5;
+  string mobile_quality = 6;
+  optional bool artwork_gestures = 7;
 }
 
 // Эквалайзер и переходы. Пустой preset — ручная настройка полос.

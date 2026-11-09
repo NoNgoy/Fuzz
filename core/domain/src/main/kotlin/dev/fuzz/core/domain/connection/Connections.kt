@@ -76,6 +76,15 @@ interface ConnectionsRepository {
 
     suspend fun remove(id: String)
 
+    /**
+     * Сдвигает подключение на [offset] мест в списке (−1 — выше). Порядок списка — порядок источников:
+     * в поиске выше результаты верхних, волна и тексты спрашивают их первыми.
+     */
+    suspend fun move(
+        id: String,
+        offset: Int,
+    )
+
     /** Проверка сохранённого подключения тем же пробным поиском, что и при сохранении. */
     suspend fun check(id: String): ConnectionCheck
 

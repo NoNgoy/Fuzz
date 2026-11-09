@@ -17,11 +17,13 @@ import dev.fuzz.core.domain.playlist.PlaylistRepository
 import dev.fuzz.core.domain.reaction.ReactionRepository
 import dev.fuzz.core.domain.reaction.ToggleReactionUseCase
 import dev.fuzz.core.domain.search.SearchLibraryUseCase
+import dev.fuzz.core.domain.settings.AppSettingsRepository
 import dev.fuzz.core.domain.wave.WavePlayer
 import dev.fuzz.core.model.Reaction
 import dev.fuzz.core.model.TrackId
 import dev.fuzz.core.player.FuzzPlayer
 import dev.fuzz.core.player.R
+import dev.fuzz.core.player.cache.StreamCache
 import dev.fuzz.core.player.queue.PlaybackSnapshot
 import dev.fuzz.core.player.queue.PlaybackSnapshotStore
 import dev.fuzz.core.player.session.BrowseCatalog
@@ -76,6 +78,10 @@ class FuzzPlaybackService : MediaLibraryService() {
 
     @Inject lateinit var soundSettings: SoundSettingsRepository
 
+    @Inject lateinit var appSettings: AppSettingsRepository
+
+    @Inject lateinit var streamCache: StreamCache
+
     @Inject internal lateinit var soundEffects: PlayerSoundEffects
 
     /** id текущего трека: по нему кнопка «Нравится» показывает, лайкнут ли он. */
@@ -90,11 +96,11 @@ class FuzzPlaybackService : MediaLibraryService() {
 
     override fun onCreate() {
         super.onCreate()
-        val player = PlayerFactory.create(this, playbackHeaders, savedStreams).also { player = it }
+        val player = PlayerFactory.create(this, playbackHeaders, savedStreams, streamCache).also { player = it }
         player.addListener(SnapshotListener())
         sound =
             SoundController(player.engine, soundEffects, soundSettings.settings, scope) {
-                PlayerFactory.createTail(this, playbackHeaders, savedStreams)
+                PlayerFactory.createTail(this, playbackHeaders, savedStreams, streamCache)
             }
         val buttons = ReactionButtons(this)
         val catalog =
@@ -121,11 +127,22 @@ class FuzzPlaybackService : MediaLibraryService() {
                 .also { this.session = it }
         followReaction(session, buttons)
         widget = WidgetUpdater(this, session, scope)
+        followAppSettings(player)
         setMediaNotificationProvider(
             DefaultMediaNotificationProvider.Builder(this).build().apply {
                 setSmallIcon(R.drawable.ic_fuzz_notification)
             },
         )
+    }
+
+    /** Наушники и кэш из настроек: меняются на ходу, без перезапуска плеера. */
+    private fun followAppSettings(player: FuzzPlayer) {
+        scope.launch {
+            appSettings.settings.collect { settings ->
+                player.engine.setHandleAudioBecomingNoisy(settings.pauseOnDisconnect)
+                withContext(Dispatchers.IO) { streamCache.setLimit(settings.cacheLimitMb) }
+            }
+        }
     }
 
     @kotlin.OptIn(ExperimentalCoroutinesApi::class)
