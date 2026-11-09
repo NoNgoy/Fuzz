@@ -27,11 +27,15 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,8 +48,11 @@ import dev.fuzz.core.design.component.ScreenTitle
 import dev.fuzz.core.design.theme.Spacing
 import dev.fuzz.core.model.Track
 import dev.fuzz.core.ui.component.NameDialog
+import dev.fuzz.core.ui.component.TrackMenuHost
 import dev.fuzz.core.ui.component.TrackRow
+import dev.fuzz.core.ui.component.rememberTrackMenu
 import dev.fuzz.core.ui.mvi.CollectEffects
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun TrackListEntry(
@@ -58,17 +65,26 @@ internal fun TrackListEntry(
             TrackListEffect.Closed -> onBack()
         }
     }
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val deleteFailed = stringResource(R.string.feature_library_delete_failed)
     val deleteFromDevice =
         rememberDeleteFromDevice(
             onDeleted = { viewModel.onIntent(TrackListIntent.DeletedFromDevice(it)) },
-            onFailed = {},
+            onFailed = { scope.launch { snackbar.showSnackbar(deleteFailed) } },
         )
-    TrackListScreen(
-        state = state,
-        onIntent = viewModel::onIntent,
-        onBack = onBack,
-        onDeleteFromDevice = deleteFromDevice,
-    )
+    val menu = rememberTrackMenu()
+    Box(Modifier.fillMaxSize()) {
+        TrackListScreen(
+            state = state,
+            onIntent = viewModel::onIntent,
+            onBack = onBack,
+            onDeleteFromDevice = deleteFromDevice,
+            onMore = menu::open,
+        )
+        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
+    }
+    TrackMenuHost(menu, showLike = state.kind != TrackListKind.Liked)
 }
 
 @Composable
@@ -78,6 +94,7 @@ internal fun TrackListScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onDeleteFromDevice: (Track) -> Unit = {},
+    onMore: (Track) -> Unit = {},
 ) {
     val isPlaylist = state.kind is TrackListKind.Playlist
     val title = state.title ?: defaultTitle(state.kind)
@@ -122,7 +139,7 @@ internal fun TrackListScreen(
                         track = track,
                         isCurrent = track.id == state.currentTrackId,
                         onClick = { onIntent(TrackListIntent.Play(index)) },
-                        trailing = { RemoveMenu(state.kind, track, onIntent, onDeleteFromDevice) },
+                        trailing = { TrackActions(state.kind, track, onIntent, onDeleteFromDevice, onMore) },
                     )
                 }
             }
@@ -250,16 +267,24 @@ private fun Header(
 }
 
 @Composable
-private fun RemoveMenu(
+private fun TrackActions(
     kind: TrackListKind,
     track: Track,
     onIntent: (TrackListIntent) -> Unit,
     onDeleteFromDevice: (Track) -> Unit,
+    onMore: (Track) -> Unit,
 ) {
     var open by rememberSaveable { mutableStateOf(false) }
     Box {
         TrackMenuButton { open = true }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.feature_library_more_actions)) },
+                onClick = {
+                    open = false
+                    onMore(track)
+                },
+            )
             DropdownMenuItem(
                 text = {
                     Text(

@@ -15,6 +15,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.fuzz.core.domain.download.DownloadStart
+import dev.fuzz.core.domain.download.Downloads
 import dev.fuzz.core.domain.playlist.PlaylistRepository
 import dev.fuzz.core.domain.reaction.ReactionRepository
 import dev.fuzz.core.domain.search.OnlineSearch
@@ -22,6 +24,7 @@ import dev.fuzz.core.model.Playlist
 import dev.fuzz.core.model.PlaylistId
 import dev.fuzz.core.model.Reaction
 import dev.fuzz.core.model.Track
+import dev.fuzz.core.model.TrackId
 import dev.fuzz.core.ui.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -61,6 +64,8 @@ fun rememberTrackMenu(): TrackMenuState = remember { TrackMenuState() }
 fun TrackMenuHost(
     state: TrackMenuState,
     showLike: Boolean = true,
+    onHide: ((Track) -> Unit)? = null,
+    onDeleteFromDevice: ((Track) -> Unit)? = null,
     viewModel: TrackMenuViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -72,11 +77,13 @@ fun TrackMenuHost(
                     TrackMenuMessage.Liked -> resources.getString(R.string.core_ui_liked)
                     is TrackMenuMessage.Added -> resources.getString(R.string.core_ui_added_to, message.playlist)
                     is TrackMenuMessage.AlreadyIn -> resources.getString(R.string.core_ui_already_in, message.playlist)
+                    is TrackMenuMessage.Download -> downloadText(resources, message)
                 }
             Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
         }
     }
     val playlists by viewModel.playlists.collectAsStateWithLifecycle()
+    val downloaded by viewModel.downloaded.collectAsStateWithLifecycle()
     val track = state.track ?: return
     AddToPlaylistSheet(
         playlists = playlists,
@@ -90,6 +97,20 @@ fun TrackMenuHost(
         },
         onDismiss = state::close,
         title = track.title,
+        onHide =
+            onHide?.let { hide ->
+                {
+                    hide(track)
+                    state.close()
+                }
+            },
+        onDeleteFromDevice =
+            onDeleteFromDevice?.takeIf { track.isOnPhone() }?.let { delete ->
+                {
+                    delete(track)
+                    state.close()
+                }
+            },
         onLike =
             if (showLike) {
                 {
@@ -99,8 +120,30 @@ fun TrackMenuHost(
             } else {
                 null
             },
+        download =
+            track.takeUnless { it.isOnPhone() }?.let {
+                SheetDownload(downloaded = track.id in downloaded) {
+                    viewModel.toggleDownload(track, track.id in downloaded)
+                    state.close()
+                }
+            },
     )
 }
+
+/** Файл на телефоне, а не трек из сети: его не нужно скачивать. */
+fun Track.isOnPhone(): Boolean = playbackUri.startsWith("content://")
+
+private fun downloadText(
+    resources: android.content.res.Resources,
+    message: TrackMenuMessage.Download,
+): String =
+    when (message.start) {
+        null -> resources.getString(R.string.core_ui_download_removed)
+        DownloadStart.Started -> resources.getString(R.string.core_ui_download_started, message.title)
+        DownloadStart.AlreadyDownloaded -> resources.getString(R.string.core_ui_download_started, message.title)
+        DownloadStart.OnPhone -> resources.getString(R.string.core_ui_download_on_phone)
+        DownloadStart.PreviewOnly -> resources.getString(R.string.core_ui_download_preview)
+    }
 
 sealed interface TrackMenuMessage {
     data object Liked : TrackMenuMessage
@@ -112,6 +155,12 @@ sealed interface TrackMenuMessage {
     data class AlreadyIn(
         val playlist: String,
     ) : TrackMenuMessage
+
+    /** [start] null — загрузка удалена. */
+    data class Download(
+        val title: String,
+        val start: DownloadStart?,
+    ) : TrackMenuMessage
 }
 
 @HiltViewModel
@@ -121,7 +170,13 @@ class TrackMenuViewModel
         private val repository: PlaylistRepository,
         private val reactions: ReactionRepository,
         private val online: OnlineSearch,
+        private val downloads: Downloads,
     ) : ViewModel() {
+        val downloaded: StateFlow<Set<TrackId>> =
+            downloads
+                .observe()
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptySet())
+
         val playlists: StateFlow<ImmutableList<Playlist>> =
             repository
                 .observePlaylists()
@@ -135,6 +190,20 @@ class TrackMenuViewModel
             viewModelScope.launch {
                 reactions.set(keep(track).id, Reaction.Like)
                 channel.send(TrackMenuMessage.Liked)
+            }
+        }
+
+        fun toggleDownload(
+            track: Track,
+            downloaded: Boolean,
+        ) {
+            viewModelScope.launch {
+                if (downloaded) {
+                    downloads.remove(track.id)
+                    channel.send(TrackMenuMessage.Download(track.title, null))
+                } else {
+                    channel.send(TrackMenuMessage.Download(track.title, downloads.start(keep(track))))
+                }
             }
         }
 

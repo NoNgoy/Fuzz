@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.fuzz.core.domain.download.Downloads
 import dev.fuzz.core.domain.library.CollectionEditor
 import dev.fuzz.core.domain.library.ObserveLibraryTracksUseCase
 import dev.fuzz.core.domain.player.PlayerController
@@ -95,6 +96,7 @@ class TrackListViewModel
         private val playlists: PlaylistRepository,
         private val player: PlayerController,
         private val collection: CollectionEditor,
+        private val downloads: Downloads,
     ) : MviViewModel<TrackListState, TrackListIntent, TrackListEffect>(TrackListState(kindOf(savedState))) {
         init {
             val kind = currentState.kind
@@ -108,8 +110,10 @@ class TrackListViewModel
                     }
 
                     TrackListKind.Downloaded -> {
-                        // Сохранённые треки из сети тоже в коллекции, но на телефоне лежат только файлы.
-                        observeLibrary().map { all -> all.filter { it.isDeviceFile() } }
+                        // Файлы телефона и скачанные треки из сети; остальное из сети без интернета не сыграет.
+                        combine(observeLibrary(), downloads.observe()) { all, downloaded ->
+                            all.filter { it.isDeviceFile() || it.id in downloaded }
+                        }
                     }
 
                     is TrackListKind.Album -> {

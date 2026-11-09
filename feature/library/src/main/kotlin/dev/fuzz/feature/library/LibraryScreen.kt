@@ -59,10 +59,10 @@ import dev.fuzz.core.design.theme.Spacing
 import dev.fuzz.core.model.Playlist
 import dev.fuzz.core.model.PlaylistId
 import dev.fuzz.core.model.Track
-import dev.fuzz.core.model.TrackId
-import dev.fuzz.core.ui.component.AddToPlaylistSheet
 import dev.fuzz.core.ui.component.NameDialog
+import dev.fuzz.core.ui.component.TrackMenuHost
 import dev.fuzz.core.ui.component.TrackRow
+import dev.fuzz.core.ui.component.rememberTrackMenu
 import dev.fuzz.core.ui.mvi.CollectEffects
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.launch
@@ -110,6 +110,7 @@ internal fun LibraryEntry(
             }
         }
     }
+    val menu = rememberTrackMenu()
     Box {
         LibraryScreen(
             state = state,
@@ -118,11 +119,16 @@ internal fun LibraryEntry(
             onOpenPlaylist = onOpenPlaylist,
             onOpenDownloaded = onOpenDownloaded,
             onOpenFolders = onOpenFolders,
-            onDeleteFromDevice = deleteFromDevice,
             onOpenTrackList = onOpenTrackList,
+            onMore = menu::open,
         )
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
     }
+    TrackMenuHost(
+        state = menu,
+        onHide = { viewModel.onIntent(LibraryIntent.Hide(it.id)) },
+        onDeleteFromDevice = deleteFromDevice,
+    )
 }
 
 private enum class LibraryFilter(
@@ -144,11 +150,10 @@ internal fun LibraryScreen(
     onOpenPlaylist: (PlaylistId) -> Unit = {},
     onOpenDownloaded: () -> Unit = {},
     onOpenFolders: () -> Unit = {},
-    onDeleteFromDevice: (Track) -> Unit = {},
     onOpenTrackList: (TrackListRoute) -> Unit = {},
+    onMore: (Track) -> Unit = {},
 ) {
     var filter by rememberSaveable { mutableStateOf(LibraryFilter.All) }
-    var menuTrack by rememberSaveable { mutableStateOf<String?>(null) }
     var creating by rememberSaveable { mutableStateOf(false) }
     LazyColumn(
         modifier = modifier.statusBarsPadding(),
@@ -240,38 +245,11 @@ internal fun LibraryScreen(
                         track = track,
                         isCurrent = track.id == state.currentTrackId,
                         onClick = { onIntent(LibraryIntent.PlayTrack(index)) },
-                        trailing = { TrackMenuButton { menuTrack = track.id.value } },
+                        trailing = { TrackMenuButton { onMore(track) } },
                     )
                 }
             }
         }
-    }
-    menuTrack?.let { trackId ->
-        val track = state.tracks.firstOrNull { it.id.value == trackId }
-        AddToPlaylistSheet(
-            title = track?.title,
-            onHide = {
-                menuTrack = null
-                onIntent(LibraryIntent.Hide(TrackId(trackId)))
-            },
-            onDeleteFromDevice =
-                track?.takeIf { it.isDeviceFile() }?.let {
-                    {
-                        menuTrack = null
-                        onDeleteFromDevice(it)
-                    }
-                },
-            playlists = state.playlists,
-            onPick = {
-                menuTrack = null
-                onIntent(LibraryIntent.AddToPlaylist(it, TrackId(trackId)))
-            },
-            onCreate = {
-                menuTrack = null
-                onIntent(LibraryIntent.CreatePlaylist(it, withTrack = TrackId(trackId)))
-            },
-            onDismiss = { menuTrack = null },
-        )
     }
     if (creating) {
         NameDialog(

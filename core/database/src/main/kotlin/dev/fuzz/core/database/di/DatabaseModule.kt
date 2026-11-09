@@ -8,6 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.fuzz.core.database.FuzzDatabase
+import dev.fuzz.core.database.dao.DownloadDao
 import dev.fuzz.core.database.dao.ListenDao
 import dev.fuzz.core.database.dao.PlaylistDao
 import dev.fuzz.core.database.dao.ReactionDao
@@ -46,4 +47,7 @@ object DatabaseModule {
 
     @Provides
     fun provideSavedRefDao(db: FuzzDatabase): SavedRefDao = db.savedRefDao()
+
+    @Provides
+    fun provideDownloadDao(db: FuzzDatabase): DownloadDao = db.downloadDao()
 }
