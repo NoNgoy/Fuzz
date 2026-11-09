@@ -2,6 +2,10 @@ package dev.fuzz.feature.settings
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.fuzz.core.domain.backup.BackupFormatException
+import dev.fuzz.core.domain.backup.BackupRepository
+import dev.fuzz.core.domain.backup.BackupSummary
+import dev.fuzz.core.domain.backup.RestoreSummary
 import dev.fuzz.core.domain.library.CollectionEditor
 import dev.fuzz.core.domain.library.SyncLocalLibraryUseCase
 import dev.fuzz.core.domain.library.SyncOutcome
@@ -17,12 +21,14 @@ import dev.fuzz.core.ui.mvi.UiState
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
+import java.io.IOException
 import javax.inject.Inject
 
 data class SettingsState(
     val appearance: AppearanceSettings = AppearanceSettings(),
     val hiddenTracks: Int = 0,
     val isRescanning: Boolean = false,
+    val isBackingUp: Boolean = false,
 ) : UiState
 
 sealed interface SettingsIntent : UiIntent {
@@ -39,6 +45,15 @@ sealed interface SettingsIntent : UiIntent {
     data object RestoreHidden : SettingsIntent
 
     data object ClearHistory : SettingsIntent
+
+    /** [uri] — файл, выбранный в системном окне «Сохранить». */
+    data class ExportBackup(
+        val uri: String,
+    ) : SettingsIntent
+
+    data class RestoreBackup(
+        val uri: String,
+    ) : SettingsIntent
 }
 
 sealed interface SettingsEffect : UiEffect {
@@ -51,6 +66,19 @@ sealed interface SettingsEffect : UiEffect {
     ) : SettingsEffect
 
     data object HistoryCleared : SettingsEffect
+
+    data class BackupSaved(
+        val summary: BackupSummary,
+    ) : SettingsEffect
+
+    data class BackupRestored(
+        val summary: RestoreSummary,
+    ) : SettingsEffect
+
+    /** [notBackup] — файл не копия Fuzz; иначе не удалось прочитать или записать файл. */
+    data class BackupFailed(
+        val notBackup: Boolean,
+    ) : SettingsEffect
 }
 
 @HiltViewModel
@@ -61,6 +89,7 @@ class SettingsViewModel
         private val collection: CollectionEditor,
         private val history: ListeningStatsRepository,
         private val sync: SyncLocalLibraryUseCase,
+        private val backup: BackupRepository,
     ) : MviViewModel<SettingsState, SettingsIntent, SettingsEffect>(SettingsState()) {
         init {
             combine(appearance.settings, collection.observeHiddenCount()) { look, hidden ->
@@ -96,12 +125,38 @@ class SettingsViewModel
                     }
                 }
 
+                is SettingsIntent.ExportBackup -> {
+                    runBackup { SettingsEffect.BackupSaved(backup.export(intent.uri)) }
+                }
+
+                is SettingsIntent.RestoreBackup -> {
+                    runBackup { SettingsEffect.BackupRestored(backup.restore(intent.uri)) }
+                }
+
                 SettingsIntent.ClearHistory -> {
                     viewModelScope.launch {
                         history.clearHistory()
                         sendEffect(SettingsEffect.HistoryCleared)
                     }
                 }
+            }
+        }
+
+        @Suppress("SwallowedException") // причина уходит человеку сообщением, а не в лог
+        private fun runBackup(action: suspend () -> SettingsEffect) {
+            if (currentState.isBackingUp) return
+            setState { copy(isBackingUp = true) }
+            viewModelScope.launch {
+                val effect =
+                    try {
+                        action()
+                    } catch (e: BackupFormatException) {
+                        SettingsEffect.BackupFailed(notBackup = true)
+                    } catch (e: IOException) {
+                        SettingsEffect.BackupFailed(notBackup = false)
+                    }
+                setState { copy(isBackingUp = false) }
+                sendEffect(effect)
             }
         }
     }

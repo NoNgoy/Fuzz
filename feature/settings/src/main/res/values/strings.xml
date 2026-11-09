@@ -56,4 +56,20 @@
     <string name="feature_settings_clear_history_confirm">Стереть всю историю прослушиваний? Статистика в профиле обнулится, а волна забудет, что вы слушали. Треки и плейлисты останутся.</string>
     <string name="feature_settings_clear">Очистить</string>
     <string name="feature_settings_history_cleared">История прослушиваний очищена</string>
+    <string name="feature_settings_section_backup">Резервная копия</string>
+    <string name="feature_settings_backup_save">Сохранить копию</string>
+    <string name="feature_settings_backup_save_hint">Лайки, плейлисты, история, подключения и настройки в один файл</string>
+    <string name="feature_settings_backup_restore">Восстановить из копии</string>
+    <string name="feature_settings_backup_restore_hint">Добавит то, чего нет на этом телефоне; ничего не удалит</string>
+    <string name="feature_settings_backup_saved">Копия сохранена: лайков %1$d, плейлистов %2$d, прослушиваний %3$d.</string>
+    <string name="feature_settings_backup_restored">Восстановлено: лайков %1$d, плейлистов %2$d, прослушиваний %3$d.</string>
+    <plurals name="feature_settings_backup_missing">
+        <item quantity="one">%1$d файла с прежнего телефона здесь нет.</item>
+        <item quantity="few">%1$d файлов с прежнего телефона здесь нет.</item>
+        <item quantity="many">%1$d файлов с прежнего телефона здесь нет.</item>
+        <item quantity="other">%1$d файла с прежнего телефона здесь нет.</item>
+    </plurals>
+    <string name="feature_settings_backup_passwords">Введите заново пароли подключений (%1$d): в копию они не попадают.</string>
+    <string name="feature_settings_backup_not_fuzz">Это не резервная копия Fuzz</string>
+    <string name="feature_settings_backup_io_failed">Не получилось прочитать или записать файл</string>
 </resources>

@@ -8,13 +8,15 @@ import kotlinx.serialization.Serializable
 data object SettingsRoute
 
 /** Куда ведут пункты настроек; все экраны живут в своих модулях, здесь только переходы. */
-class SettingsActions(
+data class SettingsActions(
     val onBack: () -> Unit = {},
     val onOpenFolders: () -> Unit = {},
     val onOpenSound: () -> Unit = {},
     val onOpenWave: () -> Unit = {},
     val onOpenConnections: () -> Unit = {},
     val onOpenImport: () -> Unit = {},
+    val onSaveBackup: () -> Unit = {},
+    val onRestoreBackup: () -> Unit = {},
 )
 
 /** Вкладка «Профиль»: статистика, итоги года, импорт, настройки. */
