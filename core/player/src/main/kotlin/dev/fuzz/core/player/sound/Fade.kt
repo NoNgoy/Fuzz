@@ -1,17 +1,27 @@
 package dev.fuzz.core.player.sound
 
-/**
- * Громкость при плавных переходах: нарастает первые [fadeMs] трека и затихает последние [fadeMs].
- * Перемотка в середину сразу даёт полную громкость. Короткий трек не затихает больше чем наполовину длины.
- */
-internal fun fadeVolume(
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
+
+/** Когда начинать наложение: за [fadeMs] до конца трека, если есть следующий и трек не короче двух переходов. */
+internal fun crossfadeDue(
     positionMs: Long,
     durationMs: Long,
     fadeMs: Long,
-): Float {
-    if (fadeMs <= 0 || durationMs <= 0) return 1f
-    val window = minOf(fadeMs, durationMs / 2).coerceAtLeast(1)
-    val fadeIn = positionMs.toFloat() / window
-    val fadeOut = (durationMs - positionMs).toFloat() / window
-    return minOf(1f, fadeIn, fadeOut).coerceIn(0f, 1f)
+    leadMs: Long = 0,
+): Boolean {
+    if (fadeMs <= 0 || durationMs <= 0 || durationMs < fadeMs * 2) return false
+    return durationMs - positionMs <= fadeMs + leadMs
 }
+
+/**
+ * Громкость при наложении на доле перехода [t] 0..1: равная мощность, чтобы середина не проваливалась.
+ * Первое значение — уходящий трек, второе — новый.
+ */
+internal fun crossfadeVolumes(t: Float): Pair<Float, Float> {
+    val x = t.coerceIn(0f, 1f) * HALF_PI
+    return cos(x) to sin(x)
+}
+
+private const val HALF_PI = (PI / 2).toFloat()

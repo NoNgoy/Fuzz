@@ -72,7 +72,7 @@
     <string name="feature_player_sound_fade">Плавные переходы</string>
     <string name="feature_player_sound_fade_off">Выключены</string>
     <string name="feature_player_sound_fade_seconds">%1$d с</string>
-    <string name="feature_player_sound_fade_hint">Трек плавно затихает в конце, а следующий плавно нарастает.</string>
+    <string name="feature_player_sound_fade_hint">Конец трека плавно перетекает в начало следующего: они звучат вместе.</string>
     <string name="feature_player_sound_skip_silence">Пропускать тишину</string>
     <string name="feature_player_sound_skip_silence_hint">Паузы в начале и конце трека не звучат</string>
     <string name="feature_player_sound_normalize">Выравнивать громкость</string>

@@ -24,12 +24,7 @@ internal object PlayerFactory {
         headers: PlaybackHeaders,
         saved: SavedStreams,
     ): FuzzPlayer {
-        val attributes =
-            AudioAttributes
-                .Builder()
-                .setUsage(C.USAGE_MEDIA)
-                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
-                .build()
+        val attributes = musicAttributes()
         val exo =
             ExoPlayer
                 .Builder(context)
@@ -44,6 +39,29 @@ internal object PlayerFactory {
                 .build()
         return FuzzPlayer(exo)
     }
+
+    /**
+     * Скрытый плеер для хвоста трека при кроссфейде: те же источники, но без аудиофокуса и реакции
+     * на наушники — этим управляет основной плеер, а хвост живёт считанные секунды.
+     */
+    @OptIn(UnstableApi::class)
+    fun createTail(
+        context: Context,
+        headers: PlaybackHeaders,
+        saved: SavedStreams,
+    ): ExoPlayer =
+        ExoPlayer
+            .Builder(context)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSources(context, headers, saved)))
+            .setAudioAttributes(musicAttributes(), false)
+            .build()
+
+    private fun musicAttributes() =
+        AudioAttributes
+            .Builder()
+            .setUsage(C.USAGE_MEDIA)
+            .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+            .build()
 
     /**
      * Локальные файлы и http; к сетевым ссылкам добавляются заголовки авторизации источника.

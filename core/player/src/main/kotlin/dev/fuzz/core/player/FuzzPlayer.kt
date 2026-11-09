@@ -8,8 +8,9 @@ import androidx.media3.exoplayer.ExoPlayer
 /**
  * Единственный плеер, который видят MediaSession, Android Auto и часы.
  *
- * Сейчас это тонкая обёртка над одним [ExoPlayer] в режиме gapless. На этапе 3 сюда добавится второй
- * движок для кроссфейда (у Media3 нет встроенного), а наружу по-прежнему будет смотреть один плеер.
+ * Тонкая обёртка над одним [ExoPlayer] в режиме gapless. Кроссфейд делает
+ * [dev.fuzz.core.player.sound.SoundController] вторым, скрытым движком для хвоста трека,
+ * а наружу по-прежнему смотрит один плеер.
  */
 @OptIn(UnstableApi::class)
 class FuzzPlayer(

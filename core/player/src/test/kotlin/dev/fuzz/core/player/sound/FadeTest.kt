@@ -1,25 +1,31 @@
 package dev.fuzz.core.player.sound
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FadeTest {
     @Test
-    fun `volume rises at start and falls at end`() {
-        assertEquals(0f, fadeVolume(0, 200_000, 5_000), 0.001f)
-        assertEquals(0.5f, fadeVolume(2_500, 200_000, 5_000), 0.001f)
-        assertEquals(1f, fadeVolume(100_000, 200_000, 5_000), 0.001f)
-        assertEquals(0.2f, fadeVolume(199_000, 200_000, 5_000), 0.001f)
+    fun `crossfade starts fade seconds before the end`() {
+        assertFalse(crossfadeDue(190_000, 200_000, 5_000))
+        assertTrue(crossfadeDue(195_000, 200_000, 5_000))
+        assertTrue("заранее готовим хвост", crossfadeDue(190_000, 200_000, 5_000, leadMs = 5_000))
     }
 
     @Test
-    fun `off or unknown duration keeps full volume`() {
-        assertEquals(1f, fadeVolume(0, 200_000, 0), 0.001f)
-        assertEquals(1f, fadeVolume(0, Long.MIN_VALUE + 1, 5_000), 0.001f)
+    fun `off, unknown duration or a too short track never overlap`() {
+        assertFalse(crossfadeDue(199_000, 200_000, 0))
+        assertFalse(crossfadeDue(0, Long.MIN_VALUE + 1, 5_000))
+        assertFalse(crossfadeDue(9_000, 10_000, 6_000))
     }
 
     @Test
-    fun `short track fades over half of its length at most`() {
-        assertEquals(1f, fadeVolume(4_000, 8_000, 12_000), 0.001f)
+    fun `equal power curve`() {
+        assertEquals(1f to 0f, crossfadeVolumes(0f))
+        val (out, into) = crossfadeVolumes(0.5f)
+        assertEquals(out, into, 0.001f)
+        assertEquals(1f, out * out + into * into, 0.001f)
+        assertEquals(0f, crossfadeVolumes(1f).first, 0.001f)
     }
 }
