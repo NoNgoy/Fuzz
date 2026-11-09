@@ -2,6 +2,8 @@ package dev.fuzz.feature.search
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.fuzz.core.domain.artist.ArtistPages
+import dev.fuzz.core.domain.artist.ArtistProfile
 import dev.fuzz.core.domain.player.PlayerController
 import dev.fuzz.core.domain.search.ArtistHit
 import dev.fuzz.core.domain.search.OnlineOrigin
@@ -52,13 +54,17 @@ data class SearchState(
     /** Найденное в сети: свои серверы, Jamendo, превью. */
     val online: ImmutableList<Track> = persistentListOf(),
     val onlineLoading: Boolean = false,
+    /** Артисты из каталога (с фото) для ряда карточек. */
+    val onlineArtists: ImmutableList<ArtistProfile> = persistentListOf(),
     /** Источники могут отдать ещё: при прокрутке до конца подгружается следующая страница. */
     val onlineHasMore: Boolean = false,
     val onlineLoadingMore: Boolean = false,
 ) : UiState {
     val showBrowse: Boolean get() = query.isBlank()
     val nothingFound: Boolean
-        get() = searched && !onlineLoading && artists.isEmpty() && tracks.isEmpty() && online.isEmpty()
+        get() =
+            searched && !onlineLoading && artists.isEmpty() && tracks.isEmpty() && online.isEmpty() &&
+                onlineArtists.isEmpty()
 }
 
 sealed interface SearchIntent : UiIntent {
@@ -99,6 +105,7 @@ class SearchViewModel
         private val searchLibrary: SearchLibraryUseCase,
         private val onlineSearch: OnlineSearch,
         private val player: PlayerController,
+        private val artistPages: ArtistPages,
     ) : MviViewModel<SearchState, SearchIntent, SearchEffect>(SearchState()) {
         private val query = MutableStateFlow("")
         private val source = MutableStateFlow(SearchSource.Everywhere)
@@ -139,6 +146,13 @@ class SearchViewModel
                         )
                     }
                 }
+                .launchIn(viewModelScope)
+            // Карточки артистов с фото: только когда в фильтре есть каталоги из сети.
+            combine(query.debounce(ONLINE_DEBOUNCE_MS), source) { q, s -> q to s }
+                .distinctUntilChanged()
+                .mapLatest { (q, s) ->
+                    if (q.isBlank() || OnlineOrigin.Preview !in s.online) emptyList() else artistPages.searchArtists(q)
+                }.onEach { found -> setState { copy(onlineArtists = found.toImmutableList()) } }
                 .launchIn(viewModelScope)
         }
 

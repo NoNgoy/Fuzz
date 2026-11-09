@@ -6,6 +6,8 @@ data class TrackRef(
     val album: String? = null,
     val durationMs: Long? = null,
     val externalIds: List<ExternalId> = emptyList(),
+    /** Обложка, если источник её знает (https). */
+    val artworkUrl: String? = null,
 )
 
 data class ArtistRef(val name: String, val externalIds: List<ExternalId> = emptyList())

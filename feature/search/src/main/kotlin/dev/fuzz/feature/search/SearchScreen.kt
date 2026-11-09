@@ -51,12 +51,16 @@ import dev.fuzz.core.design.component.ScreenTitle
 import dev.fuzz.core.design.component.SectionHeader
 import dev.fuzz.core.design.theme.FuzzTheme
 import dev.fuzz.core.design.theme.Spacing
+import dev.fuzz.core.domain.artist.ArtistProfile
 import dev.fuzz.core.domain.search.ArtistHit
 import dev.fuzz.core.ui.component.TrackRow
 import dev.fuzz.core.ui.mvi.CollectEffects
 
 @Composable
-internal fun SearchEntry(viewModel: SearchViewModel = hiltViewModel()) {
+internal fun SearchEntry(
+    onOpenArtist: (ArtistRoute) -> Unit = {},
+    viewModel: SearchViewModel = hiltViewModel(),
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val notPlayable = stringResource(R.string.feature_search_not_playable)
@@ -66,7 +70,7 @@ internal fun SearchEntry(viewModel: SearchViewModel = hiltViewModel()) {
         }
     }
     Box {
-        SearchScreen(state = state, onIntent = viewModel::onIntent)
+        SearchScreen(state = state, onIntent = viewModel::onIntent, onOpenArtist = { onOpenArtist(it.route()) })
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
     }
 }
@@ -76,6 +80,7 @@ internal fun SearchScreen(
     state: SearchState,
     onIntent: (SearchIntent) -> Unit,
     modifier: Modifier = Modifier,
+    onOpenArtist: (ArtistProfile) -> Unit = {},
 ) {
     // Поле ввода живёт вне списка: внутри LazyColumn оно пересоздавалось, когда после первой буквы
     // пропадал заголовок, и клавиатура закрывалась. Заодно поле не уезжает при прокрутке результатов.
@@ -97,7 +102,7 @@ internal fun SearchScreen(
             )
             SourceChips(state.source) { onIntent(SearchIntent.SourceSelected(it)) }
         }
-        SearchBody(state, onIntent)
+        SearchBody(state, onIntent, onOpenArtist)
     }
 }
 
@@ -105,6 +110,7 @@ internal fun SearchScreen(
 private fun SearchBody(
     state: SearchState,
     onIntent: (SearchIntent) -> Unit,
+    onOpenArtist: (ArtistProfile) -> Unit,
 ) {
     val listState = rememberLazyListState()
     // До конца осталось несколько строк: просим следующую страницу онлайн-результатов.
@@ -129,7 +135,7 @@ private fun SearchBody(
             item { SectionHeader(stringResource(R.string.feature_search_genres)) }
             item { TileGrid(GENRES) { onIntent(SearchIntent.QueryChanged(it)) } }
         } else {
-            results(state, onIntent)
+            results(state, onIntent, onOpenArtist)
         }
     }
 }
@@ -137,16 +143,15 @@ private fun SearchBody(
 private fun LazyListScope.results(
     state: SearchState,
     onIntent: (SearchIntent) -> Unit,
+    onOpenArtist: (ArtistProfile) -> Unit,
 ) {
     if (state.nothingFound) {
         item { Hint(stringResource(R.string.feature_search_nothing, state.query)) }
         return
     }
-    if (state.artists.isNotEmpty()) {
+    if (state.artists.isNotEmpty() || state.onlineArtists.isNotEmpty()) {
         item { SectionHeader(stringResource(R.string.feature_search_artists)) }
-        items(state.artists, key = { "artist:" + it.name }) { artist ->
-            ArtistRow(artist) { onIntent(SearchIntent.PlayArtist(artist.name)) }
-        }
+        item(key = "artists") { ArtistCarousel(artistCards(state), onOpenArtist) }
     }
     if (state.tracks.isNotEmpty()) {
         item { SectionHeader(stringResource(R.string.feature_search_tracks)) }
@@ -292,51 +297,7 @@ private fun TileGrid(
 }
 
 @Composable
-private fun ArtistRow(
-    artist: ArtistHit,
-    onPlay: () -> Unit,
-) {
-    Row(
-        modifier =
-            Modifier.fillMaxWidth().clickable(
-                onClick = onPlay,
-            ).padding(horizontal = Spacing.screen, vertical = 5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
-    ) {
-        Box(
-            Modifier.size(48.dp).background(FuzzTheme.colors.accentSoft, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                artist.name.take(1).uppercase(),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-        Column(Modifier.weight(1f)) {
-            Text(
-                artist.name,
-                style = MaterialTheme.typography.titleSmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                stringResource(R.string.feature_search_artist_tracks, artist.trackCount),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Icon(
-            Icons.Rounded.GraphicEq,
-            contentDescription = stringResource(R.string.feature_search_play_artist),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-@Composable
-private fun Hint(text: String) {
+internal fun Hint(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.bodyMedium,
@@ -346,3 +307,28 @@ private fun Hint(text: String) {
 }
 
 private const val LOAD_MORE_AHEAD = 5
+
+/** Артисты из коллекции и из каталога одним рядом: у совпавших по имени берём фото из каталога. */
+@Composable
+private fun artistCards(state: SearchState): List<ArtistCardData> {
+    val mine = state.artists.associateBy { it.name.lowercase() }
+    val online =
+        state.onlineArtists.map { artist ->
+            val local = mine[artist.name.lowercase()]
+            ArtistCardData(
+                artist,
+                local?.let { stringResource(R.string.feature_search_artist_tracks, it.trackCount) },
+            )
+        }
+    val onlineNames = state.onlineArtists.mapTo(HashSet()) { it.name.lowercase() }
+    val localOnly =
+        state.artists
+            .filter { it.name.lowercase() !in onlineNames }
+            .map {
+                ArtistCardData(
+                    ArtistProfile(it.name),
+                    stringResource(R.string.feature_search_artist_tracks, it.trackCount),
+                )
+            }
+    return localOnly + online
+}

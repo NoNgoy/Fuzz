@@ -27,7 +27,7 @@ import java.io.Closeable
  * ```js
  * const plugin = {
  *   // offset — сколько уже показано; скрипт без страниц может его не читать.
- *   async search(query, limit, offset) { return [{ id, title, artist, album, durationMs }] },
+ *   async search(query, limit, offset) { return [{ id, title, artist, album, durationMs, artwork }] },
  *   async streamUrl(id) { return "https://..." },
  *   async lyrics(track) { return { synced: "[00:01.00]..." } }, // или { plain }, или null
  * };
@@ -117,7 +117,14 @@ class ScriptConnection(
         if (id.isBlank() || title.isBlank()) {
             null
         } else {
-            TrackRef(title, artist, album, durationMs, listOf(ExternalId(header.id, id)))
+            TrackRef(
+                title = title,
+                artist = artist,
+                album = album,
+                durationMs = durationMs,
+                externalIds = listOf(ExternalId(header.id, id)),
+                artworkUrl = artwork?.takeIf { it.startsWith("https://") },
+            )
         }
 
     private inline fun <T, R> PluginResult<T>.map(transform: (T) -> R): PluginResult<R> =
@@ -146,6 +153,8 @@ internal data class ScriptTrack(
     val artist: String = "",
     val album: String? = null,
     val durationMs: Long? = null,
+    /** https-ссылка на обложку, необязательно. */
+    val artwork: String? = null,
 )
 
 @Serializable

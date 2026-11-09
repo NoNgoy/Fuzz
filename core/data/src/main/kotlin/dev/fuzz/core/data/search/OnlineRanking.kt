@@ -39,7 +39,7 @@ internal object OnlineRanking {
 
     private fun String.containsWord(part: String): Boolean = part.isNotEmpty() && contains(part)
 
-    private fun normalize(text: String): String =
+    fun normalize(text: String): String =
         Normalizer
             .normalize(text.lowercase(), Normalizer.Form.NFKD)
             .replace(Regex("\\p{M}"), "")
