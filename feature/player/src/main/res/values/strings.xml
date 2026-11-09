@@ -25,5 +25,12 @@
     <string name="feature_player_lyrics_source">Текст: %1$s</string>
     <string name="feature_player_soon_why">«Почему этот трек?» появится вместе с волной на этапе 2</string>
     <string name="feature_player_soon_sound">Эквалайзер и кроссфейд появятся на этапе 3</string>
-    <string name="feature_player_soon_sleep">Таймер сна появится на этапе 3</string>
+    <string name="feature_player_sleep_title">Таймер сна</string>
+    <string name="feature_player_sleep_hint">Музыка встанет на паузу, даже если закрыть плеер или заблокировать телефон</string>
+    <string name="feature_player_sleep_minutes">Через %1$d мин</string>
+    <string name="feature_player_sleep_end_of_track">Когда закончится трек</string>
+    <string name="feature_player_sleep_off">Выключить таймер</string>
+    <string name="feature_player_sleep_left">Пауза через %1$s</string>
+    <string name="feature_player_sleep_after_track">Пауза после этого трека</string>
+    <string name="feature_player_sleep_track_short">Трек</string>
 </resources>

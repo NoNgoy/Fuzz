@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import dev.fuzz.core.domain.player.SleepTimerState
 import dev.fuzz.core.model.PlaybackState
 import dev.fuzz.core.model.Reaction
 import dev.fuzz.core.model.RepeatMode
@@ -38,6 +39,25 @@ class PlayerScreenshotTest {
     fun player() =
         captureThemedScreens("player") {
             PlayerContent(state = playing, onCollapse = {}, onIntent = {}, onOpenQueue = {})
+        }
+
+    @Test
+    fun playerWithSleepTimer() =
+        captureThemedScreens("player_sleep_on") {
+            PlayerContent(
+                state = playing.copy(sleep = SleepTimerState.Countdown(24 * 60_000L + 30_000)),
+                onCollapse = {},
+                onIntent = {},
+                onOpenQueue = {},
+            )
+        }
+
+    @Test
+    fun sleepOptions() =
+        captureThemedScreens("player_sleep") {
+            androidx.compose.material3.Surface {
+                SleepOptions(sleep = SleepTimerState.EndOfTrack, onPick = {})
+            }
         }
 
     @Test

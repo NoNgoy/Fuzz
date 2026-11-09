@@ -74,6 +74,7 @@ import dev.fuzz.core.design.component.RoundToggleButton
 import dev.fuzz.core.design.theme.FuzzTheme
 import dev.fuzz.core.design.theme.MonoLabel
 import dev.fuzz.core.design.theme.Spacing
+import dev.fuzz.core.domain.player.SleepTimerState
 import dev.fuzz.core.model.PlaybackState
 import dev.fuzz.core.model.Reaction
 import dev.fuzz.core.model.RepeatMode
@@ -92,11 +93,13 @@ internal fun PlayerScreen(
     val snackbar = remember { SnackbarHostState() }
     var showQueue by remember { mutableStateOf(false) }
     var showLyrics by remember { mutableStateOf(false) }
+    var showSleep by remember { mutableStateOf(false) }
     val upcoming = upcomingMessages()
     CollectEffects(viewModel.effects) { effect ->
         when (effect) {
             is PlayerEffect.ShowUpcoming -> snackbar.showSnackbar(upcoming.getValue(effect.feature))
             PlayerEffect.ShowLyrics -> showLyrics = true
+            PlayerEffect.ShowSleep -> showSleep = true
         }
     }
     Box {
@@ -109,6 +112,7 @@ internal fun PlayerScreen(
         SnackbarHost(snackbar, modifier = Modifier.align(Alignment.BottomCenter).safeDrawingPadding())
     }
     if (showLyrics) LyricsSheet(onDismiss = { showLyrics = false })
+    if (showSleep) SleepSheet(sleep = state.sleep, onIntent = viewModel::onIntent, onDismiss = { showSleep = false })
     if (showQueue) {
         QueueSheet(
             playback = state.playback,
@@ -123,7 +127,6 @@ private fun upcomingMessages(): Map<UpcomingFeature, String> =
     mapOf(
         UpcomingFeature.Why to stringResource(R.string.feature_player_soon_why),
         UpcomingFeature.Sound to stringResource(R.string.feature_player_soon_sound),
-        UpcomingFeature.Sleep to stringResource(R.string.feature_player_soon_sleep),
     )
 
 @Composable
@@ -212,7 +215,7 @@ internal fun PlayerContent(
             SeekBar(playback = playback, onSeek = { onIntent(PlayerIntent.Seek(it)) })
             Controls(playback = playback, onIntent = onIntent)
             Spacer(Modifier.height(6.dp))
-            Actions(onIntent = onIntent, onOpenQueue = onOpenQueue)
+            Actions(sleep = state.sleep, onIntent = onIntent, onOpenQueue = onOpenQueue)
         }
     }
 }
@@ -378,6 +381,7 @@ private fun Controls(
 
 @Composable
 private fun Actions(
+    sleep: SleepTimerState,
     onIntent: (PlayerIntent) -> Unit,
     onOpenQueue: () -> Unit,
 ) {
@@ -392,9 +396,12 @@ private fun Actions(
         Action(Icons.Rounded.Equalizer, R.string.feature_player_action_sound) {
             onIntent(PlayerIntent.OpenUpcoming(UpcomingFeature.Sound))
         }
-        Action(Icons.Rounded.Bedtime, R.string.feature_player_action_sleep) {
-            onIntent(PlayerIntent.OpenUpcoming(UpcomingFeature.Sleep))
-        }
+        Action(
+            icon = Icons.Rounded.Bedtime,
+            label = sleepActionLabel(sleep),
+            active = sleep != SleepTimerState.Off,
+            onClick = { onIntent(PlayerIntent.OpenSleep) },
+        )
     }
 }
 
@@ -403,15 +410,24 @@ private fun RowScope.Action(
     icon: ImageVector,
     label: Int,
     onClick: () -> Unit,
+) = Action(icon = icon, label = stringResource(label), active = false, onClick = onClick)
+
+@Composable
+private fun RowScope.Action(
+    icon: ImageVector,
+    label: String,
+    active: Boolean,
+    onClick: () -> Unit,
 ) {
+    val tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
     // Без боковых отступов TextButton: пять подписей должны уместиться в строку на 393 dp.
     TextButton(onClick = onClick, modifier = Modifier.weight(1f), contentPadding = PaddingValues(vertical = 6.dp)) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(icon, contentDescription = null, tint = tint)
             Text(
-                stringResource(label),
+                label,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = tint,
                 maxLines = 1,
                 softWrap = false,
             )

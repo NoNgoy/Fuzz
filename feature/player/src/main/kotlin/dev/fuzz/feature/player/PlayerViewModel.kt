@@ -3,6 +3,8 @@ package dev.fuzz.feature.player
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.fuzz.core.domain.player.PlayerController
+import dev.fuzz.core.domain.player.SleepTimer
+import dev.fuzz.core.domain.player.SleepTimerState
 import dev.fuzz.core.domain.reaction.ReactionRepository
 import dev.fuzz.core.domain.reaction.ToggleReactionUseCase
 import dev.fuzz.core.model.PlaybackState
@@ -25,10 +27,11 @@ import javax.inject.Inject
 data class PlayerUiState(
     val playback: PlaybackState = PlaybackState(),
     val reaction: Reaction = Reaction.None,
+    val sleep: SleepTimerState = SleepTimerState.Off,
 ) : UiState
 
 /** Разделы плеера, которые появятся на следующих этапах. */
-enum class UpcomingFeature { Why, Sound, Sleep }
+enum class UpcomingFeature { Why, Sound }
 
 sealed interface PlayerIntent : UiIntent {
     data object TogglePlay : PlayerIntent
@@ -49,22 +52,40 @@ sealed interface PlayerIntent : UiIntent {
         val index: Int,
     ) : PlayerIntent
 
-    data object ToggleLike : PlayerIntent
+    data object ToggleLike : ReactionIntent
 
     /** Двойной тап по обложке: только ставит лайк, не снимает. */
-    data object Like : PlayerIntent
+    data object Like : ReactionIntent
 
-    data object ToggleDislike : PlayerIntent
+    data object ToggleDislike : ReactionIntent
 
     data object OpenLyrics : PlayerIntent
+
+    data object OpenSleep : SleepIntent
 
     data class OpenUpcoming(
         val feature: UpcomingFeature,
     ) : PlayerIntent
+
+    data class StartSleep(
+        val minutes: Int,
+    ) : SleepIntent
+
+    data object SleepAfterTrack : SleepIntent
+
+    data object CancelSleep : SleepIntent
 }
+
+/** Лайк и дизлайк текущего трека. */
+sealed interface ReactionIntent : PlayerIntent
+
+/** Таймер сна: открыть шторку и команды из неё. */
+sealed interface SleepIntent : PlayerIntent
 
 sealed interface PlayerEffect : UiEffect {
     data object ShowLyrics : PlayerEffect
+
+    data object ShowSleep : PlayerEffect
 
     data class ShowUpcoming(
         val feature: UpcomingFeature,
@@ -80,9 +101,11 @@ class PlayerViewModel
         private val player: PlayerController,
         private val reactions: ReactionRepository,
         private val toggleReaction: ToggleReactionUseCase,
+        private val sleepTimer: SleepTimer,
     ) : MviViewModel<PlayerUiState, PlayerIntent, PlayerEffect>(PlayerUiState()) {
         init {
             player.state.onEach { setState { copy(playback = it) } }.launchIn(viewModelScope)
+            sleepTimer.state.onEach { setState { copy(sleep = it) } }.launchIn(viewModelScope)
             player.state
                 .map { it.currentTrack?.id }
                 .distinctUntilChanged()
@@ -101,13 +124,27 @@ class PlayerViewModel
                 PlayerIntent.ToggleShuffle -> player.setShuffle(!playback.shuffle)
                 PlayerIntent.CycleRepeat -> player.setRepeatMode(playback.repeatMode.next())
                 is PlayerIntent.PlayQueueItem -> player.skipToQueueItem(intent.index)
-                PlayerIntent.ToggleLike -> react(Reaction.Like)
-                PlayerIntent.Like -> if (currentState.reaction != Reaction.Like) react(Reaction.Like)
-                PlayerIntent.ToggleDislike -> react(Reaction.Dislike)
+                is ReactionIntent -> react(intent)
                 PlayerIntent.OpenLyrics -> sendEffect(PlayerEffect.ShowLyrics)
+                is SleepIntent -> sleep(intent)
                 is PlayerIntent.OpenUpcoming -> sendEffect(PlayerEffect.ShowUpcoming(intent.feature))
             }
         }
+
+        private fun sleep(intent: SleepIntent) =
+            when (intent) {
+                PlayerIntent.OpenSleep -> sendEffect(PlayerEffect.ShowSleep)
+                is PlayerIntent.StartSleep -> sleepTimer.start(intent.minutes)
+                PlayerIntent.SleepAfterTrack -> sleepTimer.stopAfterTrack()
+                PlayerIntent.CancelSleep -> sleepTimer.cancel()
+            }
+
+        private fun react(intent: ReactionIntent) =
+            when (intent) {
+                PlayerIntent.ToggleLike -> react(Reaction.Like)
+                PlayerIntent.Like -> if (currentState.reaction != Reaction.Like) react(Reaction.Like) else Unit
+                PlayerIntent.ToggleDislike -> react(Reaction.Dislike)
+            }
 
         private fun react(reaction: Reaction) {
             val id = currentState.playback.currentTrack?.id ?: return
