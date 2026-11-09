@@ -48,7 +48,16 @@ class SavedOnlineTracksTest {
     private val id = TrackId("online-1")
 
     private fun saved(registry: ExternalTrackRegistry) =
-        SavedOnlineTracks(db.trackDao(), db.savedRefDao(), db.downloadDao(), registry, connected, emptyList(), clock)
+        SavedOnlineTracks(
+            db.trackDao(),
+            db.savedRefDao(),
+            db.downloadDao(),
+            db.wishDao(),
+            registry,
+            connected,
+            emptyList(),
+            clock,
+        )
 
     @After
     fun tearDown() = db.close()

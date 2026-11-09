@@ -5,6 +5,8 @@ import dev.fuzz.core.domain.playlist.PlaylistRepository
 import dev.fuzz.core.domain.plugin.PlaylistImporter
 import dev.fuzz.core.domain.plugin.PluginResult
 import dev.fuzz.core.domain.plugin.TrackRef
+import dev.fuzz.core.domain.wishlist.WishRequest
+import dev.fuzz.core.domain.wishlist.WishlistRepository
 import dev.fuzz.core.model.PlaylistId
 import dev.fuzz.core.model.Track
 import kotlinx.coroutines.flow.first
@@ -95,18 +97,24 @@ class ImportPlaylistUseCase
         }
     }
 
-/** Сохраняет выбранные треки новым плейлистом. */
+/**
+ * Сохраняет выбранные треки новым плейлистом. Не найденные ([missing]) уходят в «Хочу добавить»
+ * со своим местом в плейлисте: когда трек появится в коллекции, он встанет туда сам.
+ */
 class SaveImportedPlaylistUseCase
     @Inject
     constructor(
         private val playlists: PlaylistRepository,
+        private val wishlist: WishlistRepository,
     ) {
         suspend operator fun invoke(
             name: String,
             tracks: List<Track>,
+            missing: List<WishRequest> = emptyList(),
         ): PlaylistId {
             val id = playlists.create(name)
             playlists.addTracks(id, tracks.map { it.id })
+            wishlist.add(missing.map { it.copy(playlistId = id) })
             return id
         }
     }

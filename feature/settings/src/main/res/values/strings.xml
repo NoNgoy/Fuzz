@@ -72,4 +72,6 @@
     <string name="feature_settings_backup_passwords">Введите заново пароли подключений (%1$d): в копию они не попадают.</string>
     <string name="feature_settings_backup_not_fuzz">Это не резервная копия Fuzz</string>
     <string name="feature_settings_backup_io_failed">Не получилось прочитать или записать файл</string>
+    <string name="feature_settings_menu_wishlist">Хочу добавить</string>
+    <string name="feature_settings_menu_wishlist_hint">Треки, которых пока нет в коллекции</string>
 </resources>

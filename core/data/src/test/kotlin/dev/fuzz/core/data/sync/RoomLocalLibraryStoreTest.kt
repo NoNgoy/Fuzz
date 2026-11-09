@@ -3,7 +3,11 @@ package dev.fuzz.core.data.sync
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import dev.fuzz.core.data.library.RoomCollectionEditor
+import dev.fuzz.core.data.wishlist.WishlistResolver
 import dev.fuzz.core.database.FuzzDatabase
+import dev.fuzz.core.database.entity.PlaylistEntity
+import dev.fuzz.core.database.entity.PlaylistTrackEntity
+import dev.fuzz.core.database.entity.WishEntity
 import dev.fuzz.core.domain.library.ScannedTrack
 import dev.fuzz.core.domain.library.SyncStats
 import dev.fuzz.core.model.TrackId
@@ -28,7 +32,13 @@ class RoomLocalLibraryStoreTest {
 
             override fun nowMs() = now
         }
-    private val store = RoomLocalLibraryStore(db, db.trackDao(), clock)
+    private val store =
+        RoomLocalLibraryStore(
+            db,
+            db.trackDao(),
+            clock,
+            WishlistResolver(db.wishDao(), db.trackDao(), db.playlistDao(), clock),
+        )
 
     @After
     fun tearDown() = db.close()
@@ -49,6 +59,39 @@ class RoomLocalLibraryStoreTest {
         format = "FLAC",
         addedAtMs = 500,
     )
+
+    @Test
+    fun `new file fulfils a wish and takes its place in the playlist`() =
+        runTest {
+            store.replaceLocal(listOf(track(1, "Кукушка"), track(3, "Звезда")))
+            db.playlistDao().insert(PlaylistEntity("p", "Импорт", 1, 1))
+            db.playlistDao().insertEntries(
+                listOf(
+                    PlaylistTrackEntity("p", 0, "local:external_primary:1", 1),
+                    PlaylistTrackEntity("p", 1, "local:external_primary:3", 1),
+                ),
+            )
+            db.wishDao().insert(
+                listOf(
+                    WishEntity(
+                        title = "Группа крови",
+                        artist = "КИНО",
+                        reason = "import",
+                        playlistId = "p",
+                        position = 1,
+                        addedAt = 1,
+                    ),
+                ),
+            )
+
+            store.replaceLocal(listOf(track(1, "Кукушка"), track(3, "Звезда"), track(2, "Группа крови")))
+
+            assertEquals(
+                listOf("local:external_primary:1", "local:external_primary:2", "local:external_primary:3"),
+                db.playlistDao().entries("p").map { it.trackId },
+            )
+            assertEquals(emptyList<WishEntity>(), db.wishDao().all())
+        }
 
     @Test
     fun `first scan adds everything`() =

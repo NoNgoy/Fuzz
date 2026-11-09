@@ -17,6 +17,7 @@ import dev.fuzz.core.database.dao.SavedRefDao
 import dev.fuzz.core.database.dao.SimilarityCacheDao
 import dev.fuzz.core.database.dao.StatsDao
 import dev.fuzz.core.database.dao.TrackDao
+import dev.fuzz.core.database.dao.WishDao
 import javax.inject.Singleton
 
 @Module
@@ -45,7 +46,12 @@ object DatabaseModule {
 
     @Provides
     fun provideStatsDao(db: FuzzDatabase): StatsDao = db.statsDao()
+}
 
+/** DAO коллекции из сети, загрузок, копии и «Хочу добавить»: отдельно, чтобы модуль не разрастался. */
+@Module
+@InstallIn(SingletonComponent::class)
+object CollectionDaoModule {
     @Provides
     fun provideSavedRefDao(db: FuzzDatabase): SavedRefDao = db.savedRefDao()
 
@@ -54,4 +60,7 @@ object DatabaseModule {
 
     @Provides
     fun provideBackupDao(db: FuzzDatabase): BackupDao = db.backupDao()
+
+    @Provides
+    fun provideWishDao(db: FuzzDatabase): WishDao = db.wishDao()
 }

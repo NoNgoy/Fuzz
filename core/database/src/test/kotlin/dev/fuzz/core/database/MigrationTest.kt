@@ -125,6 +125,19 @@ class MigrationTest {
         }
     }
 
+    @Test
+    fun `7 to 8 adds wishlist`() {
+        helper.createDatabase(DB, 7).close()
+
+        helper.runMigrationsAndValidate(DB, 8, true).use { db ->
+            db.execSQL("INSERT INTO wishlist (title, artist, reason, added_at) VALUES ('Кукушка', 'Кино', 'import', 1)")
+            db.query("SELECT title FROM wishlist").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals("Кукушка", cursor.getString(0))
+            }
+        }
+    }
+
     private companion object {
         const val DB = "migration-test"
     }

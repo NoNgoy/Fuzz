@@ -33,9 +33,11 @@ fun NavGraphBuilder.profileScreen(
     onOpenSettings: () -> Unit,
     onOpenSound: () -> Unit,
     onOpenWave: () -> Unit,
+    onOpenWishlist: () -> Unit = {},
 ) {
     composable<ProfileRoute> {
         ProfileEntry(
+            onOpenWishlist = onOpenWishlist,
             onOpenImport = onOpenImport,
             onOpenConnections = onOpenConnections,
             onOpenSettings = onOpenSettings,

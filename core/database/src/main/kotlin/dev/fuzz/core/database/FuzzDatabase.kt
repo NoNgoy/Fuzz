@@ -12,6 +12,7 @@ import dev.fuzz.core.database.dao.SavedRefDao
 import dev.fuzz.core.database.dao.SimilarityCacheDao
 import dev.fuzz.core.database.dao.StatsDao
 import dev.fuzz.core.database.dao.TrackDao
+import dev.fuzz.core.database.dao.WishDao
 import dev.fuzz.core.database.entity.DownloadEntity
 import dev.fuzz.core.database.entity.ListenEntity
 import dev.fuzz.core.database.entity.PlaylistEntity
@@ -20,6 +21,7 @@ import dev.fuzz.core.database.entity.ReactionEntity
 import dev.fuzz.core.database.entity.SavedRefEntity
 import dev.fuzz.core.database.entity.SimilarityCacheEntity
 import dev.fuzz.core.database.entity.TrackEntity
+import dev.fuzz.core.database.entity.WishEntity
 
 /**
  * Единственный источник правды для экранов. Схема экспортируется в core/database/schemas,
@@ -35,13 +37,15 @@ import dev.fuzz.core.database.entity.TrackEntity
         SimilarityCacheEntity::class,
         SavedRefEntity::class,
         DownloadEntity::class,
+        WishEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3),
         AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5),
         AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7),
+        AutoMigration(from = 7, to = 8),
     ],
 )
 abstract class FuzzDatabase : RoomDatabase() {
@@ -62,4 +66,6 @@ abstract class FuzzDatabase : RoomDatabase() {
     abstract fun downloadDao(): DownloadDao
 
     abstract fun backupDao(): BackupDao
+
+    abstract fun wishDao(): WishDao
 }
