@@ -39,6 +39,7 @@ private fun SoundProto.toModel() =
         bassBoost = bassBoost.coerceIn(0f, 1f),
         fadeSeconds = fadeSeconds.coerceIn(0, SoundSettings.MAX_FADE_SECONDS),
         skipSilence = skipSilence,
+        normalize = normalize,
     )
 
 private fun SoundSettings.toProto() =
@@ -49,4 +50,5 @@ private fun SoundSettings.toProto() =
         bassBoost = this@toProto.bassBoost
         fadeSeconds = this@toProto.fadeSeconds
         skipSilence = this@toProto.skipSilence
+        normalize = this@toProto.normalize
     }

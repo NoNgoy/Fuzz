@@ -33,6 +33,7 @@ message SoundProto {
   float bass_boost = 4;
   int32 fade_seconds = 5;
   bool skip_silence = 6;
+  bool normalize = 7;
 }
 
 // Настройки волны. Пустая строка в enum-полях значит «не выбрано».

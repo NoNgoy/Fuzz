@@ -99,6 +99,11 @@ internal fun SoundContent(
             settings.skipSilence,
             hint = stringResource(R.string.feature_player_sound_skip_silence_hint),
         ) { onIntent(SoundIntent.SetSkipSilence(it)) }
+        SwitchRow(
+            stringResource(R.string.feature_player_sound_normalize),
+            settings.normalize,
+            hint = stringResource(R.string.feature_player_sound_normalize_hint),
+        ) { onIntent(SoundIntent.SetNormalize(it)) }
     }
 }
 

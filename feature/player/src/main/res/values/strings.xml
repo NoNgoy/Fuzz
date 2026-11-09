@@ -75,5 +75,7 @@
     <string name="feature_player_sound_fade_hint">Трек плавно затихает в конце, а следующий плавно нарастает.</string>
     <string name="feature_player_sound_skip_silence">Пропускать тишину</string>
     <string name="feature_player_sound_skip_silence_hint">Паузы в начале и конце трека не звучат</string>
+    <string name="feature_player_sound_normalize">Выравнивать громкость</string>
+    <string name="feature_player_sound_normalize_hint">Тихие треки звучат громче, громкие не оглушают</string>
     <string name="feature_player_back">Назад</string>
 </resources>

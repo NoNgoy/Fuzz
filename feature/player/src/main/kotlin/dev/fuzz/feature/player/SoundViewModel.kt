@@ -52,6 +52,10 @@ sealed interface SoundIntent : UiIntent {
     data class SetSkipSilence(
         val enabled: Boolean,
     ) : SoundIntent
+
+    data class SetNormalize(
+        val enabled: Boolean,
+    ) : SoundIntent
 }
 
 sealed interface SoundEffect : UiEffect
@@ -95,6 +99,10 @@ class SoundViewModel
 
                 is SoundIntent.SetSkipSilence -> {
                     update { copy(skipSilence = intent.enabled) }
+                }
+
+                is SoundIntent.SetNormalize -> {
+                    update { copy(normalize = intent.enabled) }
                 }
             }
         }

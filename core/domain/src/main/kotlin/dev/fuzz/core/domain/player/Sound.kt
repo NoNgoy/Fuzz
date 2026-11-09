@@ -15,6 +15,8 @@ data class SoundSettings(
     /** Плавное затухание в конце трека и нарастание в начале; 0 — выключено. */
     val fadeSeconds: Int = 0,
     val skipSilence: Boolean = false,
+    /** Выравнивание громкости: тихие треки подтягиваются, громкие не бьют по ушам. */
+    val normalize: Boolean = false,
 ) {
     companion object {
         const val MAX_FADE_SECONDS = 12
