@@ -53,7 +53,10 @@ import dev.fuzz.core.design.theme.FuzzTheme
 import dev.fuzz.core.design.theme.Spacing
 import dev.fuzz.core.domain.artist.ArtistProfile
 import dev.fuzz.core.domain.search.ArtistHit
+import dev.fuzz.core.model.Track
+import dev.fuzz.core.ui.component.TrackMenuHost
 import dev.fuzz.core.ui.component.TrackRow
+import dev.fuzz.core.ui.component.rememberTrackMenu
 import dev.fuzz.core.ui.mvi.CollectEffects
 
 @Composable
@@ -69,10 +72,17 @@ internal fun SearchEntry(
             SearchEffect.NotPlayable -> snackbar.showSnackbar(notPlayable)
         }
     }
+    val menu = rememberTrackMenu()
     Box {
-        SearchScreen(state = state, onIntent = viewModel::onIntent, onOpenArtist = { onOpenArtist(it.route()) })
+        SearchScreen(
+            state = state,
+            onIntent = viewModel::onIntent,
+            onOpenArtist = { onOpenArtist(it.route()) },
+            onMore = menu::open,
+        )
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
     }
+    TrackMenuHost(menu)
 }
 
 @Composable
@@ -81,6 +91,7 @@ internal fun SearchScreen(
     onIntent: (SearchIntent) -> Unit,
     modifier: Modifier = Modifier,
     onOpenArtist: (ArtistProfile) -> Unit = {},
+    onMore: ((Track) -> Unit)? = null,
 ) {
     // Поле ввода живёт вне списка: внутри LazyColumn оно пересоздавалось, когда после первой буквы
     // пропадал заголовок, и клавиатура закрывалась. Заодно поле не уезжает при прокрутке результатов.
@@ -102,7 +113,7 @@ internal fun SearchScreen(
             )
             SourceChips(state.source) { onIntent(SearchIntent.SourceSelected(it)) }
         }
-        SearchBody(state, onIntent, onOpenArtist)
+        SearchBody(state, onIntent, onOpenArtist, onMore)
     }
 }
 
@@ -111,6 +122,7 @@ private fun SearchBody(
     state: SearchState,
     onIntent: (SearchIntent) -> Unit,
     onOpenArtist: (ArtistProfile) -> Unit,
+    onMore: ((Track) -> Unit)?,
 ) {
     val listState = rememberLazyListState()
     // До конца осталось несколько строк: просим следующую страницу онлайн-результатов.
@@ -135,7 +147,7 @@ private fun SearchBody(
             item { SectionHeader(stringResource(R.string.feature_search_genres)) }
             item { TileGrid(GENRES) { onIntent(SearchIntent.QueryChanged(it)) } }
         } else {
-            results(state, onIntent, onOpenArtist)
+            results(state, onIntent, onOpenArtist, onMore)
         }
     }
 }
@@ -144,6 +156,7 @@ private fun LazyListScope.results(
     state: SearchState,
     onIntent: (SearchIntent) -> Unit,
     onOpenArtist: (ArtistProfile) -> Unit,
+    onMore: ((Track) -> Unit)?,
 ) {
     if (state.nothingFound) {
         item { Hint(stringResource(R.string.feature_search_nothing, state.query)) }
@@ -156,7 +169,11 @@ private fun LazyListScope.results(
     if (state.tracks.isNotEmpty()) {
         item { SectionHeader(stringResource(R.string.feature_search_tracks)) }
         itemsIndexed(state.tracks, key = { _, t -> t.id.value }) { index, track ->
-            TrackRow(track = track, onClick = { onIntent(SearchIntent.PlayTrack(index)) })
+            TrackRow(
+                track = track,
+                onClick = { onIntent(SearchIntent.PlayTrack(index)) },
+                onMore = onMore?.let { { it(track) } },
+            )
         }
     }
     if (state.online.isNotEmpty() || state.onlineLoading) {
@@ -166,7 +183,11 @@ private fun LazyListScope.results(
         item { Hint(stringResource(R.string.feature_search_online_loading)) }
     }
     itemsIndexed(state.online, key = { _, t -> "online:" + t.id.value }) { index, track ->
-        TrackRow(track = track, onClick = { onIntent(SearchIntent.PlayOnline(index)) })
+        TrackRow(
+            track = track,
+            onClick = { onIntent(SearchIntent.PlayOnline(index)) },
+            onMore = onMore?.let { { it(track) } },
+        )
     }
     if (state.onlineLoadingMore) {
         item(key = "online:more") {

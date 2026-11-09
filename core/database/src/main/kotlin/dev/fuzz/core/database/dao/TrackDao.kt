@@ -14,6 +14,10 @@ interface TrackDao {
     @Query("SELECT * FROM tracks WHERE id IN (:ids) AND deleted = 0 AND hidden = 0")
     suspend fun getByIds(ids: List<String>): List<TrackEntity>
 
+    /** Вместе с убранными и удалёнными: чтобы вернуть трек, а не завести второй. */
+    @Query("SELECT * FROM tracks WHERE id IN (:ids)")
+    suspend fun getAnyByIds(ids: List<String>): List<TrackEntity>
+
     @Query("SELECT * FROM tracks WHERE source_id = :sourceId")
     suspend fun getBySource(sourceId: String): List<TrackEntity>
 

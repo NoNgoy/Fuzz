@@ -7,6 +7,10 @@
     <string name="core_ui_hide_from_collection">Убрать из коллекции</string>
     <string name="core_ui_hide_from_collection_hint">Файл останется на телефоне</string>
     <string name="core_ui_delete_from_device">Удалить с телефона</string>
+    <string name="core_ui_like">Добавить в «Мне нравится»</string>
+    <string name="core_ui_liked">Добавлено в «Мне нравится»</string>
+    <string name="core_ui_added_to">Добавлено в «%1$s»</string>
+    <string name="core_ui_already_in">Трек уже есть в «%1$s»</string>
     <string name="core_ui_new_playlist">Новый плейлист</string>
     <string name="core_ui_playlist_name">Название</string>
     <plurals name="core_ui_tracks">

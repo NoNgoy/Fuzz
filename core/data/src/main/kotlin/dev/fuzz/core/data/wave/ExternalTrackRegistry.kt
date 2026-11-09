@@ -20,11 +20,14 @@ import javax.inject.Singleton
 class ExternalTrackRegistry
     @Inject
     constructor() : PlaybackHeaders {
-        private class Entry(
+        /** Откуда трек: источник, его описание у источника и вид каталога. */
+        class Entry(
             val source: MusicSource,
             val ref: TrackRef,
             val origin: TrackOrigin,
-        )
+        ) {
+            val label: String get() = if (origin == TrackOrigin.Preview) PREVIEW_LABEL else source.displayName
+        }
 
         private val entries = ConcurrentHashMap<TrackId, Entry>()
 
@@ -43,6 +46,8 @@ class ExternalTrackRegistry
             entries[id] = Entry(source, ref, origin)
         }
 
+        fun entry(id: TrackId): Entry? = entries[id]
+
         /** Трек для плеера или null, если источник не дал ссылку (нет сети, нет превью). */
         suspend fun resolve(id: TrackId): Track? {
             val entry = entries[id] ?: return null
@@ -58,7 +63,7 @@ class ExternalTrackRegistry
                 albumTitle = entry.ref.album,
                 durationMs = entry.ref.durationMs ?: 0L,
                 playbackUri = uri,
-                format = if (entry.origin == TrackOrigin.Preview) PREVIEW_LABEL else entry.source.displayName,
+                format = entry.label,
             )
         }
 

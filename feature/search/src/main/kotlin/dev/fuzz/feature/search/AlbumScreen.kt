@@ -34,8 +34,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.fuzz.core.design.component.ScreenTitle
 import dev.fuzz.core.design.theme.Spacing
+import dev.fuzz.core.model.Track
 import dev.fuzz.core.ui.component.Artwork
+import dev.fuzz.core.ui.component.TrackMenuHost
 import dev.fuzz.core.ui.component.TrackRow
+import dev.fuzz.core.ui.component.rememberTrackMenu
 import dev.fuzz.core.ui.mvi.CollectEffects
 
 @Composable
@@ -48,15 +51,18 @@ internal fun AlbumEntry(
     val snackbar = remember { SnackbarHostState() }
     val notPlayable = stringResource(R.string.feature_search_not_playable)
     CollectEffects(viewModel.effects) { snackbar.showSnackbar(notPlayable) }
+    val menu = rememberTrackMenu()
     Box(Modifier.fillMaxSize()) {
         AlbumScreen(
             state = state,
             onIntent = viewModel::onIntent,
             onBack = onBack,
             onOpenArtist = { onOpenArtist(ArtistRoute(name = state.album.artist)) },
+            onMore = menu::open,
         )
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
     }
+    TrackMenuHost(menu)
 }
 
 @Composable
@@ -66,6 +72,7 @@ internal fun AlbumScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onOpenArtist: () -> Unit = {},
+    onMore: ((Track) -> Unit)? = null,
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize().statusBarsPadding(),
@@ -107,7 +114,7 @@ internal fun AlbumScreen(
         }
         if (state.isLoading) item { Spinner() }
         itemsIndexed(state.tracks, key = { _, t -> t.id.value }) { index, track ->
-            TrackRow(track = track, onClick = { onIntent(AlbumIntent.Play(index)) })
+            TrackRow(track, { onIntent(AlbumIntent.Play(index)) }, onMore = onMore?.let { { it(track) } })
         }
     }
 }
