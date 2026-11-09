@@ -20,6 +20,8 @@ data class TrackListRoute(
     val downloaded: Boolean = false,
     val album: String? = null,
     val artist: String? = null,
+    /** Имя [dev.fuzz.core.domain.library.SmartPlaylist]. */
+    val smart: String? = null,
 )
 
 fun NavGraphBuilder.libraryScreen(

@@ -55,4 +55,16 @@
     <string name="feature_library_wish_nothing">В подключениях этого трека нет. Можно купить его в Bandcamp или Qobuz, а файл положить в папку с музыкой</string>
     <string name="feature_library_wish_options">Что нашлось в подключениях</string>
     <string name="feature_library_wish_taken">«%1$s» теперь в коллекции</string>
+    <string name="feature_library_smart_on_repeat">На повторе</string>
+    <string name="feature_library_smart_on_repeat_hint">Чаще всего за месяц</string>
+    <string name="feature_library_smart_on_repeat_empty">Здесь соберётся то, что вы слушаете снова и снова. Пока такого нет.</string>
+    <string name="feature_library_smart_forgotten">Давно не слушал</string>
+    <string name="feature_library_smart_forgotten_hint">Лайки, которые не звучали два месяца</string>
+    <string name="feature_library_smart_forgotten_empty">Все любимые треки звучали недавно.</string>
+    <string name="feature_library_smart_recent">Недавно добавлено</string>
+    <string name="feature_library_smart_recent_hint">Новое за 30 дней</string>
+    <string name="feature_library_smart_recent_empty">За последний месяц в коллекции ничего не появилось.</string>
+    <string name="feature_library_smart_never_played">Ещё не слушал</string>
+    <string name="feature_library_smart_never_played_hint">Ни разу не звучало</string>
+    <string name="feature_library_smart_never_played_empty">Вы послушали всё, что есть в коллекции.</string>
 </resources>

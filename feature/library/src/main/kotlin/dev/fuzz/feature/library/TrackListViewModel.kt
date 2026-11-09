@@ -7,6 +7,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.fuzz.core.domain.download.Downloads
 import dev.fuzz.core.domain.library.CollectionEditor
 import dev.fuzz.core.domain.library.ObserveLibraryTracksUseCase
+import dev.fuzz.core.domain.library.SmartPlaylist
+import dev.fuzz.core.domain.library.SmartPlaylists
 import dev.fuzz.core.domain.player.PlayerController
 import dev.fuzz.core.domain.playlist.PlaylistRepository
 import dev.fuzz.core.domain.reaction.ReactionRepository
@@ -47,6 +49,10 @@ sealed interface TrackListKind {
 
     data class Playlist(
         val id: PlaylistId,
+    ) : TrackListKind
+
+    data class Smart(
+        val playlist: SmartPlaylist,
     ) : TrackListKind
 }
 
@@ -97,6 +103,7 @@ class TrackListViewModel
         private val player: PlayerController,
         private val collection: CollectionEditor,
         private val downloads: Downloads,
+        private val smart: SmartPlaylists,
     ) : MviViewModel<TrackListState, TrackListIntent, TrackListEffect>(TrackListState(kindOf(savedState))) {
         init {
             val kind = currentState.kind
@@ -142,6 +149,13 @@ class TrackListViewModel
                     is TrackListKind.Playlist -> {
                         playlists.observeTracks(kind.id)
                     }
+
+                    is TrackListKind.Smart -> {
+                        combine(observeLibrary(), smart.observe(kind.playlist)) { all, ids ->
+                            val byId = all.associateBy { it.id }
+                            ids.mapNotNull { byId[it] }
+                        }
+                    }
                 }
             combine(tracks, player.state.map { it.currentTrack?.id }.distinctUntilChanged()) { list, current ->
                 setState { copy(isLoading = false, tracks = list.toImmutableList(), currentTrackId = current) }
@@ -180,7 +194,11 @@ class TrackListViewModel
                                 reactions.set(intent.track, Reaction.None)
                             }
 
-                            TrackListKind.Downloaded, is TrackListKind.Album, is TrackListKind.Artist -> {
+                            TrackListKind.Downloaded,
+                            is TrackListKind.Album,
+                            is TrackListKind.Artist,
+                            is TrackListKind.Smart,
+                            -> {
                                 collection.hide(intent.track)
                             }
 
@@ -212,6 +230,7 @@ class TrackListViewModel
                 val route = savedState.toRoute<TrackListRoute>()
                 return when {
                     route.playlistId != null -> TrackListKind.Playlist(PlaylistId(route.playlistId))
+                    route.smart != null -> TrackListKind.Smart(SmartPlaylist.valueOf(route.smart))
                     route.downloaded -> TrackListKind.Downloaded
                     route.album != null -> TrackListKind.Album(route.album, route.artist)
                     route.artist != null -> TrackListKind.Artist(route.artist)

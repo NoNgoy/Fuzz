@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
@@ -45,10 +46,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,6 +60,7 @@ import dev.fuzz.core.design.component.ScreenTitle
 import dev.fuzz.core.design.component.SectionHeader
 import dev.fuzz.core.design.theme.FuzzTheme
 import dev.fuzz.core.design.theme.Spacing
+import dev.fuzz.core.domain.library.SmartPlaylist
 import dev.fuzz.core.model.Playlist
 import dev.fuzz.core.model.PlaylistId
 import dev.fuzz.core.model.Track
@@ -208,6 +212,9 @@ internal fun LibraryScreen(
                     subtitle = tracksCount(state.tracks.size),
                     onClick = onOpenDownloaded,
                 )
+            }
+            if (state.tracks.isNotEmpty()) {
+                item { SmartRow(onOpenTrackList) }
             }
             if (state.wishCount > 0) {
                 item {
@@ -409,6 +416,43 @@ private fun QuickEntry(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+    }
+}
+
+/** Умные подборки: собираются сами, поэтому показываются всегда, а пустые объясняют, чего ждать. */
+@Composable
+private fun SmartRow(onOpen: (TrackListRoute) -> Unit) {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = Spacing.screen, vertical = Spacing.s),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+    ) {
+        items(SmartPlaylist.entries) { playlist ->
+            Column(
+                Modifier
+                    .width(148.dp)
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .clickable { onOpen(TrackListRoute(smart = playlist.name)) }
+                    .padding(Spacing.m),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+            ) {
+                Icon(playlist.icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Text(
+                    stringResource(playlist.title),
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    stringResource(playlist.hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    minLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

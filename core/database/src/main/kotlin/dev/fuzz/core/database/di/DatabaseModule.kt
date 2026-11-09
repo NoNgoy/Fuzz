@@ -17,6 +17,7 @@ import dev.fuzz.core.database.dao.ReactionDao
 import dev.fuzz.core.database.dao.RecapDao
 import dev.fuzz.core.database.dao.SavedRefDao
 import dev.fuzz.core.database.dao.SimilarityCacheDao
+import dev.fuzz.core.database.dao.SmartPlaylistDao
 import dev.fuzz.core.database.dao.StatsDao
 import dev.fuzz.core.database.dao.TrackDao
 import dev.fuzz.core.database.dao.WishDao
@@ -71,4 +72,7 @@ object CollectionDaoModule {
 
     @Provides
     fun provideLyricsDao(db: FuzzDatabase): LyricsDao = db.lyricsDao()
+
+    @Provides
+    fun provideSmartPlaylistDao(db: FuzzDatabase): SmartPlaylistDao = db.smartPlaylistDao()
 }
