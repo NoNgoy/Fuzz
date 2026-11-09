@@ -18,6 +18,18 @@ message UserPreferences {
   // Нет поля — настройки волны по умолчанию.
   optional WaveSettingsProto wave = 4;
   repeated ConnectionProto connections = 5;
+  // Нет поля — звук по умолчанию: эквалайзер выключен.
+  optional SoundProto sound = 6;
+}
+
+// Эквалайзер и переходы. Пустой preset — ручная настройка полос.
+message SoundProto {
+  bool equalizer_enabled = 1;
+  string preset = 2;
+  repeated float custom_gains_db = 3;
+  float bass_boost = 4;
+  int32 fade_seconds = 5;
+  bool skip_silence = 6;
 }
 
 // Настройки волны. Пустая строка в enum-полях значит «не выбрано».

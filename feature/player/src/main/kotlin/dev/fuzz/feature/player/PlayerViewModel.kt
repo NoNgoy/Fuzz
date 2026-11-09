@@ -30,9 +30,6 @@ data class PlayerUiState(
     val sleep: SleepTimerState = SleepTimerState.Off,
 ) : UiState
 
-/** Разделы плеера, которые появятся на следующих этапах. */
-enum class UpcomingFeature { Sound, }
-
 sealed interface PlayerIntent : UiIntent {
     data object TogglePlay : PlayerIntent
 
@@ -65,9 +62,7 @@ sealed interface PlayerIntent : UiIntent {
 
     data object OpenSleep : SleepIntent
 
-    data class OpenUpcoming(
-        val feature: UpcomingFeature,
-    ) : PlayerIntent
+    data object OpenSound : PlayerIntent
 
     data class StartSleep(
         val minutes: Int,
@@ -91,9 +86,7 @@ sealed interface PlayerEffect : UiEffect {
 
     data object ShowSleep : PlayerEffect
 
-    data class ShowUpcoming(
-        val feature: UpcomingFeature,
-    ) : PlayerEffect
+    data object ShowSound : PlayerEffect
 }
 
 /** Общая ViewModel мини-плеера и полноэкранного плеера: оба читают одно состояние MediaSession. */
@@ -132,7 +125,7 @@ class PlayerViewModel
                 PlayerIntent.OpenLyrics -> sendEffect(PlayerEffect.ShowLyrics)
                 PlayerIntent.OpenWhy -> sendEffect(PlayerEffect.ShowWhy)
                 is SleepIntent -> sleep(intent)
-                is PlayerIntent.OpenUpcoming -> sendEffect(PlayerEffect.ShowUpcoming(intent.feature))
+                PlayerIntent.OpenSound -> sendEffect(PlayerEffect.ShowSound)
             }
         }
 

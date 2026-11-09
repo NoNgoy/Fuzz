@@ -11,6 +11,7 @@ import androidx.media3.session.MediaSession
 import dagger.hilt.android.AndroidEntryPoint
 import dev.fuzz.core.domain.library.LibraryRepository
 import dev.fuzz.core.domain.player.PlaybackHeaders
+import dev.fuzz.core.domain.player.SoundSettingsRepository
 import dev.fuzz.core.domain.playlist.PlaylistRepository
 import dev.fuzz.core.domain.reaction.ReactionRepository
 import dev.fuzz.core.domain.reaction.ToggleReactionUseCase
@@ -26,6 +27,8 @@ import dev.fuzz.core.player.session.BrowseCatalog
 import dev.fuzz.core.player.session.BrowseTitles
 import dev.fuzz.core.player.session.LibrarySessionCallback
 import dev.fuzz.core.player.session.ReactionButtons
+import dev.fuzz.core.player.sound.PlayerSoundEffects
+import dev.fuzz.core.player.sound.SoundController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -65,6 +68,10 @@ class FuzzPlaybackService : MediaLibraryService() {
 
     @Inject lateinit var playbackHeaders: PlaybackHeaders
 
+    @Inject lateinit var soundSettings: SoundSettingsRepository
+
+    @Inject internal lateinit var soundEffects: PlayerSoundEffects
+
     /** id текущего трека: по нему кнопка «Нравится» показывает, лайкнут ли он. */
     private val currentTrackId = MutableStateFlow<String?>(null)
 
@@ -72,11 +79,13 @@ class FuzzPlaybackService : MediaLibraryService() {
     private var session: MediaLibrarySession? = null
     private var player: FuzzPlayer? = null
     private var positionSaver: Job? = null
+    private var sound: SoundController? = null
 
     override fun onCreate() {
         super.onCreate()
         val player = PlayerFactory.create(this, playbackHeaders).also { player = it }
         player.addListener(SnapshotListener())
+        sound = SoundController(player.engine, soundEffects, soundSettings.settings, scope)
         val buttons = ReactionButtons(this)
         val catalog =
             BrowseCatalog(
@@ -133,6 +142,7 @@ class FuzzPlaybackService : MediaLibraryService() {
     }
 
     override fun onDestroy() {
+        sound?.release()
         player?.let { p -> scope.launch { withContext(NonCancellable) { saveSnapshot(p) } } }
         session?.run {
             player.release()
